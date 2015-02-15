@@ -1,0 +1,13 @@
+[package]
+
+name = "cql_bindgen"
+version = "0.0.1"
+authors = ["Tupshin Harper <tupshin@tupshin.com>"]
+
+
+[lib]
+name = "cql_bindgen"
+
+[[bin]]
+name="basic"
+path="src/examples/basic.rs"
