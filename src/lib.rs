@@ -255,6 +255,7 @@ pub type CassLogCallback =
     ::std::option::Option<extern "C" fn
                               (message: *const CassLogMessage,
                                data: *mut ::libc::c_void) -> ()>;
+#[link(name = "cassandra")]
 extern "C" {
     pub fn cass_cluster_new() -> *mut CassCluster;
     pub fn cass_cluster_free(cluster: *mut CassCluster) -> ();

@@ -1,7 +1,7 @@
 #![feature(collections)]
 
 extern crate collections;
-extern crate cql_bindgen;
+extern crate cql_bindgen;   
 
 use std::mem;
 
