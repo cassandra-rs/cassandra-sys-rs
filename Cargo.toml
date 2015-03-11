@@ -9,6 +9,6 @@ authors = ["Tupshin Harper <tupshin@tupshin.com>"]
 [lib]
 name = "cql_bindgen"
 
-[[bin]]
-name="basic"
-path="src/examples/basic.rs"
+# [[bin]]
+# name="basic"
+# path="src/examples/basic.rs"
