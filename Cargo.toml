@@ -1,7 +1,8 @@
 [package]
 
-name = "cql_bindgen"
-version = "0.0.1"
+description = "A trivially modified version of the bindgen created cql bindings plus a working example with no additional dependencies"
+license = "Apache-2.0"name = "cql_bindgen"
+version = "0.0.2"
 authors = ["Tupshin Harper <tupshin@tupshin.com>"]
 
 

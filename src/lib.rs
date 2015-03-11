@@ -19,14 +19,13 @@ pub type cass_int32_t = ::libc::c_int;
 pub type cass_uint32_t = ::libc::c_uint;
 pub type cass_int64_t = ::libc::c_long;
 pub type cass_uint64_t = ::libc::c_ulong;
-pub type cass_size_t = size_t;
 pub type cass_byte_t = cass_uint8_t;
 pub type cass_duration_t = cass_uint64_t;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_CassBytes_ {
     pub data: *const cass_byte_t,
-    pub size: cass_size_t,
+    pub size: size_t,
 }
 impl ::std::default::Default for Struct_CassBytes_ {
     fn default() -> Struct_CassBytes_ { unsafe { ::std::mem::zeroed() } }
@@ -36,7 +35,7 @@ pub type CassBytes = Struct_CassBytes_;
 #[derive(Copy)]
 pub struct Struct_CassString_ {
     pub data: *const ::libc::c_char,
-    pub length: cass_size_t,
+    pub length: size_t,
 }
 impl ::std::default::Default for Struct_CassString_ {
     fn default() -> Struct_CassString_ { unsafe { ::std::mem::zeroed() } }
@@ -45,7 +44,7 @@ pub type CassString = Struct_CassString_;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_CassInet_ {
-    pub address: [cass_uint8_t; 16us],
+    pub address: [cass_uint8_t; 16usize],
     pub address_length: cass_uint8_t,
 }
 impl ::std::default::Default for Struct_CassInet_ {
@@ -245,7 +244,7 @@ pub struct Struct_CassLogMessage_ {
     pub file: *const ::libc::c_char,
     pub line: ::libc::c_int,
     pub function: *const ::libc::c_char,
-    pub message: [::libc::c_char; 256us],
+    pub message: [::libc::c_char; 256usize],
 }
 impl ::std::default::Default for Struct_CassLogMessage_ {
     fn default() -> Struct_CassLogMessage_ { unsafe { ::std::mem::zeroed() } }
@@ -262,6 +261,11 @@ extern "C" {
     pub fn cass_cluster_set_contact_points(cluster: *mut CassCluster,
                                            contact_points:
                                                *const ::libc::c_char)
+     -> CassError;
+    pub fn cass_cluster_set_contact_points_n(cluster: *mut CassCluster,
+                                             contact_points:
+                                                 *const ::libc::c_char,
+                                             contact_points_length: size_t)
      -> CassError;
     pub fn cass_cluster_set_port(cluster: *mut CassCluster,
                                  port: ::libc::c_int) -> CassError;
@@ -336,6 +340,11 @@ extern "C" {
                                         username: *const ::libc::c_char,
                                         password: *const ::libc::c_char)
      -> ();
+    pub fn cass_cluster_set_credentials_n(cluster: *mut CassCluster,
+                                          username: *const ::libc::c_char,
+                                          username_length: size_t,
+                                          password: *const ::libc::c_char,
+                                          password_length: size_t) -> ();
     pub fn cass_cluster_set_load_balance_round_robin(cluster:
                                                          *mut CassCluster)
      -> ();
@@ -346,6 +355,15 @@ extern "C" {
                                                       ::libc::c_uint,
                                                   allow_remote_dcs_for_local_cl:
                                                       cass_bool_t)
+     -> CassError;
+    pub fn cass_cluster_set_load_balance_dc_aware_n(cluster: *mut CassCluster,
+                                                    local_dc:
+                                                        *const ::libc::c_char,
+                                                    local_dc_length: size_t,
+                                                    used_hosts_per_remote_dc:
+                                                        ::libc::c_uint,
+                                                    allow_remote_dcs_for_local_cl:
+                                                        cass_bool_t)
      -> CassError;
     pub fn cass_cluster_set_token_aware_routing(cluster: *mut CassCluster,
                                                 enabled: cass_bool_t) -> ();
@@ -363,9 +381,18 @@ extern "C" {
                                          cluster: *const CassCluster,
                                          keyspace: *const ::libc::c_char)
      -> *mut CassFuture;
-    pub fn cass_session_close(session: *mut CassSession) -> *mut CassFuture;
-    pub fn cass_session_prepare(session: *mut CassSession, query: CassString)
+    pub fn cass_session_connect_keyspace_n(session: *mut CassSession,
+                                           cluster: *const CassCluster,
+                                           keyspace: *const ::libc::c_char,
+                                           keyspace_length: size_t)
      -> *mut CassFuture;
+    pub fn cass_session_close(session: *mut CassSession) -> *mut CassFuture;
+    pub fn cass_session_prepare(session: *mut CassSession,
+                                query: *const ::libc::c_char)
+     -> *mut CassFuture;
+    pub fn cass_session_prepare_n(session: *mut CassSession,
+                                  query: *const ::libc::c_char,
+                                  query_length: size_t) -> *mut CassFuture;
     pub fn cass_session_execute(session: *mut CassSession,
                                 statement: *const CassStatement)
      -> *mut CassFuture;
@@ -376,15 +403,27 @@ extern "C" {
      -> *const CassSchema;
     pub fn cass_schema_free(schema: *const CassSchema) -> ();
     pub fn cass_schema_get_keyspace(schema: *const CassSchema,
-                                    keyspace_name: *const ::libc::c_char)
+                                    keyspace: *const ::libc::c_char)
+     -> *const CassSchemaMeta;
+    pub fn cass_schema_get_keyspace_n(schema: *const CassSchema,
+                                      keyspace: *const ::libc::c_char,
+                                      keyspace_length: size_t)
      -> *const CassSchemaMeta;
     pub fn cass_schema_meta_type(meta: *const CassSchemaMeta)
      -> CassSchemaMetaType;
     pub fn cass_schema_meta_get_entry(meta: *const CassSchemaMeta,
                                       name: *const ::libc::c_char)
      -> *const CassSchemaMeta;
+    pub fn cass_schema_meta_get_entry_n(meta: *const CassSchemaMeta,
+                                        name: *const ::libc::c_char,
+                                        name_length: size_t)
+     -> *const CassSchemaMeta;
     pub fn cass_schema_meta_get_field(meta: *const CassSchemaMeta,
                                       name: *const ::libc::c_char)
+     -> *const CassSchemaMetaField;
+    pub fn cass_schema_meta_get_field_n(meta: *const CassSchemaMeta,
+                                        name: *const ::libc::c_char,
+                                        name_length: size_t)
      -> *const CassSchemaMetaField;
     pub fn cass_schema_meta_field_name(field: *const CassSchemaMetaField)
      -> CassString;
@@ -392,15 +431,27 @@ extern "C" {
      -> *const CassValue;
     pub fn cass_ssl_new() -> *mut CassSsl;
     pub fn cass_ssl_free(ssl: *mut CassSsl) -> ();
-    pub fn cass_ssl_add_trusted_cert(ssl: *mut CassSsl, cert: CassString)
+    pub fn cass_ssl_add_trusted_cert(ssl: *mut CassSsl,
+                                     cert: *const ::libc::c_char)
      -> CassError;
+    pub fn cass_ssl_add_trusted_cert_n(ssl: *mut CassSsl,
+                                       cert: *const ::libc::c_char,
+                                       arg1: size_t) -> CassError;
     pub fn cass_ssl_set_verify_flags(ssl: *mut CassSsl, flags: ::libc::c_int)
      -> ();
-    pub fn cass_ssl_set_cert(ssl: *mut CassSsl, cert: CassString)
+    pub fn cass_ssl_set_cert(ssl: *mut CassSsl, cert: *const ::libc::c_char)
      -> CassError;
-    pub fn cass_ssl_set_private_key(ssl: *mut CassSsl, key: CassString,
+    pub fn cass_ssl_set_cert_n(ssl: *mut CassSsl, cert: *const ::libc::c_char,
+                               cert_length: size_t) -> CassError;
+    pub fn cass_ssl_set_private_key(ssl: *mut CassSsl,
+                                    key: *const ::libc::c_char,
                                     password: *const ::libc::c_char)
      -> CassError;
+    pub fn cass_ssl_set_private_key_n(ssl: *mut CassSsl,
+                                      key: *const ::libc::c_char,
+                                      key_length: size_t,
+                                      password: *const ::libc::c_char,
+                                      password_length: size_t) -> CassError;
     pub fn cass_future_free(future: *mut CassFuture) -> ();
     pub fn cass_future_set_callback(future: *mut CassFuture,
                                     callback: CassFutureCallback,
@@ -415,13 +466,20 @@ extern "C" {
      -> *const CassPrepared;
     pub fn cass_future_error_code(future: *mut CassFuture) -> CassError;
     pub fn cass_future_error_message(future: *mut CassFuture) -> CassString;
-    pub fn cass_statement_new(query: CassString, parameter_count: cass_size_t)
+    pub fn cass_statement_new(query: *const ::libc::c_char,
+                              parameter_count: size_t) -> *mut CassStatement;
+    pub fn cass_statement_new_n(query: *const ::libc::c_char,
+                                query_length: size_t, parameter_count: size_t)
      -> *mut CassStatement;
     pub fn cass_statement_free(statement: *mut CassStatement) -> ();
     pub fn cass_statement_add_key_index(statement: *mut CassStatement,
-                                        index: cass_size_t) -> CassError;
+                                        index: size_t) -> CassError;
     pub fn cass_statement_set_keyspace(statement: *mut CassStatement,
                                        keyspace: *const ::libc::c_char)
+     -> CassError;
+    pub fn cass_statement_set_keyspace_n(statement: *mut CassStatement,
+                                         keyspace: *const ::libc::c_char,
+                                         keyspace_length: size_t)
      -> CassError;
     pub fn cass_statement_set_consistency(statement: *mut CassStatement,
                                           consistency: CassConsistency)
@@ -438,90 +496,159 @@ extern "C" {
                                            result: *const CassResult)
      -> CassError;
     pub fn cass_statement_bind_null(statement: *mut CassStatement,
-                                    index: cass_size_t) -> CassError;
+                                    index: size_t) -> CassError;
     pub fn cass_statement_bind_int32(statement: *mut CassStatement,
-                                     index: cass_size_t, value: cass_int32_t)
+                                     index: size_t, value: cass_int32_t)
      -> CassError;
     pub fn cass_statement_bind_int64(statement: *mut CassStatement,
-                                     index: cass_size_t, value: cass_int64_t)
+                                     index: size_t, value: cass_int64_t)
      -> CassError;
     pub fn cass_statement_bind_float(statement: *mut CassStatement,
-                                     index: cass_size_t, value: cass_float_t)
+                                     index: size_t, value: cass_float_t)
      -> CassError;
     pub fn cass_statement_bind_double(statement: *mut CassStatement,
-                                      index: cass_size_t,
-                                      value: cass_double_t) -> CassError;
+                                      index: size_t, value: cass_double_t)
+     -> CassError;
     pub fn cass_statement_bind_bool(statement: *mut CassStatement,
-                                    index: cass_size_t, value: cass_bool_t)
+                                    index: size_t, value: cass_bool_t)
      -> CassError;
     pub fn cass_statement_bind_string(statement: *mut CassStatement,
-                                      index: cass_size_t, value: CassString)
+                                      index: size_t, value: CassString)
      -> CassError;
     pub fn cass_statement_bind_bytes(statement: *mut CassStatement,
-                                     index: cass_size_t, value: CassBytes)
+                                     index: size_t, value: CassBytes)
      -> CassError;
     pub fn cass_statement_bind_uuid(statement: *mut CassStatement,
-                                    index: cass_size_t, value: CassUuid)
+                                    index: size_t, value: CassUuid)
      -> CassError;
     pub fn cass_statement_bind_inet(statement: *mut CassStatement,
-                                    index: cass_size_t, value: CassInet)
+                                    index: size_t, value: CassInet)
      -> CassError;
     pub fn cass_statement_bind_decimal(statement: *mut CassStatement,
-                                       index: cass_size_t, value: CassDecimal)
+                                       index: size_t, value: CassDecimal)
      -> CassError;
     pub fn cass_statement_bind_custom(statement: *mut CassStatement,
-                                      index: cass_size_t, size: cass_size_t,
+                                      index: size_t, size: size_t,
                                       output: *mut *mut cass_byte_t)
      -> CassError;
     pub fn cass_statement_bind_collection(statement: *mut CassStatement,
-                                          index: cass_size_t,
+                                          index: size_t,
                                           collection: *const CassCollection)
+     -> CassError;
+    pub fn cass_statement_bind_null_by_name(statement: *mut CassStatement,
+                                            name: *const ::libc::c_char)
+     -> CassError;
+    pub fn cass_statement_bind_null_by_name_n(statement: *mut CassStatement,
+                                              name: *const ::libc::c_char,
+                                              name_length: size_t)
      -> CassError;
     pub fn cass_statement_bind_int32_by_name(statement: *mut CassStatement,
                                              name: *const ::libc::c_char,
                                              value: cass_int32_t)
      -> CassError;
+    pub fn cass_statement_bind_int32_by_name_n(statement: *mut CassStatement,
+                                               name: *const ::libc::c_char,
+                                               name_length: size_t,
+                                               value: cass_int32_t)
+     -> CassError;
     pub fn cass_statement_bind_int64_by_name(statement: *mut CassStatement,
                                              name: *const ::libc::c_char,
                                              value: cass_int64_t)
+     -> CassError;
+    pub fn cass_statement_bind_int64_by_name_n(statement: *mut CassStatement,
+                                               name: *const ::libc::c_char,
+                                               name_length: size_t,
+                                               value: cass_int64_t)
      -> CassError;
     pub fn cass_statement_bind_float_by_name(statement: *mut CassStatement,
                                              name: *const ::libc::c_char,
                                              value: cass_float_t)
      -> CassError;
+    pub fn cass_statement_bind_float_by_name_n(statement: *mut CassStatement,
+                                               name: *const ::libc::c_char,
+                                               name_length: size_t,
+                                               value: cass_float_t)
+     -> CassError;
     pub fn cass_statement_bind_double_by_name(statement: *mut CassStatement,
                                               name: *const ::libc::c_char,
                                               value: cass_double_t)
      -> CassError;
+    pub fn cass_statement_bind_double_by_name_n(statement: *mut CassStatement,
+                                                name: *const ::libc::c_char,
+                                                name_length: size_t,
+                                                value: cass_double_t)
+     -> CassError;
     pub fn cass_statement_bind_bool_by_name(statement: *mut CassStatement,
                                             name: *const ::libc::c_char,
                                             value: cass_bool_t) -> CassError;
+    pub fn cass_statement_bind_bool_by_name_n(statement: *mut CassStatement,
+                                              name: *const ::libc::c_char,
+                                              name_length: size_t,
+                                              value: cass_bool_t)
+     -> CassError;
     pub fn cass_statement_bind_string_by_name(statement: *mut CassStatement,
                                               name: *const ::libc::c_char,
                                               value: CassString) -> CassError;
+    pub fn cass_statement_bind_string_by_name_n(statement: *mut CassStatement,
+                                                name: *const ::libc::c_char,
+                                                name_length: size_t,
+                                                value: CassString)
+     -> CassError;
     pub fn cass_statement_bind_bytes_by_name(statement: *mut CassStatement,
                                              name: *const ::libc::c_char,
                                              value: CassBytes) -> CassError;
+    pub fn cass_statement_bind_bytes_by_name_n(statement: *mut CassStatement,
+                                               name: *const ::libc::c_char,
+                                               name_length: size_t,
+                                               value: CassBytes) -> CassError;
     pub fn cass_statement_bind_uuid_by_name(statement: *mut CassStatement,
                                             name: *const ::libc::c_char,
                                             value: CassUuid) -> CassError;
+    pub fn cass_statement_bind_uuid_by_name_n(statement: *mut CassStatement,
+                                              name: *const ::libc::c_char,
+                                              name_length: size_t,
+                                              value: CassUuid) -> CassError;
     pub fn cass_statement_bind_inet_by_name(statement: *mut CassStatement,
                                             name: *const ::libc::c_char,
                                             value: CassInet) -> CassError;
+    pub fn cass_statement_bind_inet_by_name_n(statement: *mut CassStatement,
+                                              name: *const ::libc::c_char,
+                                              name_length: size_t,
+                                              value: CassInet) -> CassError;
     pub fn cass_statement_bind_decimal_by_name(statement: *mut CassStatement,
                                                name: *const ::libc::c_char,
                                                value: CassDecimal)
      -> CassError;
+    pub fn cass_statement_bind_decimal_by_name_n(statement:
+                                                     *mut CassStatement,
+                                                 name: *const ::libc::c_char,
+                                                 name_length: size_t,
+                                                 value: CassDecimal)
+     -> CassError;
     pub fn cass_statement_bind_custom_by_name(statement: *mut CassStatement,
                                               name: *const ::libc::c_char,
-                                              size: cass_size_t,
+                                              size: size_t,
                                               output: *mut *mut cass_byte_t)
+     -> CassError;
+    pub fn cass_statement_bind_custom_by_name_n(statement: *mut CassStatement,
+                                                name: *const ::libc::c_char,
+                                                name_length: size_t,
+                                                size: size_t,
+                                                output: *mut *mut cass_byte_t)
      -> CassError;
     pub fn cass_statement_bind_collection_by_name(statement:
                                                       *mut CassStatement,
                                                   name: *const ::libc::c_char,
                                                   collection:
                                                       *const CassCollection)
+     -> CassError;
+    pub fn cass_statement_bind_collection_by_name_n(statement:
+                                                        *mut CassStatement,
+                                                    name:
+                                                        *const ::libc::c_char,
+                                                    name_length: size_t,
+                                                    collection:
+                                                        *const CassCollection)
      -> CassError;
     pub fn cass_prepared_free(prepared: *const CassPrepared) -> ();
     pub fn cass_prepared_bind(prepared: *const CassPrepared)
@@ -534,8 +661,7 @@ extern "C" {
     pub fn cass_batch_add_statement(batch: *mut CassBatch,
                                     statement: *mut CassStatement)
      -> CassError;
-    pub fn cass_collection_new(_type: CassCollectionType,
-                               item_count: cass_size_t)
+    pub fn cass_collection_new(_type: CassCollectionType, item_count: size_t)
      -> *mut CassCollection;
     pub fn cass_collection_free(collection: *mut CassCollection) -> ();
     pub fn cass_collection_append_int32(collection: *mut CassCollection,
@@ -559,12 +685,12 @@ extern "C" {
     pub fn cass_collection_append_decimal(collection: *mut CassCollection,
                                           value: CassDecimal) -> CassError;
     pub fn cass_result_free(result: *const CassResult) -> ();
-    pub fn cass_result_row_count(result: *const CassResult) -> cass_size_t;
-    pub fn cass_result_column_count(result: *const CassResult) -> cass_size_t;
-    pub fn cass_result_column_name(result: *const CassResult,
-                                   index: cass_size_t) -> CassString;
-    pub fn cass_result_column_type(result: *const CassResult,
-                                   index: cass_size_t) -> CassValueType;
+    pub fn cass_result_row_count(result: *const CassResult) -> size_t;
+    pub fn cass_result_column_count(result: *const CassResult) -> size_t;
+    pub fn cass_result_column_name(result: *const CassResult, index: size_t)
+     -> CassString;
+    pub fn cass_result_column_type(result: *const CassResult, index: size_t)
+     -> CassValueType;
     pub fn cass_result_first_row(result: *const CassResult) -> *const CassRow;
     pub fn cass_result_has_more_pages(result: *const CassResult)
      -> cass_bool_t;
@@ -585,6 +711,7 @@ extern "C" {
     pub fn cass_iterator_fields_from_schema_meta(meta: *const CassSchemaMeta)
      -> *mut CassIterator;
     pub fn cass_iterator_next(iterator: *mut CassIterator) -> cass_bool_t;
+    pub fn cass_iterator_rewind(iterator: *mut CassIterator) -> ();
     pub fn cass_iterator_get_row(iterator: *mut CassIterator)
      -> *const CassRow;
     pub fn cass_iterator_get_column(iterator: *mut CassIterator)
@@ -599,10 +726,14 @@ extern "C" {
      -> *const CassSchemaMeta;
     pub fn cass_iterator_get_schema_meta_field(iterator: *mut CassIterator)
      -> *const CassSchemaMetaField;
-    pub fn cass_row_get_column(row: *const CassRow, index: cass_size_t)
+    pub fn cass_row_get_column(row: *const CassRow, index: size_t)
      -> *const CassValue;
     pub fn cass_row_get_column_by_name(row: *const CassRow,
                                        name: *const ::libc::c_char)
+     -> *const CassValue;
+    pub fn cass_row_get_column_by_name_n(row: *const CassRow,
+                                         name: *const ::libc::c_char,
+                                         name_length: size_t)
      -> *const CassValue;
     pub fn cass_value_get_int32(value: *const CassValue,
                                 output: *mut cass_int32_t) -> CassError;
@@ -627,7 +758,7 @@ extern "C" {
     pub fn cass_value_type(value: *const CassValue) -> CassValueType;
     pub fn cass_value_is_null(value: *const CassValue) -> cass_bool_t;
     pub fn cass_value_is_collection(value: *const CassValue) -> cass_bool_t;
-    pub fn cass_value_item_count(collection: *const CassValue) -> cass_size_t;
+    pub fn cass_value_item_count(collection: *const CassValue) -> size_t;
     pub fn cass_value_primary_sub_type(collection: *const CassValue)
      -> CassValueType;
     pub fn cass_value_secondary_sub_type(collection: *const CassValue)
@@ -653,22 +784,25 @@ extern "C" {
      -> ();
     pub fn cass_uuid_from_string(str: *const ::libc::c_char,
                                  output: *mut CassUuid) -> CassError;
+    pub fn cass_uuid_from_string_n(str: *const ::libc::c_char,
+                                   str_length: size_t, output: *mut CassUuid)
+     -> CassError;
     pub fn cass_error_desc(error: CassError) -> *const ::libc::c_char;
     pub fn cass_log_cleanup() -> ();
     pub fn cass_log_set_level(log_level: CassLogLevel) -> ();
     pub fn cass_log_set_callback(callback: CassLogCallback,
                                  data: *mut ::libc::c_void) -> ();
-    pub fn cass_log_set_queue_size(queue_size: cass_size_t) -> ();
+    pub fn cass_log_set_queue_size(queue_size: size_t) -> ();
     pub fn cass_log_level_string(log_level: CassLogLevel)
      -> *const ::libc::c_char;
     pub fn cass_inet_init_v4(address: *const cass_uint8_t) -> CassInet;
     pub fn cass_inet_init_v6(address: *const cass_uint8_t) -> CassInet;
     pub fn cass_decimal_init(scale: cass_int32_t, varint: CassBytes)
      -> CassDecimal;
-    pub fn cass_bytes_init(data: *const cass_byte_t, size: cass_size_t)
+    pub fn cass_bytes_init(data: *const cass_byte_t, size: size_t)
      -> CassBytes;
     pub fn cass_string_init(null_terminated: *const ::libc::c_char)
      -> CassString;
-    pub fn cass_string_init2(data: *const ::libc::c_char, length: cass_size_t)
-     -> CassString;
+    pub fn cass_string_init_n(data: *const ::libc::c_char,
+                              data_length: size_t) -> CassString;
 }

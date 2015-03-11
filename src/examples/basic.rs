@@ -23,7 +23,7 @@ pub fn cassvalue2cassstring<'a>(value:&CassValue) -> Result<CassString,CassError
 }}
 
 pub fn str2cass_string(query:&str) -> CassString {unsafe{
-    cass_string_init2(query.as_ptr() as *const i8,query.len() as u64)
+    cass_string_init_n(query.as_ptr() as *const i8,query.len() as u64)
 }}
 
 pub fn str2ref(query:&str) -> *const i8 {
@@ -45,10 +45,9 @@ fn connect_session(session:&mut CassSession, cluster:&CassCluster) -> CassError 
 }}
 
 fn execute_query(session: &mut CassSession, query: &str) -> CassError {unsafe{
-    let query=str2cass_string(query);
-    println!("{:?}",query.length);
+    println!("{:?}",query);
    // println!("{:?}", query);
-    let statement = cass_statement_new(query, 0);
+    let statement = cass_statement_new(query.as_ptr() as *const i8, 0);
     let future = cass_session_execute(session,statement);
     cass_future_wait(future);
     let _ = cass_future_error_code(future);
@@ -58,8 +57,8 @@ fn execute_query(session: &mut CassSession, query: &str) -> CassError {unsafe{
 }}
 
 fn insert_into_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> CassError {unsafe{
-    let query=str2cass_string("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);");
-    let statement = cass_statement_new(query, 6);
+    let query="INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
+    let statement = cass_statement_new(query.as_ptr() as *const i8, 6);
     cass_statement_bind_string(statement, 0, str2cass_string(key));
     cass_statement_bind_bool(statement, 1, basic.bln);
     cass_statement_bind_float(statement, 2, basic.flt);
@@ -75,8 +74,8 @@ fn insert_into_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Ca
 }}
 
 fn select_from_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Result<(),CassError> {unsafe{
-    let query = str2cass_string("SELECT * FROM examples.basic WHERE key = ?");
-    let statement = cass_statement_new(query, 1);
+    let query = "SELECT * FROM examples.basic WHERE key = ?";
+    let statement = cass_statement_new(query.as_ptr() as *const i8, 1);
     let key = key.as_ptr() as *const i8;
     cass_statement_bind_string(statement, 0, cass_string_init(key));
     let future = cass_session_execute(session,statement);
