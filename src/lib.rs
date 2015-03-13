@@ -5,5 +5,7 @@
 extern crate libc;
 
 pub use cassandra::*;
+pub use ffi_util::*;
 
 mod cassandra;
+mod ffi_util;

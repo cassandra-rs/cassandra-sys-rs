@@ -3,8 +3,6 @@
 extern crate collections;
 extern crate cql_bindgen;   
 
-use std::mem;
-
 use cql_bindgen::*;
 
 #[derive(Debug)]
@@ -14,20 +12,6 @@ struct Basic {
     dbl:cass_double_t,
     i32:cass_int32_t,
     i64:cass_int64_t,
-}
-
-pub fn cassvalue2cassstring<'a>(value:&CassValue) -> Result<CassString,CassError> {unsafe{
-    let mut cass_string:CassString = mem::uninitialized();
-    cass_value_get_string(value, &mut cass_string);
-    Ok(cass_string)
-}}
-
-pub fn str2cass_string(query:&str) -> CassString {unsafe{
-    cass_string_init_n(query.as_ptr() as *const i8,query.len() as u64)
-}}
-
-pub fn str2ref(query:&str) -> *const i8 {
-    query.as_ptr() as *const i8
 }
 
 fn create_cluster() -> &'static mut CassCluster {unsafe{
@@ -46,7 +30,6 @@ fn connect_session(session:&mut CassSession, cluster:&CassCluster) -> CassError 
 
 fn execute_query(session: &mut CassSession, query: &str) -> CassError {unsafe{
     println!("{:?}",query);
-   // println!("{:?}", query);
     let statement = cass_statement_new(query.as_ptr() as *const i8, 0);
     let future = cass_session_execute(session,statement);
     cass_future_wait(future);
@@ -104,7 +87,6 @@ fn select_from_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Re
         
     };
     cass_future_free(future);
-    cass_statement_free(statement);
     Ok(())
 }}
 
@@ -136,4 +118,3 @@ fn main() {unsafe{
     cass_cluster_free(cluster);
     cass_session_free(session);
 }}
-
