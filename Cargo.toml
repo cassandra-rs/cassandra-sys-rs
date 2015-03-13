@@ -2,13 +2,18 @@
 
 description = "A trivially modified version of the bindgen created cql bindings plus a working example with no additional dependencies"
 license = "Apache-2.0"name = "cql_bindgen"
-version = "0.0.2"
+version = "0.0.4"
 authors = ["Tupshin Harper <tupshin@tupshin.com>"]
 
 
 [lib]
 name = "cql_bindgen"
 
-# [[bin]]
-# name="basic"
-# path="src/examples/basic.rs"
+[[bin]]
+name="basic"
+path="src/examples/basic.rs"
+
+[[bin]]
+name="schema_meta"
+path="src/examples/schema_meta.rs"
+
