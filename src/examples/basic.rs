@@ -42,7 +42,7 @@ fn execute_query(session: &mut CassSession, query: &str) -> CassError {unsafe{
 fn insert_into_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> CassError {unsafe{
     let query="INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
     let statement = cass_statement_new(query.as_ptr() as *const i8, 6);
-    cass_statement_bind_string(statement, 0, str2cass_string(key));
+    cass_statement_bind_string(statement, 0, str2ref(key));
     cass_statement_bind_bool(statement, 1, basic.bln);
     cass_statement_bind_float(statement, 2, basic.flt);
     cass_statement_bind_double(statement, 3, basic.dbl);
@@ -60,7 +60,7 @@ fn select_from_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Re
     let query = "SELECT * FROM examples.basic WHERE key = ?";
     let statement = cass_statement_new(query.as_ptr() as *const i8, 1);
     let key = key.as_ptr() as *const i8;
-    cass_statement_bind_string(statement, 0, cass_string_init(key));
+    cass_statement_bind_string(statement, 0, key);
     let future = cass_session_execute(session,statement);
     cass_future_wait(future);
     let _ = match cass_future_error_code(future) {

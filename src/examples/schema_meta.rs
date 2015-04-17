@@ -50,10 +50,10 @@ unsafe fn print_table(session:&mut CassSession, keyspace:&str, table:&str) {
     cass_schema_free(schema);
 }
 
-unsafe fn print_error(future:&mut CassFuture) {
-    let message = cass_future_error_message(future);
-    println!("Error: {:?}", raw2utf8(message.data,message.length));
-}
+//unsafe fn print_error(future:&mut CassFuture) {
+//    let message = cass_future_error_message(future);
+//    println!("Error: {:?}", raw2utf8(message.data,message.length));
+//}
 
 unsafe fn execute_query(session:&mut CassSession, query:&str) -> u32 {
     let query = CString::new(query).unwrap();
@@ -64,7 +64,7 @@ unsafe fn execute_query(session:&mut CassSession, query:&str) -> u32 {
 
     let rc = cass_future_error_code(future);
     if rc != CASS_OK {
-        print_error(&mut *future);
+       // print_error(&mut *future);
     }
 
     cass_future_free(future);
@@ -102,9 +102,11 @@ fn main() {unsafe{
         cass_future_free(close_future);
     } else {
         /* Handle error */
-        let message = cass_future_error_message(connect_future);
+        let mut m:*const i8 = mem::zeroed();
+        let mut l:size_t = mem::zeroed();
+        cass_future_error_message(connect_future,&mut m, &mut l);
 
-        println!("Unable to connect: {:?}", raw2utf8(message.data,message.length));
+        println!("Unable to connect: {:?}", raw2utf8(m,l));
     }
 
     cass_future_free(connect_future);
@@ -122,7 +124,7 @@ unsafe fn print_schema_value(value:&CassValue) {
     let mut i:cass_int32_t=mem::zeroed();
     let mut b:cass_bool_t=mem::zeroed();
     let mut d:cass_double_t=mem::zeroed();
-    let mut s:CassString=mem::zeroed();
+    //let mut s:CassString=mem::zeroed();
     let mut u:CassUuid=mem::zeroed();
     let mut us:[i8; CASS_UUID_STRING_LENGTH] = mem::zeroed();
 
@@ -143,11 +145,11 @@ unsafe fn print_schema_value(value:&CassValue) {
             print!("{}", d);
         }
 
-        CASS_VALUE_TYPE_TEXT|CASS_VALUE_TYPE_ASCII|CASS_VALUE_TYPE_VARCHAR => {
-            cass_value_get_string(value, &mut s);
-
-            print!("{:?}", raw2utf8(s.data,s.length));
-        }
+//        CASS_VALUE_TYPE_TEXT|CASS_VALUE_TYPE_ASCII|CASS_VALUE_TYPE_VARCHAR => {
+//            cass_value_get_string(value, &mut s);
+//
+//            print!("{:?}", raw2utf8(s.data,s.length));
+//        }
     
         CASS_VALUE_TYPE_UUID => {
             cass_value_get_uuid(value, &mut u);
@@ -203,12 +205,12 @@ unsafe fn print_schema_map(value:&CassValue) {
 }
 
 unsafe fn print_schema_meta_field(field:&Struct_CassSchemaMetaField_, indent:u32) {
-    let name = cass_schema_meta_field_name(field);
+    //let name = cass_schema_meta_field_name(field);
     let value = cass_schema_meta_field_value(field);
 
     print_indent(indent);
   
-    print!("{:?}", raw2utf8(name.data,name.length));
+   // print!("{:?}", raw2utf8(name.data,name.length));
     print_schema_value(&*value);
     print!("\n");
 }
@@ -231,17 +233,23 @@ unsafe fn print_schema_meta_entries(meta:&CassSchemaMeta, indent:u32) {
     cass_iterator_free(entries);
 }
 
+//pub fn cass_value_get_string(value: *const CassValue,
+//                                 output: *mut *const ::libc::c_char,
+//                                 output_size: *mut size_t) -> CassError;
+
 unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
-    let mut name:CassString = mem::zeroed();
+    
     print_indent(indent);
+   	let mut output = mem::zeroed();
+   	let mut output_size = mem::zeroed();
 
     match cass_schema_meta_type(meta) {
         CASS_SCHEMA_META_TYPE_KEYSPACE => {
             let KS_NAME = CString::new("keyspace_name").unwrap();
             let field = cass_schema_meta_get_field(meta, KS_NAME.as_ptr());
-            cass_value_get_string(cass_schema_meta_field_value(&*field), &mut name);
+            cass_value_get_string(cass_schema_meta_field_value(&*field), &mut output, &mut output_size);
 
-            println!("Keyspace {:?}", raw2utf8(name.data,name.length));
+            println!("Keyspace {:?}", raw2utf8(output,output_size));
             print_schema_meta_fields(meta, indent + 1);
             println!("");
             print_schema_meta_entries(meta, indent + 1);
@@ -250,9 +258,9 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
         CASS_SCHEMA_META_TYPE_TABLE => {
             let CF_NAME = CString::new("columnfamily_name").unwrap();
             let field = cass_schema_meta_get_field(meta, CF_NAME.as_ptr());
-            cass_value_get_string(cass_schema_meta_field_value(field), &mut name);
+            cass_value_get_string(cass_schema_meta_field_value(field), &mut output, &mut output_size);
       
-            println!("Table {:?}", raw2utf8(name.data,name.length));
+            println!("Table {:?}", raw2utf8(output,output_size));
             print_schema_meta_fields(meta, indent + 1);
             println!("");
             print_schema_meta_entries(meta, indent + 1);
@@ -261,9 +269,9 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
         CASS_SCHEMA_META_TYPE_COLUMN => {
             let COLUMN_NAME = CString::new("column_name").unwrap();
             let field = cass_schema_meta_get_field(meta, COLUMN_NAME.as_ptr());
-            cass_value_get_string(cass_schema_meta_field_value(field), &mut name);
+            cass_value_get_string(cass_schema_meta_field_value(field), &mut output, &mut output_size);
 
-            println!("Column {:?}", raw2utf8(name.data,name.length));
+            println!("Column {:?}", raw2utf8(output,output_size));
             print_schema_meta_fields(meta, indent + 1);
             println!("");
         }
