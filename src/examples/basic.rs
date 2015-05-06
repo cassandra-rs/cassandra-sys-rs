@@ -1,6 +1,3 @@
-#![feature(collections)]
-
-extern crate collections;
 extern crate cql_bindgen;   
 
 use cql_bindgen::*;

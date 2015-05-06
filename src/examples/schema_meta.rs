@@ -1,7 +1,5 @@
-#![feature(collections)]
 #![allow(non_snake_case)]
 extern crate cql_bindgen;
-extern crate collections;
 
 use std::mem;
 use std::ffi::CString;
@@ -103,10 +101,10 @@ fn main() {unsafe{
     } else {
         /* Handle error */
         let mut m:*const i8 = mem::zeroed();
-        let mut l:size_t = mem::zeroed();
+        let mut l = mem::zeroed();
         cass_future_error_message(connect_future,&mut m, &mut l);
 
-        println!("Unable to connect: {:?}", raw2utf8(m,l));
+        println!("Unable to connect: {:?}", raw2utf8(m,l as u64));
     }
 
     cass_future_free(connect_future);
@@ -249,7 +247,7 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
             let field = cass_schema_meta_get_field(meta, KS_NAME.as_ptr());
             cass_value_get_string(cass_schema_meta_field_value(&*field), &mut output, &mut output_size);
 
-            println!("Keyspace {:?}", raw2utf8(output,output_size));
+            println!("Keyspace {:?}", raw2utf8(output,output_size as u64));
             print_schema_meta_fields(meta, indent + 1);
             println!("");
             print_schema_meta_entries(meta, indent + 1);
@@ -260,7 +258,7 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
             let field = cass_schema_meta_get_field(meta, CF_NAME.as_ptr());
             cass_value_get_string(cass_schema_meta_field_value(field), &mut output, &mut output_size);
       
-            println!("Table {:?}", raw2utf8(output,output_size));
+            println!("Table {:?}", raw2utf8(output,output_size as u64));
             print_schema_meta_fields(meta, indent + 1);
             println!("");
             print_schema_meta_entries(meta, indent + 1);
@@ -271,7 +269,7 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
             let field = cass_schema_meta_get_field(meta, COLUMN_NAME.as_ptr());
             cass_value_get_string(cass_schema_meta_field_value(field), &mut output, &mut output_size);
 
-            println!("Column {:?}", raw2utf8(output,output_size));
+            println!("Column {:?}", raw2utf8(output,output_size as u64));
             print_schema_meta_fields(meta, indent + 1);
             println!("");
         }

@@ -1,6 +1,3 @@
-use cassandra::*;
-
-use std::mem;
 use std::slice;
 use std::str;
 
