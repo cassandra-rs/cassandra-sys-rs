@@ -18,5 +18,9 @@ path="src/examples/basic.rs"
 name="schema_meta"
 path="src/examples/schema_meta.rs"
 
+[[bin]]
+name="uuid"
+path="src/examples/uuid.rs"
+
 [dependencies]
 libc = "*"
