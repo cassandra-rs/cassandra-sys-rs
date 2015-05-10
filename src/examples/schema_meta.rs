@@ -8,45 +8,6 @@ use cql_bindgen::*;
 
 const CASS_UUID_STRING_LENGTH:usize = 37;
 
-unsafe fn print_keyspace(session:&mut CassSession, keyspace:&str) {
-    let schema = cass_session_get_schema(session);
-    let keyspace = CString::new(keyspace).unwrap();
-    let keyspace_meta = cass_schema_get_keyspace(schema, keyspace.as_ptr());
-
-    if !keyspace_meta.is_null() {
-        print_schema_meta(&*keyspace_meta, 0);
-    } else {
-        println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
-    }
-
-    let keyspace_meta = cass_schema_get_keyspace(schema, keyspace.as_ptr());
-
-    if !keyspace_meta.is_null() {
-        print_schema_meta(&*keyspace_meta, 0);
-    } else {
-        println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
-    }
-    cass_schema_free(schema);
-}
-
-unsafe fn print_table(session:&mut CassSession, keyspace:&str, table:&str) {
-    let schema = cass_session_get_schema(session);
-    let keyspace = CString::new(keyspace).unwrap();
-    let keyspace_meta = cass_schema_get_keyspace(schema, keyspace.as_ptr());
-    let table = CString::new(table).unwrap();
-
-    if !keyspace_meta.is_null() {
-        let table_meta = cass_schema_meta_get_entry(keyspace_meta, table.as_ptr());
-        if !table_meta.is_null() {
-            print_schema_meta(&*table_meta, 0);
-        } else {
-            println!("Unable to find {:?} table in the schema metadata", table);
-        }
-    } else {
-        println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
-    }
-    cass_schema_free(schema);
-}
 
 //unsafe fn print_error(future:&mut CassFuture) {
 //    let message = cass_future_error_message(future);
@@ -126,33 +87,34 @@ unsafe fn print_schema_value(value:&CassValue) {
     let mut u:CassUuid=mem::zeroed();
     let mut us:[i8; CASS_UUID_STRING_LENGTH] = mem::zeroed();
 
-    let cass_type = cass_value_type(value);
-    match cass_type {
+    match cass_value_type(value) {
         CASS_VALUE_TYPE_INT => {
             cass_value_get_int32(value, &mut i);
-            print!("{}", i);
+            println!("{}", i);
         }
 
         CASS_VALUE_TYPE_BOOLEAN => {
             cass_value_get_bool(value, &mut b);
-            print!("{}", if b > 0 {"true"} else {"false"});
+            println!("{}", if b > 0 {"true"} else {"false"});
         }   
     
         CASS_VALUE_TYPE_DOUBLE => {
             cass_value_get_double(value, &mut d);
-            print!("{}", d);
+            println!("{}", d);
         }
 
-//        CASS_VALUE_TYPE_TEXT|CASS_VALUE_TYPE_ASCII|CASS_VALUE_TYPE_VARCHAR => {
-//            cass_value_get_string(value, &mut s);
-//
-//            print!("{:?}", raw2utf8(s.data,s.length));
-//        }
+        CASS_VALUE_TYPE_TEXT|CASS_VALUE_TYPE_ASCII|CASS_VALUE_TYPE_VARCHAR => {
+            let mut s:*const i8=mem::zeroed();
+            let mut s_size:u64=mem::zeroed();
+            cass_value_get_string(value, &mut s, &mut s_size);
+
+            println!("{:?}", raw2utf8(s,s_size));
+        }
     
         CASS_VALUE_TYPE_UUID => {
             cass_value_get_uuid(value, &mut u);
             cass_uuid_string(u, &mut*us.as_mut_ptr());
-            print!("{:?}", "us - FIXME" /*us*/);
+            println!("{:?}", "us - FIXME" /*us*/);
         }
     
         CASS_VALUE_TYPE_LIST => {
@@ -163,10 +125,9 @@ unsafe fn print_schema_value(value:&CassValue) {
             print_schema_map(value);
         }
         _ => {
-            if cass_value_is_null(value) > 0 {
-                print!("null");
-            } else {
-                print!("<unhandled type>");
+            match cass_value_is_null(value) {
+                0 => println!("<unhandled type>: {:?}",cass_value_type(value)),
+                _ => {/*print!("null")*/}
             }
         }
     }
@@ -210,7 +171,7 @@ unsafe fn print_schema_meta_field(field:&Struct_CassSchemaMetaField_, indent:u32
   
    // print!("{:?}", raw2utf8(name.data,name.length));
     print_schema_value(&*value);
-    print!("\n");
+    //print!("\n");
 }
 
 unsafe fn print_schema_meta_fields(meta:&CassSchemaMeta, indent:u32) {
@@ -231,10 +192,6 @@ unsafe fn print_schema_meta_entries(meta:&CassSchemaMeta, indent:u32) {
     cass_iterator_free(entries);
 }
 
-//pub fn cass_value_get_string(value: *const CassValue,
-//                                 output: *mut *const ::libc::c_char,
-//                                 output_size: *mut size_t) -> CassError;
-
 unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
     
     print_indent(indent);
@@ -249,7 +206,7 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
 
             println!("Keyspace {:?}", raw2utf8(output,output_size as u64));
             print_schema_meta_fields(meta, indent + 1);
-            println!("");
+            //println!("");
             print_schema_meta_entries(meta, indent + 1);
         }
 
@@ -260,7 +217,7 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
       
             println!("Table {:?}", raw2utf8(output,output_size as u64));
             print_schema_meta_fields(meta, indent + 1);
-            println!("");
+            //println!("");
             print_schema_meta_entries(meta, indent + 1);
         }
     
@@ -269,10 +226,51 @@ unsafe fn print_schema_meta(meta:&CassSchemaMeta, indent:u32) {
             let field = cass_schema_meta_get_field(meta, COLUMN_NAME.as_ptr());
             cass_value_get_string(cass_schema_meta_field_value(field), &mut output, &mut output_size);
 
-            println!("Column {:?}", raw2utf8(output,output_size as u64));
+            println!("{:?}", raw2utf8(output,output_size as u64));
             print_schema_meta_fields(meta, indent + 1);
-            println!("");
+            //println!("");
         }
     _ => {panic!("")}
     }
 }
+
+unsafe fn print_keyspace(session:&mut CassSession, keyspace:&str) {
+    let schema = cass_session_get_schema(session);
+    let keyspace = CString::new(keyspace).unwrap();
+    let keyspace_meta = cass_schema_get_keyspace(schema, keyspace.as_ptr());
+
+    if !keyspace_meta.is_null() {
+        print_schema_meta(&*keyspace_meta, 0);
+    } else {
+        println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
+    }
+
+    let keyspace_meta = cass_schema_get_keyspace(schema, keyspace.as_ptr());
+
+    if !keyspace_meta.is_null() {
+        print_schema_meta(&*keyspace_meta, 0);
+    } else {
+        println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
+    }
+    cass_schema_free(schema);
+}
+
+unsafe fn print_table(session:&mut CassSession, keyspace:&str, table:&str) {
+    let schema = cass_session_get_schema(session);
+    let keyspace = CString::new(keyspace).unwrap();
+    let keyspace_meta = cass_schema_get_keyspace(schema, keyspace.as_ptr());
+    let table = CString::new(table).unwrap();
+
+    if !keyspace_meta.is_null() {
+        let table_meta = cass_schema_meta_get_entry(keyspace_meta, table.as_ptr());
+        if !table_meta.is_null() {
+            print_schema_meta(&*table_meta, 0);
+        } else {
+            println!("Unable to find {:?} table in the schema metadata", table);
+        }
+    } else {
+        println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
+    }
+    cass_schema_free(schema);
+}
+
