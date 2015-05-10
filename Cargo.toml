@@ -3,7 +3,7 @@
 description = "A trivially modified version of the bindgen created cql bindings plus a working example with no additional dependencies.\nNow works with the beta channel"
 license = "Apache-2.0"
 name = "cql_bindgen"
-version = "0.0.8"
+version = "0.0.9"
 authors = ["Tupshin Harper <tupshin@tupshin.com>"]
 
 
