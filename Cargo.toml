@@ -1,9 +1,9 @@
 [package]
 
-description = "A trivially modified version of the bindgen created cql bindings plus a working example with no additional dependencies.\nNow works with the beta channel"
+description = "A trivially modified version of the bindgen created cql bindings plus a working example with no additional dependencies."
 license = "Apache-2.0"
 name = "cql_bindgen"
-version = "0.0.9"
+version = "0.0.10"
 authors = ["Tupshin Harper <tupshin@tupshin.com>"]
 
 
