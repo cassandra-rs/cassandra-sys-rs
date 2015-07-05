@@ -3,9 +3,9 @@
 description = "A trivially modified version of the bindgen created cql bindings plus a working example with no additional dependencies.\nYou probably want to use the \"cassandra\" crate that provides a safe wrapper"
 license = "Apache-2.0"
 name = "cql_bindgen"
-version = "0.0.11"
+version = "0.0.12"
 authors = ["Tupshin Harper <tupshin@tupshin.com>"]
-
+build = "build.rs"
 
 [lib]
 name = "cql_bindgen"
