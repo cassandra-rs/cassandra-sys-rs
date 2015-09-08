@@ -119,12 +119,12 @@ fn select_from_log(session:&mut CassSession, key:&str) -> Result<(),CassError> {
   }
 }}
 
-fn main() {unsafe{
+pub fn main() {unsafe{
     let cluster = create_cluster();
     let session = cass_session_new();
     let uuid_gen = cass_uuid_gen_new();
     let mut uuid = mem::zeroed();
-
+    
     match connect_session(&mut*session, cluster) {
         CASS_OK => {
 //            let output = &mut Basic{bln:0,flt:0f32,dbl:0f64,i32:0,i64:0};

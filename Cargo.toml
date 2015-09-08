@@ -22,5 +22,9 @@ path="src/examples/schema_meta.rs"
 name="uuid"
 path="src/examples/uuid.rs"
 
+[[bin]]
+name="async"
+path="src/examples/async.rs"
+
 [dependencies]
 libc = "*"

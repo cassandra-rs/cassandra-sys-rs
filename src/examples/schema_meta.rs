@@ -32,7 +32,7 @@ unsafe fn execute_query(session:&mut CassSession, query:&str) -> u32 {
     return rc;
 }
 
-fn main() {unsafe{
+pub fn main() {unsafe{
     let cluster = cass_cluster_new();
     let session = cass_session_new();
     let contact_points = CString::new("127.0.0.1").unwrap();
