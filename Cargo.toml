@@ -15,6 +15,26 @@ name="basic"
 path="src/examples/basic.rs"
 
 [[bin]]
+name="batch"
+path="src/examples/batch.rs"
+
+[[bin]]
+name="bind_by_name"
+path="src/examples/bind_by_name.rs"
+
+# [[bin]]
+# name="callbacks"
+# path="src/examples/callbacks.rs"
+
+[[bin]]
+name="collections"
+path="src/examples/collections.rs"
+
+[[bin]]
+name="logging"
+path="src/examples/logging.rs"
+
+[[bin]]
 name="schema_meta"
 path="src/examples/schema_meta.rs"
 
@@ -28,3 +48,7 @@ path="src/examples/async.rs"
 
 [dependencies]
 libc = "*"
+clippy = "*"
+num = "*"
+log = "*"
+env_logger = "*"
