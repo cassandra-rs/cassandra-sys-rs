@@ -35,6 +35,14 @@ name="logging"
 path="src/examples/logging.rs"
 
 [[bin]]
+name="maps"
+path="src/examples/maps.rs"
+
+[[bin]]
+name="named_parameters"
+path="src/examples/named_parameters.rs"
+
+[[bin]]
 name="schema_meta"
 path="src/examples/schema_meta.rs"
 
