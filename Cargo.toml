@@ -42,6 +42,14 @@ path="src/examples/maps.rs"
 name="named_parameters"
 path="src/examples/named_parameters.rs"
 
+# [[bin]]
+# name="perf"
+# path="src/examples/perf.rs"
+
+[[bin]]
+name="prepared"
+path="src/examples/prepared.rs"
+
 [[bin]]
 name="paging"
 path="src/examples/paging.rs"
@@ -64,3 +72,4 @@ clippy = "*"
 num = "*"
 log = "*"
 env_logger = "*"
+threadpool = "*"

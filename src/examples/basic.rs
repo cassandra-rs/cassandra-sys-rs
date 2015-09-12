@@ -36,56 +36,56 @@ fn execute_query(session: &mut CassSession, query: &str) -> CassError {
     result
 }
 
-fn insert_into_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> CassError {
+fn insert_into_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> CassError {unsafe{
     let query="INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
-    let statement = unsafe{cass_statement_new(query.as_ptr() as *const i8, 6)};
-    unsafe{cass_statement_bind_string(statement, 0, str2ref(key))};
-    unsafe{cass_statement_bind_bool(statement, 1, basic.bln)};
-    unsafe{cass_statement_bind_float(statement, 2, basic.flt)};
-    unsafe{cass_statement_bind_double(statement, 3, basic.dbl)};
-    unsafe{cass_statement_bind_int32(statement, 4, basic.i32)};
-    unsafe{cass_statement_bind_int64(statement, 5, basic.i64)};
-    let future = unsafe{cass_session_execute(session,statement)};
-    unsafe{cass_future_wait(future)};
-    let result = unsafe{cass_future_error_code(future)};
-    unsafe{cass_future_free(future)};
-    unsafe{cass_statement_free(statement)};
+    let statement = cass_statement_new(query.as_ptr() as *const i8, 6);
+    cass_statement_bind_string(statement, 0, str2ref(key));
+    cass_statement_bind_bool(statement, 1, basic.bln);
+    cass_statement_bind_float(statement, 2, basic.flt);
+    cass_statement_bind_double(statement, 3, basic.dbl);
+    cass_statement_bind_int32(statement, 4, basic.i32);
+    cass_statement_bind_int64(statement, 5, basic.i64);
+    let future = cass_session_execute(session,statement);
+    cass_future_wait(future);
+    let result = cass_future_error_code(future);
+    cass_future_free(future);
+    cass_statement_free(statement);
     result
-}
+}}
 
-fn select_from_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Result<(),CassError> {
+fn select_from_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Result<(),CassError> {unsafe{
     let query = "SELECT * FROM examples.basic WHERE key = ?";
-    let statement = unsafe{cass_statement_new(query.as_ptr() as *const i8, 1)};
+    let statement = cass_statement_new(query.as_ptr() as *const i8, 1);
     let key = key.as_ptr() as *const i8;
-    unsafe{cass_statement_bind_string(statement, 0, key)};
-    let future = unsafe{cass_session_execute(session,statement)};
-    unsafe{cass_future_wait(future)};
-    let _ = match unsafe{cass_future_error_code(future)} {
+    cass_statement_bind_string(statement, 0, key);
+    let future = cass_session_execute(session,statement);
+    cass_future_wait(future);
+    let _ = match cass_future_error_code(future) {
         CASS_OK => {
-            let result = unsafe{cass_future_get_result(future)};
-            let iterator = unsafe{cass_iterator_from_result(result)};
-            if unsafe{cass_iterator_next(iterator)} > 0 {
-                let row = unsafe{cass_iterator_get_row(iterator)};
+            let result = cass_future_get_result(future);
+            let iterator = cass_iterator_from_result(result);
+            if cass_iterator_next(iterator) > 0 {
+                let row = cass_iterator_get_row(iterator);
                 let ref mut b_bln = basic.bln;
                 let ref mut b_dbl = basic.dbl;
                 let ref mut b_flt = basic.flt;
                 let ref mut b_i32 = basic.i32;
                 let ref mut b_i64 = basic.i64;
-                unsafe{cass_value_get_bool(cass_row_get_column(row,1), b_bln )};
-                unsafe{cass_value_get_double(cass_row_get_column(row,2), b_dbl)};
-                unsafe{cass_value_get_float(cass_row_get_column(row,3), b_flt)};
-                unsafe{cass_value_get_int32(cass_row_get_column(row,4), b_i32)};
-                unsafe{cass_value_get_int64(cass_row_get_column(row,5), b_i64)};
-                unsafe{cass_statement_free(statement)};
-                unsafe{cass_iterator_free(iterator)};
+                cass_value_get_bool(cass_row_get_column(row,1), b_bln );
+                cass_value_get_double(cass_row_get_column(row,2), b_dbl);
+                cass_value_get_float(cass_row_get_column(row,3), b_flt);
+                cass_value_get_int32(cass_row_get_column(row,4), b_i32);
+                cass_value_get_int64(cass_row_get_column(row,5), b_i64);
+                cass_statement_free(statement);
+                cass_iterator_free(iterator);
             }
         },
         _ => {}//panic!("error: {:?}", err)
         
     };
-    unsafe{cass_future_free(future)};
+    cass_future_free(future);
     Ok(())
-}
+}}
 
 pub fn main() {
     let cluster = create_cluster();
