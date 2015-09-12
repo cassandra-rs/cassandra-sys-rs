@@ -43,6 +43,10 @@ name="named_parameters"
 path="src/examples/named_parameters.rs"
 
 [[bin]]
+name="paging"
+path="src/examples/paging.rs"
+
+[[bin]]
 name="schema_meta"
 path="src/examples/schema_meta.rs"
 
