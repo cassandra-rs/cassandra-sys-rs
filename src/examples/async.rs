@@ -17,7 +17,7 @@ fn print_error(future:*mut CassFuture) {
 fn create_cluster() -> *mut CassCluster {
     let cluster = unsafe{cass_cluster_new()};
     let host = CString::new("127.0.0.1").unwrap();
-    unsafe{cass_cluster_set_contact_points(cluster,host.as_ptr() as *const i8)};
+    unsafe{cass_cluster_set_contact_points(cluster,host.as_ptr())};
     cluster 
 }
 

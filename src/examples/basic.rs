@@ -1,4 +1,5 @@
 extern crate cql_bindgen;
+use std::ffi::CString;
 
 use cql_bindgen::*;
 
@@ -13,7 +14,7 @@ struct Basic {
 
 fn create_cluster() -> *mut CassCluster {
     let cluster = unsafe{cass_cluster_new()};
-    unsafe{cass_cluster_set_contact_points(cluster,"127.0.0.1".as_ptr() as *const i8)};
+    unsafe{cass_cluster_set_contact_points(cluster,CString::new("127.0.0.1").unwrap().as_ptr())};
     cluster 
 }
 
@@ -27,7 +28,7 @@ fn connect_session(session:&mut CassSession, cluster:&CassCluster) -> CassError 
 
 fn execute_query(session: &mut CassSession, query: &str) -> CassError {
     println!("{:?}",query);
-    let statement = unsafe{cass_statement_new(query.as_ptr() as *const i8, 0)};
+    let statement = unsafe{cass_statement_new(CString::new(query).unwrap().as_ptr(), 0)};
     let future = unsafe{cass_session_execute(session,statement)};
     unsafe{cass_future_wait(future)};
     unsafe{cass_future_error_code(future)};
@@ -38,7 +39,7 @@ fn execute_query(session: &mut CassSession, query: &str) -> CassError {
 
 fn insert_into_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> CassError {unsafe{
     let query="INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
-    let statement = cass_statement_new(query.as_ptr() as *const i8, 6);
+    let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 6);
     cass_statement_bind_string(statement, 0, str2ref(key));
     cass_statement_bind_bool(statement, 1, basic.bln);
     cass_statement_bind_float(statement, 2, basic.flt);
@@ -55,8 +56,8 @@ fn insert_into_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Ca
 
 fn select_from_basic(session:&mut CassSession, key:&str, basic:&mut Basic) -> Result<(),CassError> {unsafe{
     let query = "SELECT * FROM examples.basic WHERE key = ?";
-    let statement = cass_statement_new(query.as_ptr() as *const i8, 1);
-    let key = key.as_ptr() as *const i8;
+    let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
+    let key = CString::new(key).unwrap().as_ptr();
     cass_statement_bind_string(statement, 0, key);
     let future = cass_session_execute(session,statement);
     cass_future_wait(future);

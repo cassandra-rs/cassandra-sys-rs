@@ -64,7 +64,7 @@ pub fn main() {unsafe{
         cass_future_free(close_future);
     } else {
         /* Handle error */
-        let mut m:*const i8 = mem::zeroed();
+        let mut m = mem::zeroed();
         let mut l = mem::zeroed();
         cass_future_error_message(connect_future,&mut m, &mut l);
 
@@ -107,8 +107,8 @@ unsafe fn print_schema_value(value:&CassValue) {
         }
 
         CASS_VALUE_TYPE_TEXT|CASS_VALUE_TYPE_ASCII|CASS_VALUE_TYPE_VARCHAR => {
-            let mut s:*const i8=mem::zeroed();
-            let mut s_size:u64=mem::zeroed();
+            let mut s =mem::zeroed();
+            let mut s_size =mem::zeroed();
             cass_value_get_string(value, &mut s, &mut s_size);
 
             println!("{:?}", raw2utf8(s,s_size));

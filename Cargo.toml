@@ -63,6 +63,10 @@ name="simple"
 path="src/examples/simple.rs"
 
 [[bin]]
+name="ssl"
+path="src/examples/ssl.rs"
+
+[[bin]]
 name="uuid"
 path="src/examples/uuid.rs"
 
