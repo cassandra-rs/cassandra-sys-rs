@@ -136,13 +136,11 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                                         print!("<invalid type {:?}> ", other_type);
                                     }
                                 }
-
                             }
                             false => {
                                 print!("<null> ");
                             }
                         }
-
                     }
                     println!("");
                 }
