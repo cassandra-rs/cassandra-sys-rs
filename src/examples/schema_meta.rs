@@ -9,10 +9,13 @@ use cql_bindgen::*;
 const CASS_UUID_STRING_LENGTH:usize = 37;
 
 
-//unsafe fn print_error(future:&mut CassFuture) {
-//    let message = cass_future_error_message(future);
-//    println!("Error: {:?}", raw2utf8(message.data,message.length));
-//}
+fn print_error(future: &mut CassFuture) {
+    unsafe {
+        let mut message = mem::zeroed();
+        let mut message_length = mem::zeroed();
+        cass_future_error_message(future, &mut message, &mut message_length);
+    }
+}
 
 unsafe fn execute_query(session:&mut CassSession, query:&str) -> u32 {
     let query = CString::new(query).unwrap();
@@ -23,7 +26,7 @@ unsafe fn execute_query(session:&mut CassSession, query:&str) -> u32 {
 
     let rc = cass_future_error_code(future);
     if rc != CASS_OK {
-       // print_error(&mut *future);
+        print_error(&mut *future);
     }
 
     cass_future_free(future);

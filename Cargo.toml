@@ -59,6 +59,10 @@ name="schema_meta"
 path="src/examples/schema_meta.rs"
 
 [[bin]]
+name="simple"
+path="src/examples/simple.rs"
+
+[[bin]]
 name="uuid"
 path="src/examples/uuid.rs"
 
