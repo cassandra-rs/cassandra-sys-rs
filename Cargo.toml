@@ -67,6 +67,10 @@ name="ssl"
 path="src/examples/ssl.rs"
 
 [[bin]]
+name="tuple"
+path="src/examples/tuple.rs"
+
+[[bin]]
 name="uuid"
 path="src/examples/uuid.rs"
 
