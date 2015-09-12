@@ -69,21 +69,23 @@ fn execute_query(session: &mut CassSession, query: &str) -> Result<(), CassError
 
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
-        let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (:k, :b, :f, :d, :i32, :i64);").unwrap();
+        //let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (:k, :b, :f, :d, :i32, :i64);").unwrap();
+        let query = CString::new("INSERT INTO examples.basic (key) VALUES (:k);").unwrap();
         let key = CString::new(key).unwrap();
-        let statement = &mut*cass_statement_new(query.as_ptr(), 6);
+        let statement = &mut*cass_statement_new(query.as_ptr(), 1);
         let k = CString::new("k").unwrap();
         let b = CString::new("b").unwrap();
         let f = CString::new("f").unwrap();
         let d = CString::new("d").unwrap();
         let i32 = CString::new("i32").unwrap();
         let i64 = CString::new("i64").unwrap();
+//        cass_statement_bind_string(statement, 0, key.as_ptr());
         cass_statement_bind_string_by_name(statement, k.as_ptr(), key.as_ptr());
-        cass_statement_bind_bool_by_name(statement, b.as_ptr(), basic.bln);
-        cass_statement_bind_float_by_name(statement, f.as_ptr(), basic.flt);
-        cass_statement_bind_double_by_name(statement, d.as_ptr(), basic.dbl);
-        cass_statement_bind_int32_by_name(statement, i32.as_ptr(), basic.i32);
-        cass_statement_bind_int64_by_name(statement, i64.as_ptr(), basic.i64);
+//        cass_statement_bind_bool_by_name(statement, b.as_ptr(), basic.bln);
+//        cass_statement_bind_float_by_name(statement, f.as_ptr(), basic.flt);
+//        cass_statement_bind_double_by_name(statement, d.as_ptr(), basic.dbl);
+//        cass_statement_bind_int32_by_name(statement, i32.as_ptr(), basic.i32);
+//        cass_statement_bind_int64_by_name(statement, i64.as_ptr(), basic.i64);
 
         let future = &mut* cass_session_execute(session, statement);
 
@@ -106,10 +108,11 @@ fn select_from_basic(session: &mut CassSession, key: &str) -> Result<Basic, Cass
         let key = CString::new(key).unwrap();
         let query = CString::new("SELECT * FROM examples.basic WHERE key = ?").unwrap();
         let mut output: Basic = mem::zeroed();
+        let local_key = CString::new("key").unwrap();
 
         let statement = &mut*cass_statement_new(query.as_ptr(), 1);
 
-        cass_statement_bind_string_by_name(statement, CString::new("key").unwrap().as_ptr(), key.as_ptr());
+        cass_statement_bind_string_by_name(statement, local_key.as_ptr(), key.as_ptr());
 
         let future = &mut*cass_session_execute(session, statement);
         cass_future_wait(future);
