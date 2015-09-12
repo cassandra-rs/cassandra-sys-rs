@@ -37,13 +37,19 @@ fn create_cluster() -> *mut CassCluster {
     }
 }
 
-fn connect_session(session: &mut CassSession, cluster: &CassCluster) -> CassError {
+fn connect_session(session: &mut CassSession, cluster: &CassCluster) -> Result<(),CassError> {
     unsafe {
-        let future = cass_session_connect(session, cluster);
+        let future = &mut*cass_session_connect(session, cluster);
         cass_future_wait(future);
-        let err = cass_future_error_code(future);
+        let result = match cass_future_error_code(future) {
+            CASS_OK => Ok(()),
+            rc => {
+                print_error(future);
+                Err(rc)
+            }
+        };
         cass_future_free(future);
-        err
+        result
     }
 }
 
@@ -168,11 +174,7 @@ fn main() {
         let input = Basic { bln: cass_true, flt: 0.001, dbl: 0.0002, i32: 1, i64: 2 };
         let mut output = mem::zeroed();
 
-        if connect_session(&mut*session, cluster) != CASS_OK {
-            cass_cluster_free(cluster);
-            cass_session_free(session);
-            panic!()
-        }
+        connect_session(&mut*session, cluster).unwrap();
 
         execute_query(&mut*session,
                 "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \
