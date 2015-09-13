@@ -1,7 +1,6 @@
 extern crate cql_bindgen;
 
 use std::mem;
-use std::ffi::CString;
 
 use cql_bindgen::*;
 
@@ -12,7 +11,7 @@ fn main() {
         let session = cass_session_new();
 
         //Add contact points
-        cass_cluster_set_contact_points(cluster, CString::new("127.0.0.1").unwrap().as_ptr());
+        cass_cluster_set_contact_points(cluster, str2ref("127.0.0.1"));
 
         //Provide the cluster object as configuration to connect the session
         let connect_future = cass_session_connect(session, cluster);
@@ -20,8 +19,8 @@ fn main() {
         if cass_future_error_code(connect_future) == CASS_OK {
 
             //Build statement and execute query
-            let query = CString::new("SELECT keyspace_name FROM system.schema_keyspaces;").unwrap();
-            let statement = cass_statement_new(query.as_ptr(), 0);
+            let query = "SELECT keyspace_name FROM system.schema_keyspaces;";
+            let statement = cass_statement_new(str2ref(query), 0);
 
             let result_future = cass_session_execute(session, statement);
 
@@ -32,7 +31,7 @@ fn main() {
 
                 while cass_iterator_next(rows) > 0 {
                     let row = cass_iterator_get_row(rows);
-                    let value = cass_row_get_column_by_name(row, CString::new("keyspace_name").unwrap().as_ptr());
+                    let value = cass_row_get_column_by_name(row, str2ref("keyspace_name"));
 
                     let mut keyspace_name = mem::zeroed();
                     let mut keyspace_name_length = mem::zeroed();

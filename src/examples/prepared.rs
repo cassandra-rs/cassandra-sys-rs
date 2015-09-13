@@ -5,8 +5,10 @@
 extern crate cql_bindgen;
 extern crate num;
 
+mod examples_util;
+use examples_util::*;
+
 use std::mem;
-use std::ffi::CString;
 
 use cql_bindgen::*;
 
@@ -19,68 +21,12 @@ struct Basic {
     i64: i64,
 }
 
-fn print_error(future: &mut CassFuture) {
-    unsafe {
-        let mut message = mem::zeroed();
-        let mut message_length = mem::zeroed();
-        cass_future_error_message(future, &mut message, &mut message_length);
-        println!("Error: {:?}", raw2utf8(message,message_length));
-    }
-}
-
-fn create_cluster() -> *mut CassCluster {
-    unsafe {
-        let cluster = cass_cluster_new();
-        let host = CString::new("127.0.0.1").unwrap();
-        cass_cluster_set_contact_points(cluster, host.as_ptr());
-        cluster
-    }
-}
-
-fn connect_session(session: &mut CassSession, cluster: &CassCluster) -> Result<(),CassError> {
-    unsafe {
-        let future = &mut*cass_session_connect(session, cluster);
-        cass_future_wait(future);
-        let result = match cass_future_error_code(future) {
-            CASS_OK => Ok(()),
-            rc => {
-                print_error(future);
-                Err(rc)
-            }
-        };
-        cass_future_free(future);
-        result
-    }
-}
-
-fn execute_query(session: &mut CassSession, query: &str) -> Result<(), CassError> {
-    unsafe {
-        let query = CString::new(query).unwrap();
-        let statement = cass_statement_new(query.as_ptr(), 0);
-        let future = &mut*cass_session_execute(session, statement);
-        cass_future_wait(future);
-        cass_future_error_code(future);
-        let result = match cass_future_error_code(future) {
-            CASS_OK => Ok(()),
-            rc => {
-                print_error(future);
-                Err(rc)
-            }
-        };
-        cass_future_free(future);
-        cass_statement_free(statement);
-        result
-    }
-}
-
-
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
-        let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);").unwrap();
-        let key = CString::new(key).unwrap();
-        let statement = cass_statement_new(query.as_ptr(), 6);
+        let query = "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
+        let statement = cass_statement_new(str2ref(query), 6);
 
-        cass_statement_bind_string(statement, 0, key.as_ptr());
+        cass_statement_bind_string(statement, 0, str2ref(key));
         cass_statement_bind_bool(statement, 1, basic.bln);
         cass_statement_bind_float(statement, 2, basic.flt);
         cass_statement_bind_double(statement, 3, basic.dbl);
@@ -106,9 +52,9 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Res
 
 fn prepare_select_from_basic(session: &mut CassSession) -> Result<&CassPrepared, CassError> {
     unsafe {
-        let query = CString::new("SELECT * FROM examples.basic WHERE key = ?").unwrap();
+        let query = "SELECT * FROM examples.basic WHERE key = ?";
 
-        let future = &mut*cass_session_prepare(session, query.as_ptr());
+        let future = &mut*cass_session_prepare(session, str2ref(query));
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -130,8 +76,7 @@ fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &s
                      -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
-        let key = CString::new(key).unwrap();
-        cass_statement_bind_string(statement, 0, key.as_ptr());
+        cass_statement_bind_string(statement, 0, str2ref(key));
 
         let future = &mut*cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -149,6 +94,7 @@ fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &s
                     cass_value_get_float(cass_row_get_column(row, 3), &mut basic.flt);
                     cass_value_get_int32(cass_row_get_column(row, 4), &mut basic.i32);
                     cass_value_get_int64(cass_row_get_column(row, 5), &mut basic.i64);
+                    println!("Got row: {:?}", basic);
                 }
                 cass_result_free(result);
                 cass_iterator_free(iterator);
@@ -169,7 +115,7 @@ fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &s
 
 fn main() {
     unsafe {
-        let cluster = &mut*create_cluster();
+        let cluster = create_cluster().unwrap();
         let session = cass_session_new();
         let input = Basic { bln: cass_true, flt: 0.001, dbl: 0.0002, i32: 1, i64: 2 };
         let mut output = mem::zeroed();
@@ -177,16 +123,14 @@ fn main() {
         connect_session(&mut*session, cluster).unwrap();
 
         execute_query(&mut*session,
-                "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \
-                           'class': 'SimpleStrategy', 'replication_factor': '3' };").unwrap();
-
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
+                       'replication_factor': '3' };")
+            .unwrap();
 
         execute_query(&mut*session,
-                "CREATE TABLE IF NOT EXISTS examples.basic (key text, \
-                                              bln boolean, \
-                                              flt float, dbl double,\
-                                              i32 int, i64 bigint, \
-                                              PRIMARY KEY (key));").unwrap();
+                      "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 \
+                       int, i64 bigint, PRIMARY KEY (key));")
+            .unwrap();
 
         insert_into_basic(&mut*session, "prepared_test", &input).unwrap();
 
@@ -198,8 +142,11 @@ fn main() {
         assert!(input.dbl == output.dbl);
         assert!(input.i32 == output.i32);
         assert!(input.i64 == output.i64);
+
         cass_prepared_free(prepared);
+
         let close_future = cass_session_close(session);
+
         cass_future_wait(close_future);
         cass_future_free(close_future);
 
