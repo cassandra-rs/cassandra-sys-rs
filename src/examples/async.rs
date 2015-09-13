@@ -1,3 +1,6 @@
+#![feature(plugin)]
+#![plugin(clippy)]
+
 extern crate cql_bindgen;
 
 mod examples_util;
@@ -15,10 +18,9 @@ fn insert_into_async(session: &mut CassSession, key: &str) {
         for i in 0..NUM_CONCURRENT_REQUESTS {
             let statement = cass_statement_new(query, 6);
             let key = &format!("{}{}", key, i);
-            let bbool = if i % 2 == 0 { cass_true } else { cass_false };
 
             cass_statement_bind_string(statement, 0, str2ref(key));
-            cass_statement_bind_bool(statement, 1, bbool);
+            cass_statement_bind_bool(statement, 1, if i % 2 == 0 { cass_true } else { cass_false });
             cass_statement_bind_float(statement, 2, i as f32 / 2.0f32);
             cass_statement_bind_double(statement, 3, i as f64 / 200.0);
             cass_statement_bind_int32(statement, 4, i as i32 * 10);
@@ -28,17 +30,15 @@ fn insert_into_async(session: &mut CassSession, key: &str) {
             cass_statement_free(statement);
         }
 
-        for i in 0..NUM_CONCURRENT_REQUESTS {
-            let future = &mut*futures[i];
-            cass_future_wait(future);
-
-            match cass_future_error_code(future) {
+        for future in futures.iter_mut() {
+            cass_future_wait(*future);
+            match cass_future_error_code(*future) {
                 CASS_OK => {}
                 _ => {
-                    print_error(future);
+                    print_error(&mut**future);
                 }
             }
-            cass_future_free(future);
+            cass_future_free(*future);
         }
     }
 }

@@ -1,3 +1,6 @@
+#![feature(plugin)]
+#![plugin(clippy)]
+
 extern crate cql_bindgen;
 
 use std::mem;

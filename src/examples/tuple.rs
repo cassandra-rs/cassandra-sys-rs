@@ -1,3 +1,6 @@
+#![feature(plugin)]
+#![plugin(clippy)]
+
 extern crate cql_bindgen;
 
 mod examples_util;
@@ -95,6 +98,7 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                             false => print!("<null> "),
                         }
                     }
+                    cass_iterator_free(item);    
                     println!("");
                 }
                 cass_result_free(result);
@@ -143,7 +147,7 @@ fn main() {
             Err(rc) => {
                 cass_cluster_free(cluster);
                 cass_session_free(session);
-                panic!();
+                panic!("{:?}", rc);
             }
         }
     }

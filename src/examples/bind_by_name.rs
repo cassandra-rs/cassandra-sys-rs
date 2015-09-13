@@ -76,7 +76,7 @@ fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key
                          -> Result<Basic, CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
-
+        cass_prepared_free(prepared);
         cass_statement_bind_string_by_name(statement, str2ref("key"), str2ref(key));
 
         let future = &mut*cass_session_execute(session, statement);
@@ -99,6 +99,7 @@ fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key
                     cass_value_get_int32(cass_row_get_column_by_name(row, str2ref("i32")), &mut output.i32);
                     cass_value_get_int64(cass_row_get_column_by_name(row, str2ref("i64")), &mut output.i64);
                 }
+                cass_iterator_free(iterator);
                 cass_result_free(result);
 
                 Ok(basic)
@@ -151,7 +152,6 @@ fn main() {
                                 assert!(input.dbl == output.dbl);
                                 assert!(input.i32 == output.i32);
                                 assert!(input.i64 == output.i64);
-                                cass_prepared_free(select_prepared);
                             }
                             _ => panic!("couldn't query"),
                         }
@@ -161,10 +161,13 @@ fn main() {
             }
             rc => {
                 println!("Error: {:?}", rc);
-                let close_future = cass_session_close(session);
-                cass_future_wait(close_future);
-                cass_future_free(close_future);
             }
         }
+        let close_future = cass_session_close(session);
+        cass_future_wait(close_future);
+        cass_future_free(close_future);
+        cass_cluster_free(cluster);
+        cass_session_free(session);
+
     }
 }

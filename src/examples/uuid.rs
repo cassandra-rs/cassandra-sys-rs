@@ -1,3 +1,6 @@
+#![feature(plugin)]
+#![plugin(clippy)]
+
 extern crate cql_bindgen;
 
 mod examples_util;
@@ -129,8 +132,9 @@ pub fn main() {
                 cass_future_wait(close_future);
                 cass_future_free(close_future);
             }
-            _ => {}
-        }
+            rc => panic!("{:?}", rc)
+        }    
+        cass_uuid_gen_free(uuid_gen);
         cass_cluster_free(cluster);
         cass_session_free(session);
     }

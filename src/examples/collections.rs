@@ -69,7 +69,10 @@ fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), C
                         cass_value_get_string(cass_iterator_get_value(items_iterator), &mut item, &mut item_length);
                         println!("item: {:?}", raw2utf8(item,item_length));
                     }
+                    cass_iterator_free(items_iterator);
                 };
+                cass_iterator_free(iterator);
+                cass_result_free(result);
                 Ok(())
             }
             rc => {
@@ -111,5 +114,7 @@ fn main() {
         let close_future = cass_session_close(session);
         cass_future_wait(close_future);
         cass_future_free(close_future);
+        cass_session_free(session);
+        cass_cluster_free(cluster);
     }
 }

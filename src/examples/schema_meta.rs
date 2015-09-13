@@ -1,3 +1,6 @@
+#![feature(plugin)]
+#![plugin(clippy)]
+
 #![allow(non_snake_case)]
 extern crate cql_bindgen;
 
@@ -219,14 +222,6 @@ unsafe fn print_schema_meta(meta: &CassSchemaMeta, indent: u32) {
 
 unsafe fn print_keyspace(session: &mut CassSession, keyspace: &str) {
     let schema = cass_session_get_schema(session);
-    let keyspace_meta = cass_schema_get_keyspace(schema, str2ref(keyspace));
-
-    if !keyspace_meta.is_null() {
-        print_schema_meta(&*keyspace_meta, 0);
-    } else {
-        println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
-    }
-
     let keyspace_meta = cass_schema_get_keyspace(schema, str2ref(keyspace));
 
     if !keyspace_meta.is_null() {

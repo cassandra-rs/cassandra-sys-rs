@@ -1,3 +1,6 @@
+#![feature(plugin)]
+#![plugin(clippy)]
+
 extern crate cql_bindgen;
 mod examples_util;
 use examples_util::*;
@@ -36,7 +39,9 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
                 print_error(future);
                 Err(rc)
             }
-        };      
+        };
+ 
+        cass_future_free(future);      
         cass_statement_free(statement);
         result
     }
@@ -75,6 +80,7 @@ fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
                     cass_statement_free(statement);
                     cass_iterator_free(iterator);
                 }
+                cass_result_free(result);
                 Ok(())
             }
             rc => {
@@ -86,6 +92,7 @@ fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
     }
 }
 
+#[allow(float_cmp)] 
 pub fn main() {
     unsafe {
         let cluster = &mut*create_cluster().unwrap();

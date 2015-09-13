@@ -28,7 +28,6 @@ fn prepare_insert_into_batch<'a>(session: &mut CassSession, mut prepared: &'a Ca
         let result = match rc {
             CASS_OK => {
                 prepared = &*cass_future_get_prepared(future);
-                cass_future_free(future);
                 Ok(prepared)
             }
             _ => {

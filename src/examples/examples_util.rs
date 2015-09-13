@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use cql_bindgen::*;
 
 use std::mem;
@@ -36,8 +38,7 @@ pub fn connect_session(session: &mut CassSession, cluster: &CassCluster) -> Resu
 
 pub fn execute_query(session: &mut CassSession, query: &str) -> Result<(), CassError> {
     unsafe {
-        let query = CString::new(query).unwrap();
-        let statement = cass_statement_new(query.as_ptr(), 0);
+        let statement = cass_statement_new(str2ref(query), 0);
         let future = &mut*cass_session_execute(session, statement);
         cass_future_wait(future);
         cass_future_error_code(future);
