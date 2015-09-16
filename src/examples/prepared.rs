@@ -1,5 +1,5 @@
-#![feature(plugin)]
-#![plugin(clippy)]
+//#![feature(plugin)]
+//#![plugin(clippy)]
 #![allow(float_cmp)]
 
 extern crate cql_bindgen;

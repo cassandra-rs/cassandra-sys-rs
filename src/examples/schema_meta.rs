@@ -1,5 +1,5 @@
-#![feature(plugin)]
-#![plugin(clippy)]
+//#![feature(plugin)]
+//#![plugin(clippy)]
 
 #![allow(non_snake_case)]
 extern crate cql_bindgen;
@@ -12,48 +12,6 @@ use std::mem;
 use cql_bindgen::*;
 
 const CASS_UUID_STRING_LENGTH:usize = 37;
-
-pub fn main() {
-    unsafe {
-        let cluster = cass_cluster_new();
-        let session = cass_session_new();
-        cass_cluster_set_contact_points(cluster, str2ref("127.0.0.1"));
-
-        let connect_future = cass_session_connect(session, cluster);
-
-        if cass_future_error_code(connect_future) == CASS_OK {
-
-            execute_query(&mut*session,
-                          "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                           'replication_factor': '3' };")
-                .unwrap();
-
-            print_keyspace(&mut*session, "examples");
-
-            execute_query(&mut*session,
-                          "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY \
-                           (key));")
-                .unwrap();
-
-            print_table(&mut *session, "examples", "schema_meta");
-
-            let close_future = cass_session_close(session);
-            cass_future_wait(close_future);
-            cass_future_free(close_future);
-        } else {
-        /* Handle error */
-            let mut m = mem::zeroed();
-            let mut l = mem::zeroed();
-            cass_future_error_message(connect_future, &mut m, &mut l);
-
-            println!("Unable to connect: {:?}", raw2utf8(m,l as u64));
-        }
-
-        cass_future_free(connect_future);
-        cass_cluster_free(cluster);
-        cass_session_free(session);
-    }
-}
 
 fn print_indent(indent: u32) {
     for _ in 0..indent {
@@ -247,4 +205,45 @@ unsafe fn print_table(session: &mut CassSession, keyspace: &str, table: &str) {
         println!("Unable to find {:?} keyspace in the schema metadata", keyspace);
     }
     cass_schema_free(schema);
+}
+
+pub fn main() {
+    unsafe {
+        let cluster = cass_cluster_new();
+        let session = cass_session_new();
+        cass_cluster_set_contact_points(cluster, str2ref("127.0.0.1"));
+
+        let connect_future = cass_session_connect(session, cluster);
+
+        if cass_future_error_code(connect_future) == CASS_OK {
+
+            execute_query(&mut*session,
+                          "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
+                           'replication_factor': '3' };")
+                .unwrap();
+
+            print_keyspace(&mut*session, "examples");
+
+            execute_query(&mut*session,
+                          "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY \
+                           (key));")
+                .unwrap();
+
+            print_table(&mut *session, "examples", "schema_meta");
+
+            let close_future = cass_session_close(session);
+            cass_future_wait(close_future);
+            cass_future_free(close_future);
+        } else {
+            let mut m = mem::zeroed();
+            let mut l = mem::zeroed();
+            cass_future_error_message(connect_future, &mut m, &mut l);
+
+            println!("Unable to connect: {:?}", raw2utf8(m,l as u64));
+        }
+
+        cass_future_free(connect_future);
+        cass_cluster_free(cluster);
+        cass_session_free(session);
+    }
 }

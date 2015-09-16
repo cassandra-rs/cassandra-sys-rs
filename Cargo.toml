@@ -3,7 +3,7 @@
 description = "A rust-bindgen ffi wrapper around the Cassandra c++ driver plus working examples\n with no additional dependencies.\nYou probably want to use the \"cassandra\" crate that provides a safe wrapper"
 license = "Apache-2.0"
 name = "cql_bindgen"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Tupshin Harper <tupshin@tupshin.com>"]
 build = "build.rs"
 homepage = "https://github.com/tupshin/cql-bindgen"
@@ -73,6 +73,10 @@ name="tuple"
 path="src/examples/tuple.rs"
 
 [[bin]]
+name="udt"
+path="src/examples/udt.rs"
+
+[[bin]]
 name="uuid"
 path="src/examples/uuid.rs"
 
@@ -82,8 +86,8 @@ path="src/examples/async.rs"
 
 [dependencies]
 libc = "*"
-clippy = "*"
+# clippy = "*"
 num = "*"
 log = "*"
 env_logger = "*"
-threadpool = "*"
+# threadpool = "*"
