@@ -9,3 +9,9 @@ It is quite possible to use this crate directly from your rust code, but it will
 
 Instead it is recommended that you use the safe wrapper of this ffi interface.
 https://crates.io/crates/cassandra
+
+## Compilation
+
+By default, `/usr/lib`, `/usr/local/lib64`, and `/usr/local/lib` are added to the linker search path.
+
+A semicolon separated list of additional directories to add to the linker search path may be specified through the `CASSANDRA_SYS_LIB_PATH` environment variable.
