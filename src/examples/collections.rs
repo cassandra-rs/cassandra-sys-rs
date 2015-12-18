@@ -1,6 +1,5 @@
 //#![feature(plugin)]
 //#![plugin(clippy)]
-#![allow(float_cmp)]
 
 extern crate cql_bindgen;
 extern crate num;
@@ -90,7 +89,7 @@ fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), C
 
 fn main() {
     unsafe {
-        let cluster = create_cluster().unwrap();
+        let cluster = &mut*create_cluster();
         let session = &mut* cass_session_new();
 
         let items: Vec<&str> = vec!("apple", "orange", "banana", "mango");

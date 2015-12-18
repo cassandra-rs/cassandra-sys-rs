@@ -1,7 +1,5 @@
 //#![feature(plugin)]
 //#![plugin(clippy)]
-#![allow(float_cmp)]
-
 extern crate cql_bindgen;
 extern crate num;
 
@@ -119,7 +117,7 @@ fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key
 
 fn main() {
     unsafe {
-        let cluster = create_cluster().unwrap();
+        let cluster = create_cluster();
         let session = &mut*cass_session_new();
         let input = Basic { bln: 1, flt: 0.001, dbl: 0.0002, i32: 1, i64: 2 };
 
@@ -166,7 +164,7 @@ fn main() {
         let close_future = cass_session_close(session);
         cass_future_wait(close_future);
         cass_future_free(close_future);
-        cass_cluster_free(cluster);
+        cass_cluster_free(&mut*cluster);
         cass_session_free(session);
 
     }

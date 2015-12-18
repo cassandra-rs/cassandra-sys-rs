@@ -1,6 +1,5 @@
 //#![feature(plugin)]
 //#![plugin(clippy)]
-#![allow(float_cmp)]
 #[macro_use]
 extern crate log;
 extern crate cql_bindgen;
@@ -15,11 +14,9 @@ use std::ptr;
 use std::env;
 use std::ffi::CStr;
 
-use libc::types::common::c95::c_void;
-
 use cql_bindgen::*;
 
-extern "C" fn on_log(message: *const CassLogMessage, data: *mut c_void) {
+extern "C" fn on_log(message: *const CassLogMessage, data: *mut libc::c_void) {
     unsafe {
         let _ = data;
         let message = &*message;
@@ -43,7 +40,7 @@ fn main() {
         cass_log_set_level(CASS_LOG_INFO);
         cass_log_set_callback(Some(on_log), ptr::null_mut());
 
-        let cluster = create_cluster().unwrap();
+        let cluster = create_cluster();
         let session = &mut*cass_session_new();
 
         connect_session(session, cluster).unwrap();

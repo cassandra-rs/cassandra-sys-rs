@@ -92,10 +92,9 @@ fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
     }
 }
 
-#[allow(float_cmp)] 
 pub fn main() {
     unsafe {
-        let cluster = &mut*create_cluster().unwrap();
+        let cluster = create_cluster();
         let session = &mut*cass_session_new();
         
         let input = &mut Basic{bln:cass_true, flt:0.001f32, dbl:0.0002f64, i32:1, i64:2 };
@@ -131,7 +130,7 @@ pub fn main() {
             }
             err => println!("Error: {:?}", err),
         }
-        cass_cluster_free(&mut*cluster);
+        cass_cluster_free(cluster);
         cass_session_free(session);
     }
 }

@@ -91,3 +91,8 @@ num = "*"
 log = "*"
 env_logger = "*"
 # threadpool = "*"
+# bindgen_plugin="*"
+
+[dependencies.bindgen_plugin]
+git = "https://github.com/crabtw/rust-bindgen.git"
+path = "bindgen_plugin"

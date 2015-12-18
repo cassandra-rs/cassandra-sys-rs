@@ -7,17 +7,14 @@ extern crate num;
 mod examples_util;
 use examples_util::*;
 
-use std::mem;
-
 use cql_bindgen::*;
-
 
 struct Pair {
     key: String,
     value: String,
 }
 
-fn prepare_insert_into_batch<'a>(session: &mut CassSession, mut prepared: &'a CassPrepared)
+fn prepare_insert_into_batch<'a>(session: &mut CassSession)
                                  -> Result<&'a CassPrepared, CassError> {
     unsafe {
         let query = "INSERT INTO examples.pairs (key, value) VALUES (?, ?)";
@@ -27,7 +24,7 @@ fn prepare_insert_into_batch<'a>(session: &mut CassSession, mut prepared: &'a Ca
         let rc = cass_future_error_code(future);
         let result = match rc {
             CASS_OK => {
-                prepared = &*cass_future_get_prepared(future);
+                let prepared = &*cass_future_get_prepared(future);
                 Ok(prepared)
             }
             _ => {
@@ -99,7 +96,7 @@ fn insert_into_batch_with_prepared(session: &mut CassSession, prepared: &CassPre
 
 pub fn main() {
     unsafe {
-        let cluster = create_cluster().unwrap();
+        let cluster = create_cluster();
         let session = &mut*cass_session_new();
 
         let pairs = vec!(
@@ -107,7 +104,7 @@ pub fn main() {
             Pair{key:"b".to_owned(), value:"2".to_owned()}
         );
 
-        connect_session(session, cluster).unwrap();
+        connect_session(session, &cluster).unwrap();
 
         execute_query(session,
                       "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \'class\': \'SimpleStrategy\', \
@@ -117,8 +114,8 @@ pub fn main() {
 
         execute_query(session, "CREATE TABLE IF NOT EXISTS examples.pairs (key text, value text, PRIMARY KEY (key));")
             .unwrap();
-        let prepared = mem::zeroed();
-        match prepare_insert_into_batch(session, prepared) {
+
+        match prepare_insert_into_batch(session) {
             Ok(prepared) => {
                 insert_into_batch_with_prepared(session, prepared, pairs).unwrap();
                 cass_prepared_free(prepared);

@@ -1,6 +1,5 @@
 //#![feature(plugin)]
 //#![plugin(clippy)]
-#![allow(float_cmp)]
 
 extern crate cql_bindgen;
 extern crate num;
@@ -97,10 +96,10 @@ fn main() {
             Pair{key:"mango".to_owned(), value:4 }
         );
 
-        let cluster = create_cluster().unwrap();
+        let cluster = create_cluster();
         let session = &mut*cass_session_new();
 
-        connect_session(session, cluster).unwrap();
+        connect_session(session, &cluster).unwrap();
 
         execute_query(session,
                       "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \

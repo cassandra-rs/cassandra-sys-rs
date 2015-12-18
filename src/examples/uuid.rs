@@ -97,7 +97,7 @@ fn select_from_log(session: &mut CassSession, key: &str) -> Result<(), CassError
 
 pub fn main() {
     unsafe {
-        let cluster = create_cluster().unwrap();
+        let cluster = create_cluster();
         let session = &mut*cass_session_new();
         let uuid_gen = cass_uuid_gen_new();
         let mut uuid = mem::zeroed();

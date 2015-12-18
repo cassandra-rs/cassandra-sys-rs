@@ -1,6 +1,5 @@
 //#![feature(plugin)]
 //#![plugin(clippy)]
-#![allow(float_cmp)]
 
 extern crate cql_bindgen;
 extern crate num;
@@ -107,7 +106,7 @@ fn select_from_paging(session: &mut CassSession) {
 fn main() {
     unsafe {
         let uuid_gen = &mut* cass_uuid_gen_new();
-        let cluster = create_cluster().unwrap();
+        let cluster = create_cluster();
         let session = &mut* cass_session_new();
 
         connect_session(session, cluster).unwrap();

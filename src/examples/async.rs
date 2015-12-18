@@ -45,10 +45,10 @@ fn insert_into_async(session: &mut CassSession, key: &str) {
 
 pub fn main() {
     unsafe {
-        let cluster = create_cluster().unwrap();
+        let mut cluster = create_cluster();
         let session = &mut*cass_session_new();
 
-        match connect_session(session, cluster) {
+        match connect_session(session, &cluster) {
             Ok(()) => {
                 execute_query(session,
                               "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \

@@ -14,15 +14,6 @@ pub fn print_error(future: &mut CassFuture) {
     }
 }
 
-pub fn create_cluster() -> Result<&'static mut CassCluster, CassError> {
-    unsafe {
-        let cluster = cass_cluster_new();
-        let host = CString::new("127.0.0.1").unwrap();
-        cass_cluster_set_contact_points(cluster, host.as_ptr());
-        Ok(&mut *cluster)
-    }
-}
-
 pub fn connect_session(session: &mut CassSession, cluster: &CassCluster) -> Result<(), CassError> {
     unsafe {
         let future = cass_session_connect(session, cluster);
@@ -33,6 +24,15 @@ pub fn connect_session(session: &mut CassSession, cluster: &CassCluster) -> Resu
             CASS_OK => Ok(()),
             rc => Err(rc),
         }
+    }
+}
+
+pub fn create_cluster() -> &'static mut CassCluster {
+    unsafe {
+        let cluster = cass_cluster_new();
+        let host = CString::new("127.0.0.1").unwrap();
+        cass_cluster_set_contact_points(cluster, host.as_ptr());
+        &mut*cluster
     }
 }
 
