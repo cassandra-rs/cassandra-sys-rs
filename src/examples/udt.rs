@@ -12,7 +12,7 @@ use cql_bindgen::*;
 
 const CASS_UUID_STRING_LENGTH:usize = 37;
 
-fn insert_into_udt(session: &mut CassSession, uuid_gen: &mut CassUuidGen, schema: &CassSchema) -> Result<(), CassError> {
+fn insert_into_udt(session: &mut CassSession, schema_meta: &CassSchemaMeta, uuid_gen: &mut CassUuidGen) -> Result<(), CassError> {
     unsafe {
         let mut id_str: [i8; CASS_UUID_STRING_LENGTH] = [0;CASS_UUID_STRING_LENGTH];
 
@@ -22,9 +22,11 @@ fn insert_into_udt(session: &mut CassSession, uuid_gen: &mut CassUuidGen, schema
         let mut id = mem::zeroed();
         cass_uuid_gen_time(uuid_gen, &mut id);
         cass_uuid_string(id, id_str[..].as_mut_ptr());
+        
+        let keyspace_meta = cass_schema_meta_keyspace_by_name(schema_meta, str2ref("examples"));
 
-        let udt_address = cass_schema_get_udt(schema, str2ref("examples"), str2ref("address"));
-        let udt_phone = cass_schema_get_udt(schema, str2ref("examples"), str2ref("phone_numbers"));
+        let udt_address = cass_keyspace_meta_user_type_by_name(keyspace_meta, str2ref("address"));
+        let udt_phone = cass_keyspace_meta_user_type_by_name(keyspace_meta, str2ref("phone_numbers"));
 
         match (udt_address.is_null(), udt_phone.is_null()) {
             (_,true) => panic!("phone is null"),
@@ -89,7 +91,7 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                     let row = cass_iterator_get_row(rows);
                     let id_value = cass_row_get_column_by_name(row, str2ref("id"));
                     let address_value = cass_row_get_column_by_name(row, str2ref("address"));
-                    let fields = cass_iterator_from_user_type(address_value);
+                    let fields = cass_iterator_fields_from_user_type(address_value);
                     let mut id = mem::zeroed();
                     cass_value_get_uuid(id_value, &mut id);
                     cass_uuid_string(id, id_str[..].as_mut_ptr());
@@ -120,7 +122,7 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                                     let phone_numbers = cass_iterator_from_collection(field_value);
                                     while cass_iterator_next(phone_numbers) > 0 {
                                         let phone_value = cass_iterator_get_value(phone_numbers);
-                                        let phone_fields = cass_iterator_from_user_type(phone_value);
+                                        let phone_fields = cass_iterator_fields_from_user_type(phone_value);
                                         assert!(cass_value_type(phone_value) == CASS_VALUE_TYPE_UDT);
                                         while cass_iterator_next(phone_fields) > 0 {
                                             let phone_number_value =
@@ -184,12 +186,10 @@ fn main() {
                       "CREATE TABLE IF NOT EXISTS examples.udt (id timeuuid, address frozen<address>, PRIMARY \
                        KEY(id))")
             .unwrap();
+            
+        let schema_meta = cass_session_get_schema_meta(session);
 
-        let schema = cass_session_get_schema(session);
-        assert!(!schema.is_null());
-        println!("{:?}", schema);
-
-        insert_into_udt(session, uuid_gen, &*schema).unwrap();
+        insert_into_udt(session, &*schema_meta, uuid_gen).unwrap();
         select_from_udt(session).unwrap();
 
         let close_future = cass_session_close(session);
@@ -200,7 +200,5 @@ fn main() {
         cass_session_free(session);
 
         cass_uuid_gen_free(uuid_gen);
-        cass_schema_free(schema);
-
     }
 }
