@@ -1,10 +1,11 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 
 extern crate cql_bindgen;
 
 mod examples_util;
 use examples_util::*;
+use std::ffi::CString;
 
 use std::mem;
 
@@ -18,7 +19,7 @@ fn insert_into_tuple(session: &mut CassSession, uuid_gen: &mut CassUuidGen) -> R
 
         let query = "INSERT INTO examples.tuples (id, item) VALUES (?, ?)";
 
-        let statement = &mut*cass_statement_new(str2ref(query), 2);
+        let statement = &mut *cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
         cass_uuid_gen_time(uuid_gen, &mut id);
         cass_uuid_string(id, id_str[..].as_mut_ptr());
 
@@ -30,7 +31,7 @@ fn insert_into_tuple(session: &mut CassSession, uuid_gen: &mut CassUuidGen) -> R
         cass_statement_bind_uuid(statement, 0, id);
         cass_statement_bind_tuple(statement, 1, item);
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let rc = cass_future_error_code(future);
@@ -50,9 +51,9 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
     unsafe {
         let query = "SELECT * FROM examples.tuples";
 
-        let statement = cass_statement_new(str2ref(query), 0);
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -64,8 +65,8 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                     let mut id = mem::zeroed();
                     let mut id_str = mem::zeroed();
                     let row = cass_iterator_get_row(rows);
-                    let id_value = cass_row_get_column_by_name(row, str2ref("id"));
-                    let item_value = cass_row_get_column_by_name(row, str2ref("item"));
+                    let id_value = cass_row_get_column_by_name(row, CString::new("id").unwrap().as_ptr());
+                    let item_value = cass_row_get_column_by_name(row, CString::new("item").unwrap().as_ptr());
                     let item = cass_iterator_from_tuple(item_value);
 
                     cass_value_get_uuid(id_value, &mut id);
@@ -83,7 +84,7 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                                         let mut text = mem::zeroed();
                                         let mut text_length = mem::zeroed();
                                         cass_value_get_string(value, &mut text, &mut text_length);
-                                        print!("{:?} ", raw2utf8(text,text_length));
+                                        print!("{:?} ", raw2utf8(text, text_length).unwrap());
                                     }
                                     CASS_VALUE_TYPE_BIGINT => {
                                         let mut i = mem::zeroed();
@@ -98,7 +99,7 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                             false => print!("<null> "),
                         }
                     }
-                    cass_iterator_free(item);    
+                    cass_iterator_free(item);
                     println!("");
                 }
                 cass_result_free(result);
@@ -119,9 +120,9 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
 fn main() {
     unsafe {
         let cluster = create_cluster();
-        let mut session = &mut*cass_session_new();
+        let mut session = &mut *cass_session_new();
 
-        let uuid_gen = &mut*cass_uuid_gen_new();
+        let uuid_gen = &mut *cass_uuid_gen_new();
 
         match connect_session(session, cluster) {
             Ok(()) => {

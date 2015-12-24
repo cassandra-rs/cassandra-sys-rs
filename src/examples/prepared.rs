@@ -1,11 +1,12 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 
 extern crate cql_bindgen;
 extern crate num;
 
 mod examples_util;
 use examples_util::*;
+use std::ffi::CString;
 
 use std::mem;
 
@@ -23,16 +24,16 @@ struct Basic {
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
         let query = "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
-        let statement = cass_statement_new(str2ref(query), 6);
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 6);
 
-        cass_statement_bind_string(statement, 0, str2ref(key));
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
         cass_statement_bind_bool(statement, 1, basic.bln);
         cass_statement_bind_float(statement, 2, basic.flt);
         cass_statement_bind_double(statement, 3, basic.dbl);
         cass_statement_bind_int32(statement, 4, basic.i32);
         cass_statement_bind_int64(statement, 5, basic.i64);
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
 
         cass_future_wait(future);
 
@@ -53,7 +54,7 @@ fn prepare_select_from_basic(session: &mut CassSession) -> Result<&CassPrepared,
     unsafe {
         let query = "SELECT * FROM examples.basic WHERE key = ?";
 
-        let future = &mut*cass_session_prepare(session, str2ref(query));
+        let future = &mut *cass_session_prepare(session, CString::new(query).unwrap().as_ptr());
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -75,9 +76,9 @@ fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &s
                      -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
-        cass_statement_bind_string(statement, 0, str2ref(key));
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -116,25 +117,31 @@ fn main() {
     unsafe {
         let cluster = create_cluster();
         let session = cass_session_new();
-        let input = Basic { bln: cass_true, flt: 0.001, dbl: 0.0002, i32: 1, i64: 2 };
+        let input = Basic {
+            bln: cass_true,
+            flt: 0.001,
+            dbl: 0.0002,
+            i32: 1,
+            i64: 2,
+        };
         let mut output = mem::zeroed();
 
-        connect_session(&mut*session, cluster).unwrap();
+        connect_session(&mut *session, cluster).unwrap();
 
-        execute_query(&mut*session,
+        execute_query(&mut *session,
                       "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
                        'replication_factor': '3' };")
             .unwrap();
 
-        execute_query(&mut*session,
+        execute_query(&mut *session,
                       "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 \
                        int, i64 bigint, PRIMARY KEY (key));")
             .unwrap();
 
-        insert_into_basic(&mut*session, "prepared_test", &input).unwrap();
+        insert_into_basic(&mut *session, "prepared_test", &input).unwrap();
 
-        let prepared = prepare_select_from_basic(&mut*session).unwrap();
-        select_from_basic(&mut*session, &prepared, "prepared_test", &mut output).unwrap();
+        let prepared = prepare_select_from_basic(&mut *session).unwrap();
+        select_from_basic(&mut *session, &prepared, "prepared_test", &mut output).unwrap();
 
         assert!(input.bln == output.bln);
         assert!(input.flt == output.flt);

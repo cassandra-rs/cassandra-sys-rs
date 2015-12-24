@@ -1,11 +1,11 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 extern crate cql_bindgen;
 extern crate num;
 
 mod examples_util;
 use examples_util::*;
-
+use std::ffi::CString;
 use cql_bindgen::*;
 
 #[derive(Copy,Clone)]
@@ -19,7 +19,7 @@ struct Basic {
 
 fn prepare_query<'a>(session: &mut CassSession, query: &str) -> Result<&'a CassPrepared, CassError> {
     unsafe {
-        let future = &mut*cass_session_prepare(session, str2ref(query));
+        let future = &mut *cass_session_prepare(session, CString::new(query).unwrap().as_ptr());
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -41,14 +41,16 @@ fn insert_into_basic(session: &mut CassSession, prepared: &CassPrepared, key: &s
                      -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
-        cass_statement_bind_string_by_name(statement, str2ref("key"), str2ref(key));
-        cass_statement_bind_bool_by_name(statement, str2ref("BLN"), basic.bln);
-        cass_statement_bind_float_by_name(statement, str2ref("FLT"), basic.flt);
-        cass_statement_bind_double_by_name(statement, str2ref("dbl"), basic.dbl);
-        cass_statement_bind_int32_by_name(statement, str2ref("i32"), basic.i32);
-        cass_statement_bind_int64_by_name(statement, str2ref("I64"), basic.i64);
+        cass_statement_bind_string_by_name(statement,
+                                           CString::new("key").unwrap().as_ptr(),
+                                           CString::new(key).unwrap().as_ptr());
+        cass_statement_bind_bool_by_name(statement, CString::new("bln").unwrap().as_ptr(), basic.bln);
+        cass_statement_bind_float_by_name(statement, CString::new("flt").unwrap().as_ptr(), basic.flt);
+        cass_statement_bind_double_by_name(statement, CString::new("dbl").unwrap().as_ptr(), basic.dbl);
+        cass_statement_bind_int32_by_name(statement, CString::new("i32").unwrap().as_ptr(), basic.i32);
+        cass_statement_bind_int64_by_name(statement, CString::new("i64").unwrap().as_ptr(), basic.i64);
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
 
         cass_future_wait(future);
 
@@ -75,9 +77,11 @@ fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key
     unsafe {
         let statement = cass_prepared_bind(prepared);
         cass_prepared_free(prepared);
-        cass_statement_bind_string_by_name(statement, str2ref("key"), str2ref(key));
+        cass_statement_bind_string_by_name(statement,
+                                           CString::new("key").unwrap().as_ptr(),
+                                           CString::new(key).unwrap().as_ptr());
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let rc = cass_future_error_code(future);
@@ -91,11 +95,16 @@ fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key
                 if cass_iterator_next(iterator) > 0 {
                     let row = cass_iterator_get_row(iterator);
 
-                    cass_value_get_bool(cass_row_get_column_by_name(row, str2ref("BLN")), &mut output.bln);
-                    cass_value_get_double(cass_row_get_column_by_name(row, str2ref("dbl")), &mut output.dbl);
-                    cass_value_get_float(cass_row_get_column_by_name(row, str2ref("flt")), &mut output.flt);
-                    cass_value_get_int32(cass_row_get_column_by_name(row, str2ref("i32")), &mut output.i32);
-                    cass_value_get_int64(cass_row_get_column_by_name(row, str2ref("i64")), &mut output.i64);
+                    cass_value_get_bool(cass_row_get_column_by_name(row, CString::new("bln").unwrap().as_ptr()),
+                                        &mut output.bln);
+                    cass_value_get_double(cass_row_get_column_by_name(row, CString::new("dbl").unwrap().as_ptr()),
+                                          &mut output.dbl);
+                    cass_value_get_float(cass_row_get_column_by_name(row, CString::new("flt").unwrap().as_ptr()),
+                                         &mut output.flt);
+                    cass_value_get_int32(cass_row_get_column_by_name(row, CString::new("i32").unwrap().as_ptr()),
+                                         &mut output.i32);
+                    cass_value_get_int64(cass_row_get_column_by_name(row, CString::new("i64").unwrap().as_ptr()),
+                                         &mut output.i64);
                 }
                 cass_iterator_free(iterator);
                 cass_result_free(result);
@@ -118,8 +127,14 @@ fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key
 fn main() {
     unsafe {
         let cluster = create_cluster();
-        let session = &mut*cass_session_new();
-        let input = Basic { bln: 1, flt: 0.001, dbl: 0.0002, i32: 1, i64: 2 };
+        let session = &mut *cass_session_new();
+        let input = Basic {
+            bln: 1,
+            flt: 0.001,
+            dbl: 0.0002,
+            i32: 1,
+            i64: 2,
+        };
 
         let insert_query = "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
         let select_query = "SELECT * FROM examples.basic WHERE key = ?";
@@ -128,7 +143,7 @@ fn main() {
             Ok(()) => {
                 execute_query(session,
                               "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \'class\': \
-                               \'SimpleStrategy\', \'replication_factor\': \'3\' };")
+                               \'SimpleStrategy\', \'replication_factor\': \'1\' };")
                     .unwrap();
 
                 execute_query(session,
@@ -164,7 +179,7 @@ fn main() {
         let close_future = cass_session_close(session);
         cass_future_wait(close_future);
         cass_future_free(close_future);
-        cass_cluster_free(&mut*cluster);
+        cass_cluster_free(&mut *cluster);
         cass_session_free(session);
 
     }

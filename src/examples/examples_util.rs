@@ -10,7 +10,7 @@ pub fn print_error(future: &mut CassFuture) {
         let mut message = mem::zeroed();
         let mut message_length = mem::zeroed();
         cass_future_error_message(future, &mut message, &mut message_length);
-        println!("Error: {:?}", raw2utf8(message,message_length));
+        println!("Error: {:?}", raw2utf8(message, message_length));
     }
 }
 
@@ -32,14 +32,14 @@ pub fn create_cluster() -> &'static mut CassCluster {
         let cluster = cass_cluster_new();
         let host = CString::new("127.0.0.1").unwrap();
         cass_cluster_set_contact_points(cluster, host.as_ptr());
-        &mut*cluster
+        &mut *cluster
     }
 }
 
 pub fn execute_query(session: &mut CassSession, query: &str) -> Result<(), CassError> {
     unsafe {
-        let statement = cass_statement_new(str2ref(query), 0);
-        let future = &mut*cass_session_execute(session, statement);
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
         cass_future_error_code(future);
         let result = match cass_future_error_code(future) {

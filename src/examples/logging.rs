@@ -1,5 +1,5 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 #[macro_use]
 extern crate log;
 extern crate cql_bindgen;
@@ -36,12 +36,12 @@ fn main() {
     unsafe {
         env::set_var("RUST_LOG", "info");
         env_logger::init().unwrap();
-        //Log configuration *MUST* be done before any other driver call
+        // Log configuration *MUST* be done before any other driver call
         cass_log_set_level(CASS_LOG_INFO);
         cass_log_set_callback(Some(on_log), ptr::null_mut());
 
         let cluster = create_cluster();
-        let session = &mut*cass_session_new();
+        let session = &mut *cass_session_new();
 
         connect_session(session, cluster).unwrap();
 

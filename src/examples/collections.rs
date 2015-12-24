@@ -1,5 +1,5 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 
 extern crate cql_bindgen;
 extern crate num;
@@ -8,24 +8,24 @@ mod examples_util;
 use examples_util::*;
 
 use std::mem;
-
+use std::ffi::CString;
 use cql_bindgen::*;
 
 fn insert_into_collections(session: &mut CassSession, key: &str, items: Vec<&str>) -> Result<(), CassError> {
     unsafe {
         let query = "INSERT INTO examples.collections (key, items) VALUES (?, ?);";
 
-        let statement = cass_statement_new(str2ref(query), 2);
-        cass_statement_bind_string(statement, 0, str2ref(key));
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
 
         let collection = cass_collection_new(CASS_COLLECTION_TYPE_SET, 2);
         for item in items {
-            cass_collection_append_string(collection, str2ref(item));
+            cass_collection_append_string(collection, CString::new(item).unwrap().as_ptr());
         }
         cass_statement_bind_collection(statement, 1, collection);
         cass_collection_free(collection);
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -45,11 +45,11 @@ fn insert_into_collections(session: &mut CassSession, key: &str, items: Vec<&str
 fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), CassError> {
     unsafe {
         let query = "SELECT items FROM examples.collections WHERE key = ?";
-        let statement = cass_statement_new(str2ref(query), 1);
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
 
-        cass_statement_bind_string(statement, 0, str2ref(key));
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -65,8 +65,10 @@ fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), C
                     while cass_iterator_next(items_iterator) > 0 {
                         let mut item = mem::zeroed();
                         let mut item_length = mem::zeroed();
-                        cass_value_get_string(cass_iterator_get_value(items_iterator), &mut item, &mut item_length);
-                        println!("item: {:?}", raw2utf8(item,item_length));
+                        cass_value_get_string(cass_iterator_get_value(items_iterator),
+                                              &mut item,
+                                              &mut item_length);
+                        println!("item: {:?}", raw2utf8(item, item_length));
                     }
                     cass_iterator_free(items_iterator);
                 };
@@ -89,10 +91,10 @@ fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), C
 
 fn main() {
     unsafe {
-        let cluster = &mut*create_cluster();
-        let session = &mut* cass_session_new();
+        let cluster = &mut *create_cluster();
+        let session = &mut *cass_session_new();
 
-        let items: Vec<&str> = vec!("apple", "orange", "banana", "mango");
+        let items: Vec<&str> = vec!["apple", "orange", "banana", "mango"];
 
         cass_cluster_set_protocol_version(cluster, 2);
 

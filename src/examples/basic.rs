@@ -1,5 +1,5 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 
 extern crate cql_bindgen;
 mod examples_util;
@@ -23,14 +23,14 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
         let query = "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
         let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 6);
 
-        cass_statement_bind_string(statement, 0, str2ref(key));
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
         cass_statement_bind_bool(statement, 1, basic.bln);
         cass_statement_bind_float(statement, 2, basic.flt);
         cass_statement_bind_double(statement, 3, basic.dbl);
         cass_statement_bind_int32(statement, 4, basic.i32);
         cass_statement_bind_int64(statement, 5, basic.i64);
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -40,8 +40,8 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
                 Err(rc)
             }
         };
- 
-        cass_future_free(future);      
+
+        cass_future_free(future);
         cass_statement_free(statement);
         result
     }
@@ -50,10 +50,9 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
 fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) -> Result<(), CassError> {
     unsafe {
         let query = "SELECT * FROM examples.basic WHERE key = ?";
-        let statement = cass_statement_new(str2ref(query), 1);
-        let key = str2ref(key);
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
 
-        cass_statement_bind_string(statement, 0, key);
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
 
         let future = cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -64,28 +63,26 @@ fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
                 let iterator = cass_iterator_from_result(result);
                 if cass_iterator_next(iterator) > 0 {
                     let row = cass_iterator_get_row(iterator);
-                    
+
                     let ref mut b_bln = basic.bln;
                     let ref mut b_dbl = basic.dbl;
                     let ref mut b_flt = basic.flt;
                     let ref mut b_i32 = basic.i32;
                     let ref mut b_i64 = basic.i64;
-                    
+
                     cass_value_get_bool(cass_row_get_column(row, 1), b_bln);
                     cass_value_get_double(cass_row_get_column(row, 2), b_dbl);
                     cass_value_get_float(cass_row_get_column(row, 3), b_flt);
                     cass_value_get_int32(cass_row_get_column(row, 4), b_i32);
                     cass_value_get_int64(cass_row_get_column(row, 5), b_i64);
-                    
+
                     cass_statement_free(statement);
                     cass_iterator_free(iterator);
                 }
                 cass_result_free(result);
                 Ok(())
             }
-            rc => {
-                Err(rc)
-            }
+            rc => Err(rc),
         };
         cass_future_free(future);
         result
@@ -95,13 +92,25 @@ fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
 pub fn main() {
     unsafe {
         let cluster = create_cluster();
-        let session = &mut*cass_session_new();
-        
-        let input = &mut Basic{bln:cass_true, flt:0.001f32, dbl:0.0002f64, i32:1, i64:2 };
+        let session = &mut *cass_session_new();
+
+        let input = &mut Basic {
+            bln: cass_true,
+            flt: 0.001f32,
+            dbl: 0.0002f64,
+            i32: 1,
+            i64: 2,
+        };
 
         match connect_session(session, cluster) {
             Ok(()) => {
-                let output = &mut Basic{bln:0,flt:0f32,dbl:0f64,i32:0,i64:0};
+                let output = &mut Basic {
+                    bln: 0,
+                    flt: 0f32,
+                    dbl: 0f64,
+                    i32: 0,
+                    i64: 0,
+                };
                 execute_query(session,
                               "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
                                'SimpleStrategy', 'replication_factor': '1' };")
@@ -110,21 +119,21 @@ pub fn main() {
                               "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl \
                                double, i32 int, i64 bigint, PRIMARY KEY (key));")
                     .unwrap();
-                    
+
                 insert_into_basic(session, "test", input).unwrap();
                 select_from_basic(session, "test", output).unwrap();
-                
-                println!("{:?}",input);
-                println!("{:?}",output);
-                
+
+                println!("{:?}", input);
+                println!("{:?}", output);
+
                 assert!(input.bln == output.bln);
                 assert!(input.flt == output.flt);
                 assert!(input.dbl == output.dbl);
                 assert!(input.i32 == output.i32);
                 assert!(input.i64 == output.i64);
-                
+
                 let close_future = cass_session_close(session);
-                
+
                 cass_future_wait(close_future);
                 cass_future_free(close_future);
             }

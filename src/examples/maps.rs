@@ -1,5 +1,5 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 
 extern crate cql_bindgen;
 extern crate num;
@@ -8,6 +8,7 @@ mod examples_util;
 use examples_util::*;
 
 use std::mem;
+use std::ffi::CString;
 
 use cql_bindgen::*;
 
@@ -19,19 +20,19 @@ struct Pair {
 fn insert_into_maps(session: &mut CassSession, key: &str, items: Vec<Pair>) -> Result<(), CassError> {
     unsafe {
         let query = "INSERT INTO examples.maps (key, items) VALUES (?, ?);";
-        let statement = cass_statement_new(str2ref(query), 2);
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
 
-        cass_statement_bind_string(statement, 0, str2ref(key));
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
 
         let collection = cass_collection_new(CASS_COLLECTION_TYPE_MAP, 5);
         for item in items {
-            cass_collection_append_string(collection, str2ref(&item.key));
+            cass_collection_append_string(collection, CString::new(item.key).unwrap().as_ptr());
             cass_collection_append_int32(collection, item.value);
         }
         cass_statement_bind_collection(statement, 1, collection);
         cass_collection_free(collection);
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let rc = cass_future_error_code(future);
@@ -49,11 +50,11 @@ fn insert_into_maps(session: &mut CassSession, key: &str, items: Vec<Pair>) -> R
 fn select_from_maps(session: &mut CassSession, key: &str) -> Result<(), CassError> {
     unsafe {
         let query = "SELECT items FROM examples.maps WHERE key = ?";
-        let statement = cass_statement_new(str2ref(query), 1);
+        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
 
-        cass_statement_bind_string(statement, 0, str2ref(key));
+        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
 
-        let future = &mut*cass_session_execute(session, statement);
+        let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -69,17 +70,21 @@ fn select_from_maps(session: &mut CassSession, key: &str) -> Result<(), CassErro
                         let mut item_key = mem::zeroed();
                         let mut item_key_length = mem::zeroed();
                         let mut value = mem::zeroed();
-                        cass_value_get_string(cass_iterator_get_map_key(iterator), &mut item_key, &mut item_key_length);
+                        cass_value_get_string(cass_iterator_get_map_key(iterator),
+                                              &mut item_key,
+                                              &mut item_key_length);
                         cass_value_get_int32(cass_iterator_get_map_value(iterator), &mut value);
 
-                        println!("item: '{:?}' : {:?}", raw2utf8(item_key, item_key_length), value);
+                        println!("item: '{:?}' : {:?}",
+                                 raw2utf8(item_key, item_key_length),
+                                 value);
                     }
                     cass_iterator_free(iterator);
                     cass_result_free(result);
                 }
                 Ok(())
             }
-            rc => Err(rc)
+            rc => Err(rc),
         };
         cass_future_free(future);
         cass_statement_free(statement);
@@ -89,15 +94,25 @@ fn select_from_maps(session: &mut CassSession, key: &str) -> Result<(), CassErro
 
 fn main() {
     unsafe {
-        let items = vec!(
-            Pair{key: "apple".to_owned(), value:1 },
-            Pair{key:"orange".to_owned(), value:2 },
-            Pair{key:"banana".to_owned(), value:3 },
-            Pair{key:"mango".to_owned(), value:4 }
-        );
+        let items = vec![Pair {
+                             key: "apple".to_owned(),
+                             value: 1,
+                         },
+                         Pair {
+                             key: "orange".to_owned(),
+                             value: 2,
+                         },
+                         Pair {
+                             key: "banana".to_owned(),
+                             value: 3,
+                         },
+                         Pair {
+                             key: "mango".to_owned(),
+                             value: 4,
+                         }];
 
         let cluster = create_cluster();
-        let session = &mut*cass_session_new();
+        let session = &mut *cass_session_new();
 
         connect_session(session, &cluster).unwrap();
 

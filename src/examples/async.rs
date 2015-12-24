@@ -1,26 +1,32 @@
-//#![feature(plugin)]
-//#![plugin(clippy)]
+// #![feature(plugin)]
+// #![plugin(clippy)]
 
 extern crate cql_bindgen;
 
 mod examples_util;
 use examples_util::*;
+use std::ffi::CString;
 
 use cql_bindgen::*;
 
-static NUM_CONCURRENT_REQUESTS:usize = 1000;
+static NUM_CONCURRENT_REQUESTS: usize = 1000;
 
 fn insert_into_async(session: &mut CassSession, key: &str) {
     unsafe {
-        let query = str2ref("INSERT INTO async (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);");
+        let query = CString::new("INSERT INTO async (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);")
+                        .unwrap()
+                        .as_ptr();
         let futures = &mut Vec::with_capacity(NUM_CONCURRENT_REQUESTS);
 
         for i in 0..NUM_CONCURRENT_REQUESTS {
             let statement = cass_statement_new(query, 6);
-            let key = &format!("{}{}", key, i);
 
-            cass_statement_bind_string(statement, 0, str2ref(key));
-            cass_statement_bind_bool(statement, 1, if i % 2 == 0 { cass_true } else { cass_false });
+            cass_statement_bind_string(statement,
+                                       0,
+                                       CString::new(format!("{}{}", key, i)).unwrap().as_ptr());
+            cass_statement_bind_bool(statement,
+                                     1,
+                                     if i % 2 == 0 { cass_true } else { cass_false });
             cass_statement_bind_float(statement, 2, i as f32 / 2.0f32);
             cass_statement_bind_double(statement, 3, i as f64 / 200.0);
             cass_statement_bind_int32(statement, 4, i as i32 * 10);
@@ -35,7 +41,7 @@ fn insert_into_async(session: &mut CassSession, key: &str) {
             match cass_future_error_code(*future) {
                 CASS_OK => {}
                 _ => {
-                    print_error(&mut**future);
+                    print_error(&mut **future);
                 }
             }
             cass_future_free(*future);
@@ -46,7 +52,7 @@ fn insert_into_async(session: &mut CassSession, key: &str) {
 pub fn main() {
     unsafe {
         let mut cluster = create_cluster();
-        let session = &mut*cass_session_new();
+        let session = &mut *cass_session_new();
 
         match connect_session(session, &cluster) {
             Ok(()) => {
