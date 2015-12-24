@@ -1,16 +1,16 @@
 [package]
 
-description = "A rust-bindgen ffi wrapper around the Cassandra c++ driver plus working examples\n with no additional dependencies.\nYou probably want to use the \"cassandra\" crate that provides a safe wrapper"
+description = "A bindgen-genderated rust wrapper around the Cassandra c++ driver plus working examples\n with no additional dependencies.\nYou probably want to use the \"cassandra\" crate that provides a safe wrapper"
 license = "Apache-2.0"
-name = "cql_bindgen"
-version = "0.2.1"
+name = "cassandra-sys"
+version = "0.2.2"
 authors = ["Tupshin Harper <tupshin@tupshin.com>"]
 build = "build.rs"
-homepage = "https://github.com/tupshin/cql-bindgen"
-documentation = "https://github.com/tupshin/cql-bindgen"
+homepage = "https://github.com/tupshin/cassandra-sys"
+documentation = "https://github.com/tupshin/cassandra-sys"
 
 [lib]
-name = "cql_bindgen"
+name = "cassandra_sys"
 
 [[bin]]
 name="basic"
@@ -86,13 +86,6 @@ path="src/examples/async.rs"
 
 [dependencies]
 libc = "0.2"
-# clippy = "*"
 num = "0.1"
 log = "0.3"
 env_logger = "0.3"
-# threadpool = "*"
-# bindgen_plugin="*"
-
-# [dependencies.bindgen_plugin]
-# git = "https://github.com/crabtw/rust-bindgen.git"
-# path = "bindgen_plugin"

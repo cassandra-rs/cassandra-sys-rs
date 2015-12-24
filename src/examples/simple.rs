@@ -1,12 +1,12 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 
 use std::mem;
 use std::ffi::CString;
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 fn main() {
     unsafe {

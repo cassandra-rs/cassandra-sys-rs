@@ -2,7 +2,7 @@
 // #![plugin(clippy)]
 #[macro_use]
 extern crate log;
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 extern crate num;
 extern crate libc;
 extern crate env_logger;
@@ -14,7 +14,7 @@ use std::ptr;
 use std::env;
 use std::ffi::CStr;
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 extern "C" fn on_log(message: *const CassLogMessage, data: *mut libc::c_void) {
     unsafe {

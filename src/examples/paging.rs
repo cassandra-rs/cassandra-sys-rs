@@ -1,7 +1,7 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 extern crate num;
 use std::ffi::CString;
 
@@ -11,7 +11,7 @@ use examples_util::*;
 use std::mem;
 use std::ffi::CStr;
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 const NUM_CONCURRENT_REQUESTS: usize = 1000;
 #[derive(Clone)]

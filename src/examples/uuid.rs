@@ -1,7 +1,7 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 
 mod examples_util;
 use examples_util::*;
@@ -12,7 +12,7 @@ use std::ffi::CString;
 
 use std::str;
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 const CASS_UUID_STRING_LENGTH: usize = 37;
 

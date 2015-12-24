@@ -1,13 +1,13 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 extern crate num;
 
 use std::mem;
 use std::ffi::CString;
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 #[derive(Clone)]
 struct Basic {

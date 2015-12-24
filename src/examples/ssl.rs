@@ -1,13 +1,13 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 
 use std::mem;
 use std::io::Result as IoResult;
 use std::io::Read;
 use std::fs::File;
-use cql_bindgen::*;
+use cassandra_sys::*;
 use std::ffi::CString;
 
 fn load_trusted_cert_file(file: &str, ssl: &mut CassSsl) -> IoResult<()> {

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 use std::mem;
 use std::ffi::CString;

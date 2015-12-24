@@ -1,14 +1,14 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 extern crate num;
 
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 struct Pair {
     key: String,
