@@ -2,7 +2,7 @@
 //#![plugin(clippy)]
 #![allow(float_cmp)]
 
-extern crate cql_bindgen;
+extern crate cassandra_sys;
 extern crate num;
 extern crate threadpool;
 
@@ -13,7 +13,7 @@ use threadpool::ThreadPool;
 use std::sync::mpsc::channel;
 
 
-use cql_bindgen::*;
+use cassandra_sys::*;
 
 const NUM_THREADS:usize = 1;
 const NUM_IO_WORKER_THREADS:usize = 4;
