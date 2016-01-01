@@ -21,5 +21,6 @@ fn main() {
     println!("cargo:rustc-flags=-l dylib=uv");
     println!("cargo:rustc-link-search={}", "/usr/lib/");
     println!("cargo:rustc-link-search={}", "/usr/local/lib64");
+    println!("cargo:rustc-link-search={}", "/usr/local/lib");
     println!("cargo:rustc-link-lib=static=cassandra_static");
 }
