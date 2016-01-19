@@ -4,6 +4,8 @@
 extern crate cassandra_sys;
 mod examples_util;
 use examples_util::*;
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_Unnamed1::*;
 
 use cassandra_sys::*;
 
@@ -61,23 +63,26 @@ fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
             CASS_OK => {
                 let result = cass_future_get_result(future);
                 let iterator = cass_iterator_from_result(result);
-                if cass_iterator_next(iterator) > 0 {
-                    let row = cass_iterator_get_row(iterator);
+                match cass_iterator_next(iterator) {
+                    cass_true => {
+                        let row = cass_iterator_get_row(iterator);
 
-                    let ref mut b_bln = basic.bln;
-                    let ref mut b_dbl = basic.dbl;
-                    let ref mut b_flt = basic.flt;
-                    let ref mut b_i32 = basic.i32;
-                    let ref mut b_i64 = basic.i64;
+                        let ref mut b_bln = basic.bln;
+                        let ref mut b_dbl = basic.dbl;
+                        let ref mut b_flt = basic.flt;
+                        let ref mut b_i32 = basic.i32;
+                        let ref mut b_i64 = basic.i64;
 
-                    cass_value_get_bool(cass_row_get_column(row, 1), b_bln);
-                    cass_value_get_double(cass_row_get_column(row, 2), b_dbl);
-                    cass_value_get_float(cass_row_get_column(row, 3), b_flt);
-                    cass_value_get_int32(cass_row_get_column(row, 4), b_i32);
-                    cass_value_get_int64(cass_row_get_column(row, 5), b_i64);
+                        cass_value_get_bool(cass_row_get_column(row, 1), b_bln);
+                        cass_value_get_double(cass_row_get_column(row, 2), b_dbl);
+                        cass_value_get_float(cass_row_get_column(row, 3), b_flt);
+                        cass_value_get_int32(cass_row_get_column(row, 4), b_i32);
+                        cass_value_get_int64(cass_row_get_column(row, 5), b_i64);
 
-                    cass_statement_free(statement);
-                    cass_iterator_free(iterator);
+                        cass_statement_free(statement);
+                        cass_iterator_free(iterator);
+                    }
+                    cass_false => {}
                 }
                 cass_result_free(result);
                 Ok(())
@@ -105,19 +110,17 @@ pub fn main() {
         match connect_session(session, cluster) {
             Ok(()) => {
                 let output = &mut Basic {
-                    bln: 0,
+                    bln: cass_false,
                     flt: 0f32,
                     dbl: 0f64,
                     i32: 0,
                     i64: 0,
                 };
                 execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
-                               'SimpleStrategy', 'replication_factor': '1' };")
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };")
                     .unwrap();
                 execute_query(session,
-                              "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl \
-                               double, i32 int, i64 bigint, PRIMARY KEY (key));")
+                              "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double, i32 int, i64 bigint, PRIMARY KEY (key));")
                     .unwrap();
 
                 insert_into_basic(session, "test", input).unwrap();

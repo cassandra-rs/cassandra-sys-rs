@@ -6,7 +6,7 @@ extern crate cassandra_sys;
 extern crate num;
 extern crate libc;
 extern crate env_logger;
-
+use cassandra_sys::Enum_CassLogLevel_::*;
 mod examples_util;
 use examples_util::*;
 
@@ -16,7 +16,7 @@ use std::ffi::CStr;
 
 use cassandra_sys::*;
 
-extern "C" fn on_log(message: *const CassLogMessage, data: *mut libc::c_void) {
+unsafe extern "C" fn on_log(message: *const CassLogMessage, data: *mut libc::c_void) {
     unsafe {
         let _ = data;
         let message = &*message;

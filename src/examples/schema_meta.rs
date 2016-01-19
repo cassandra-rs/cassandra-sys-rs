@@ -7,8 +7,10 @@ extern crate cassandra_sys;
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
-
+use cassandra_sys::Enum_Unnamed1::*;
+use cassandra_sys::Enum_CassValueType_::*;
 use std::mem;
+use cassandra_sys::Enum_CassError_::*;
 
 use cassandra_sys::*;
 
@@ -36,7 +38,11 @@ unsafe fn print_schema_value(value: &CassValue) {
 
         CASS_VALUE_TYPE_BOOLEAN => {
             cass_value_get_bool(value, &mut b);
-            println!("{}", if b > 0 { "true" } else { "false" });
+            println!("{}",
+                     match b {
+                         Enum_Unnamed1::cass_true => "true", 
+                         Enum_Unnamed1::cass_false => "false",
+                     });
         }
 
         CASS_VALUE_TYPE_DOUBLE => {
@@ -66,8 +72,8 @@ unsafe fn print_schema_value(value: &CassValue) {
         }
         _ => {
             match cass_value_is_null(value) {
-                0 => println!("<unhandled type>: {}", cass_value_type(value)),
-                _ => println!("null"),
+                cass_true => println!("<unhandled type>: {:?}", cass_value_type(value)),
+                cass_false => println!("null"),
             }
         }
     }
@@ -78,8 +84,8 @@ unsafe fn print_schema_list(value: &CassValue) {
     let mut is_first = cass_true;
 
     print!("[ ");
-    while cass_iterator_next(iterator) > 0 {
-        if !is_first > 0 {
+    while cass_iterator_next(iterator) == cass_true {
+        if is_first == cass_false {
             print!(", ")
         };
         print_schema_value(&*cass_iterator_get_value(iterator));
@@ -94,8 +100,8 @@ unsafe fn print_schema_map(value: &CassValue) {
     let mut is_first = cass_true;
 
     print!("[[ ");
-    while cass_iterator_next(iterator) > 0 {
-        if !is_first > 0 {}
+    while cass_iterator_next(iterator) == cass_true {
+        if is_first == cass_false {}
         print!(", ");
         print_schema_value(&*cass_iterator_get_map_key(iterator));
         print!(" : ");
@@ -120,7 +126,7 @@ unsafe fn print_keyspace(session: &mut CassSession, keyspace: &str) {
 }
 
 unsafe fn print_meta_fields(iterator: *mut CassIterator, indent: u32) {
-    while cass_iterator_next(iterator) > 0 {
+    while cass_iterator_next(iterator) == cass_true {
         print_meta_field(iterator, indent);
     }
     cass_iterator_free(iterator);
@@ -155,7 +161,7 @@ unsafe fn print_keyspace_meta(meta: *const CassKeyspaceMeta, indent: u32) {
     println!("");
 
     let iterator = cass_iterator_tables_from_keyspace_meta(meta);
-    while cass_iterator_next(iterator) > 0 {
+    while cass_iterator_next(iterator) == cass_true {
         print_table_meta(cass_iterator_get_table_meta(iterator), indent + 1);
     }
     println!("");
@@ -177,7 +183,7 @@ unsafe fn print_table_meta(meta: *const CassTableMeta, indent: u32) {
     println!("");
 
     let iterator = cass_iterator_columns_from_table_meta(meta);
-    while cass_iterator_next(iterator) > 0 {
+    while cass_iterator_next(iterator) == cass_true {
         print_column_meta(cass_iterator_get_column_meta(iterator), indent + 1);
     }
     println!("");
@@ -228,15 +234,13 @@ pub fn main() {
         if cass_future_error_code(connect_future) == CASS_OK {
 
             execute_query(&mut *session,
-                          "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                           'replication_factor': '3' };")
+                          "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
                 .unwrap();
 
             print_keyspace(&mut *session, "examples");
 
             execute_query(&mut *session,
-                          "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY \
-                           (key));")
+                          "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY (key));")
                 .unwrap();
 
             print_table(&mut *session, "examples", "schema_meta");

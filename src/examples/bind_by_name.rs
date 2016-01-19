@@ -7,10 +7,13 @@ mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
 use cassandra_sys::*;
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_Unnamed1::*;
+
 
 #[derive(Copy,Clone)]
 struct Basic {
-    bln: u32,
+    bln: Enum_Unnamed1,
     flt: f32,
     dbl: f64,
     i32: i32,
@@ -37,8 +40,7 @@ fn prepare_query<'a>(session: &mut CassSession, query: &str) -> Result<&'a CassP
     }
 }
 
-fn insert_into_basic(session: &mut CassSession, prepared: &CassPrepared, key: &str, basic: &Basic)
-                     -> Result<(), CassError> {
+fn insert_into_basic(session: &mut CassSession, prepared: &CassPrepared, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
         cass_statement_bind_string_by_name(statement,
@@ -72,8 +74,7 @@ fn insert_into_basic(session: &mut CassSession, prepared: &CassPrepared, key: &s
     }
 }
 
-fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key: &str, basic: Basic)
-                         -> Result<Basic, CassError> {
+fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key: &str, basic: Basic) -> Result<Basic, CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
         cass_prepared_free(prepared);
@@ -92,7 +93,7 @@ fn select_from_basic<'a>(session: &mut CassSession, prepared: &CassPrepared, key
                 let result = cass_future_get_result(future);
                 let iterator = cass_iterator_from_result(result);
 
-                if cass_iterator_next(iterator) > 0 {
+                if cass_iterator_next(iterator) == cass_true {
                     let row = cass_iterator_get_row(iterator);
 
                     cass_value_get_bool(cass_row_get_column_by_name(row, CString::new("bln").unwrap().as_ptr()),
@@ -129,7 +130,7 @@ fn main() {
         let cluster = create_cluster();
         let session = &mut *cass_session_new();
         let input = Basic {
-            bln: 1,
+            bln: cass_true,
             flt: 0.001,
             dbl: 0.0002,
             i32: 1,
@@ -142,13 +143,11 @@ fn main() {
         match connect_session(session, cluster) {
             Ok(()) => {
                 execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \'class\': \
-                               \'SimpleStrategy\', \'replication_factor\': \'1\' };")
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \'class\': \'SimpleStrategy\', \'replication_factor\': \'1\' };")
                     .unwrap();
 
                 execute_query(session,
-                              "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl \
-                               double,i32 int, i64 bigint, PRIMARY KEY (key));")
+                              "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 int, i64 bigint, PRIMARY KEY (key));")
                     .unwrap();
 
                 match prepare_query(session, &insert_query) {
@@ -157,8 +156,7 @@ fn main() {
                         cass_prepared_free(insert_prepared);
                         match prepare_query(session, &select_query) {
                             Ok(select_prepared) => {
-                                let output = select_from_basic(session, select_prepared, "prepared_test", input)
-                                                 .unwrap();
+                                let output = select_from_basic(session, select_prepared, "prepared_test", input).unwrap();
 
                                 assert!(input.bln.clone() == output.bln);
                                 assert!(input.flt == output.flt);

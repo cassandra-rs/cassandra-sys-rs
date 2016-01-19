@@ -10,6 +10,8 @@ use examples_util::*;
 
 use std::mem;
 use std::ffi::CStr;
+use cassandra_sys::Enum_Unnamed1::*;
+use cassandra_sys::Enum_CassError_::*;
 
 use cassandra_sys::*;
 
@@ -70,7 +72,7 @@ fn select_from_paging(session: &mut CassSession) {
                     let iterator = cass_iterator_from_result(result);
                     cass_future_free(future);
 
-                    while cass_iterator_next(iterator) > 0 {
+                    while cass_iterator_next(iterator) == cass_true {
                         let row = &*cass_iterator_get_row(iterator);
                         let mut key_str: [i8; 37] = mem::zeroed();
                         let mut key = mem::zeroed();
@@ -85,7 +87,7 @@ fn select_from_paging(session: &mut CassSession) {
                                  CStr::from_ptr(key_str[..].as_ptr()),
                                  raw2utf8(value, value_length).unwrap());
                     }
-                    match cass_result_has_more_pages(result) > 0 {
+                    match cass_result_has_more_pages(result) == cass_true {
                         true => {
                             cass_statement_set_paging_state(statement, result);
                         }
@@ -112,8 +114,7 @@ fn main() {
         connect_session(session, cluster).unwrap();
 
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                       'replication_factor': '3' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
             .unwrap();
 
 

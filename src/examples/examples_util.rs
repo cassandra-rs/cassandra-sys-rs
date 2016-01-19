@@ -4,6 +4,8 @@ use cassandra_sys::*;
 
 use std::mem;
 use std::ffi::CString;
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_Unnamed1::*;
 
 pub fn print_error(future: &mut CassFuture) {
     unsafe {

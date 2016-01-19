@@ -6,7 +6,10 @@ extern crate num;
 
 mod examples_util;
 use examples_util::*;
-
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_Unnamed1::*;
+use cassandra_sys::Enum_CassValueType_::*;
+use cassandra_sys::Enum_CassCollectionType_::*;
 use std::mem;
 use std::ffi::CString;
 
@@ -66,7 +69,7 @@ fn select_from_maps(session: &mut CassSession, key: &str) -> Result<(), CassErro
 
                     let iterator = cass_iterator_from_map(cass_row_get_column(row, 0));
 
-                    while cass_iterator_next(iterator) > 0 {
+                    while cass_iterator_next(iterator) == cass_true {
                         let mut item_key = mem::zeroed();
                         let mut item_key_length = mem::zeroed();
                         let mut value = mem::zeroed();
@@ -117,8 +120,7 @@ fn main() {
         connect_session(session, &cluster).unwrap();
 
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                       'replication_factor': '3' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
             .unwrap();
 
         execute_query(session,

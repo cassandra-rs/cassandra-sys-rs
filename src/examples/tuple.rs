@@ -8,8 +8,10 @@ use examples_util::*;
 use std::ffi::CString;
 
 use std::mem;
-
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_CassValueType_::*;
 use cassandra_sys::*;
+use cassandra_sys::Enum_Unnamed1::*;
 
 
 fn insert_into_tuple(session: &mut CassSession, uuid_gen: &mut CassUuidGen) -> Result<(), CassError> {
@@ -61,7 +63,7 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                 let result = cass_future_get_result(future);
                 let rows = cass_iterator_from_result(result);
 
-                while cass_iterator_next(rows) > 0 {
+                while cass_iterator_next(rows) == cass_true {
                     let mut id = mem::zeroed();
                     let mut id_str = mem::zeroed();
                     let row = cass_iterator_get_row(rows);
@@ -74,11 +76,11 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
 
                     print!("id {:?} ", &id_str);
 
-                    while cass_iterator_next(item) > 0 {
+                    while cass_iterator_next(item) == cass_true {
                         let value = cass_iterator_get_value(item);
 
-                        match cass_value_is_null(value) == 0 {
-                            true => {
+                        match cass_value_is_null(value) {
+                            cass_true => {
                                 match cass_value_type(value) {
                                     CASS_VALUE_TYPE_VARCHAR => {
                                         let mut text = mem::zeroed();
@@ -96,7 +98,7 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                                     }
                                 }
                             }
-                            false => print!("<null> "),
+                            cass_false => print!("<null> "),
                         }
                     }
                     cass_iterator_free(item);
@@ -127,12 +129,10 @@ fn main() {
         match connect_session(session, cluster) {
             Ok(()) => {
                 execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
-                               'SimpleStrategy', 'replication_factor': '3' }")
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' }")
                     .unwrap();
                 execute_query(session,
-                              "CREATE TABLE IF NOT EXISTS examples.tuples (id timeuuid, item frozen<tuple<text, \
-                               bigint>>, PRIMARY KEY(id))")
+                              "CREATE TABLE IF NOT EXISTS examples.tuples (id timeuuid, item frozen<tuple<text, bigint>>, PRIMARY KEY(id))")
                     .unwrap();
 
                 insert_into_tuple(session, uuid_gen).unwrap();

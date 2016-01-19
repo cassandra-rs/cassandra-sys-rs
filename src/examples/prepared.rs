@@ -7,14 +7,15 @@ extern crate num;
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
-
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_Unnamed1::*;
 use std::mem;
 
 use cassandra_sys::*;
 
 #[derive(Debug)]
 struct Basic {
-    bln: u32,
+    bln: Enum_Unnamed1,
     flt: f32,
     dbl: f64,
     i32: i32,
@@ -72,8 +73,7 @@ fn prepare_select_from_basic(session: &mut CassSession) -> Result<&CassPrepared,
     }
 }
 
-fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &str, basic: &mut Basic)
-                     -> Result<(), CassError> {
+fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &str, basic: &mut Basic) -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
         cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
@@ -86,7 +86,7 @@ fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &s
                 let result = cass_future_get_result(future);
                 let iterator = cass_iterator_from_result(result);
 
-                if cass_iterator_next(iterator) > 0 {
+                if cass_iterator_next(iterator) == cass_true {
                     let row = cass_iterator_get_row(iterator);
 
                     cass_value_get_bool(cass_row_get_column(row, 1), &mut basic.bln);
@@ -129,13 +129,11 @@ fn main() {
         connect_session(&mut *session, cluster).unwrap();
 
         execute_query(&mut *session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                       'replication_factor': '3' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
             .unwrap();
 
         execute_query(&mut *session,
-                      "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 \
-                       int, i64 bigint, PRIMARY KEY (key));")
+                      "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 int, i64 bigint, PRIMARY KEY (key));")
             .unwrap();
 
         insert_into_basic(&mut *session, "prepared_test", &input).unwrap();

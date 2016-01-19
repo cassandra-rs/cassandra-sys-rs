@@ -10,6 +10,10 @@ use examples_util::*;
 use std::mem;
 use std::ffi::CString;
 use cassandra_sys::*;
+use cassandra_sys::Enum_CassCollectionType_::*;
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_Unnamed1::*;
+
 
 fn insert_into_collections(session: &mut CassSession, key: &str, items: Vec<&str>) -> Result<(), CassError> {
     unsafe {
@@ -57,12 +61,12 @@ fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), C
                 let result = cass_future_get_result(future);
                 let iterator = cass_iterator_from_result(result);
 
-                if cass_iterator_next(iterator) > 0 {
+                if cass_iterator_next(iterator) == cass_true {
                     let row = cass_iterator_get_row(iterator);
                     let value = cass_row_get_column(row, 0);
                     let items_iterator = cass_iterator_from_collection(value);
 
-                    while cass_iterator_next(items_iterator) > 0 {
+                    while cass_iterator_next(items_iterator) == cass_true {
                         let mut item = mem::zeroed();
                         let mut item_length = mem::zeroed();
                         cass_value_get_string(cass_iterator_get_value(items_iterator),
@@ -100,8 +104,7 @@ fn main() {
 
         connect_session(session, cluster).unwrap();
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                       'replication_factor': '1' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };")
             .unwrap();
 
         execute_query(session,

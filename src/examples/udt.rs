@@ -6,15 +6,18 @@ extern crate cassandra_sys;
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
-
+use cassandra_sys::Enum_Unnamed1::*;
+use cassandra_sys::Enum_CassCollectionType_::*;
+use cassandra_sys::Enum_CassValueType_::*;
 use std::mem;
+use cassandra_sys::Enum_CassError_::*;
+
 
 use cassandra_sys::*;
 
 const CASS_UUID_STRING_LENGTH: usize = 37;
 
-fn insert_into_udt(session: &mut CassSession, schema_meta: &CassSchemaMeta, uuid_gen: &mut CassUuidGen)
-                   -> Result<(), CassError> {
+fn insert_into_udt(session: &mut CassSession, schema_meta: &CassSchemaMeta, uuid_gen: &mut CassUuidGen) -> Result<(), CassError> {
     unsafe {
         let mut id_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
 
@@ -27,8 +30,7 @@ fn insert_into_udt(session: &mut CassSession, schema_meta: &CassSchemaMeta, uuid
 
         let keyspace_meta = cass_schema_meta_keyspace_by_name(schema_meta, CString::new("examples").unwrap().as_ptr());
 
-        let udt_address = cass_keyspace_meta_user_type_by_name(keyspace_meta,
-                                                               CString::new("address").unwrap().as_ptr());
+        let udt_address = cass_keyspace_meta_user_type_by_name(keyspace_meta, CString::new("address").unwrap().as_ptr());
 
         let udt_phone = cass_keyspace_meta_user_type_by_name(keyspace_meta,
                                                              CString::new("phone_numbers").unwrap().as_ptr());
@@ -101,7 +103,7 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                 let result = cass_future_get_result(future);
                 let rows = cass_iterator_from_result(result);
 
-                while cass_iterator_next(rows) > 0 {
+                while cass_iterator_next(rows) == cass_true {
                     let mut id_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
                     let row = cass_iterator_get_row(rows);
                     let id_value = cass_row_get_column_by_name(row, CString::new("id").unwrap().as_ptr());
@@ -113,15 +115,15 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
 
                     println!("id {:?} ", id_str[..].as_mut_ptr());
 
-                    while !fields.is_null() && cass_iterator_next(fields) > 0 {
+                    while !fields.is_null() && cass_iterator_next(fields) == cass_true {
                         let mut field_name = mem::zeroed();
                         let mut field_name_length = mem::zeroed();
                         cass_iterator_get_user_type_field_name(fields, &mut field_name, &mut field_name_length);
                         let field_value = cass_iterator_get_user_type_field_value(fields);
                         println!("{:?} ", raw2utf8(field_name, field_name_length));
 
-                        match !cass_value_is_null(field_value) > 0 {
-                            true => {
+                        match cass_value_is_null(field_value) {
+                            cass_false => {
                                 match cass_value_type(field_value) {
                                     CASS_VALUE_TYPE_VARCHAR => {
                                         let mut text = mem::zeroed();
@@ -136,13 +138,12 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                                     }
                                     CASS_VALUE_TYPE_SET => {
                                         let phone_numbers = cass_iterator_from_collection(field_value);
-                                        while cass_iterator_next(phone_numbers) > 0 {
+                                        while cass_iterator_next(phone_numbers) == cass_true {
                                             let phone_value = cass_iterator_get_value(phone_numbers);
                                             let phone_fields = cass_iterator_fields_from_user_type(phone_value);
                                             assert!(cass_value_type(phone_value) == CASS_VALUE_TYPE_UDT);
-                                            while cass_iterator_next(phone_fields) > 0 {
-                                                let phone_number_value =
-                                                    cass_iterator_get_user_type_field_value(phone_fields);
+                                            while cass_iterator_next(phone_fields) == cass_true {
+                                                let phone_number_value = cass_iterator_get_user_type_field_value(phone_fields);
                                                 let mut i = mem::zeroed();
                                                 cass_value_get_int32(phone_number_value, &mut i);
                                                 println!("{:?} ", i);
@@ -152,7 +153,7 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                                     _ => print!("<invalid> "),
                                 }
                             }
-                            false => print!("<null> "),
+                            cass_true => print!("<null> "),
                         }
 
 
@@ -188,8 +189,7 @@ fn main() {
         }
 
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                       'replication_factor': '3' }")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' }")
             .unwrap();
 
         execute_query(session,
@@ -197,13 +197,11 @@ fn main() {
             .unwrap();
 
         execute_query(session,
-                      "CREATE TYPE IF NOT EXISTS examples.address (street text, city text, zip int, phone \
-                       set<frozen<phone_numbers>>)")
+                      "CREATE TYPE IF NOT EXISTS examples.address (street text, city text, zip int, phone set<frozen<phone_numbers>>)")
             .unwrap();
 
         execute_query(session,
-                      "CREATE TABLE IF NOT EXISTS examples.udt (id timeuuid, address frozen<address>, PRIMARY \
-                       KEY(id))")
+                      "CREATE TABLE IF NOT EXISTS examples.udt (id timeuuid, address frozen<address>, PRIMARY KEY(id))")
             .unwrap();
 
         let schema_meta = cass_session_get_schema_meta(session);

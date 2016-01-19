@@ -9,6 +9,10 @@ use std::io::Read;
 use std::fs::File;
 use cassandra_sys::*;
 use std::ffi::CString;
+use cassandra_sys::Enum_Unnamed1::*;
+use cassandra_sys::Enum_CassSslVerifyFlags::*;
+use cassandra_sys::Enum_CassError_::*;
+
 
 fn load_trusted_cert_file(file: &str, ssl: &mut CassSsl) -> IoResult<()> {
     unsafe {
@@ -73,7 +77,7 @@ fn main() {
                     let result = cass_future_get_result(result_future);
                     let rows = cass_iterator_from_result(result);
 
-                    while cass_iterator_next(rows) > 0 {
+                    while cass_iterator_next(rows) == cass_true {
                         let row = cass_iterator_get_row(rows);
                         let value = cass_row_get_column_by_name(row, CString::new("keyspace_name").unwrap().as_ptr());
 

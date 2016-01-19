@@ -7,8 +7,10 @@ extern crate num;
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
-
+use cassandra_sys::Enum_CassBatchType_::*;
 use cassandra_sys::*;
+use cassandra_sys::Enum_CassError_::*;
+use cassandra_sys::Enum_Unnamed1::*;
 
 struct Pair {
     key: String,
@@ -37,8 +39,7 @@ fn prepare_insert_into_batch<'a>(session: &mut CassSession) -> Result<&'a CassPr
     }
 }
 
-fn insert_into_batch_with_prepared(session: &mut CassSession, prepared: &CassPrepared, pairs: Vec<Pair>)
-                                   -> Result<(), CassError> {
+fn insert_into_batch_with_prepared(session: &mut CassSession, prepared: &CassPrepared, pairs: Vec<Pair>) -> Result<(), CassError> {
     unsafe {
         let batch = cass_batch_new(CASS_BATCH_TYPE_LOGGED);
 
@@ -109,8 +110,7 @@ pub fn main() {
         connect_session(session, &cluster).unwrap();
 
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \'class\': \'SimpleStrategy\', \
-                       \'replication_factor\': \'3\' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \'class\': \'SimpleStrategy\', \'replication_factor\': \'3\' };")
             .unwrap();
 
 
