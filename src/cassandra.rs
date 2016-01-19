@@ -3,7 +3,7 @@
 pub type ptrdiff_t = ::libc::c_long;
 pub type size_t = ::libc::c_ulong;
 pub type wchar_t = ::libc::c_int;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u32)]
 pub enum Enum_Unnamed1 {
     cass_false = 0,
@@ -218,7 +218,7 @@ pub enum Enum_CassWriteType_ {
     CASS_WRITE_TYPE_CAS = 6,
 }
 pub type CassWriteType = Enum_CassWriteType_;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u32)]
 pub enum Enum_CassValueType_ {
     CASS_VALUE_TYPE_UNKNOWN = 65535,
@@ -285,7 +285,7 @@ pub enum Enum_CassIteratorType_ {
     CASS_ITERATOR_TYPE_COLUMN_META = 12,
 }
 pub type CassIteratorType = Enum_CassIteratorType_;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[repr(u32)]
 pub enum Enum_CassLogLevel_ {
     CASS_LOG_DISABLED = 0,
@@ -316,7 +316,7 @@ pub enum Enum_CassColumnType_ {
     CASS_COLUMN_TYPE_COMPACT_VALUE = 4,
 }
 pub type CassColumnType = Enum_CassColumnType_;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[repr(u32)]
 pub enum Enum_CassErrorSource_ {
     CASS_ERROR_SOURCE_NONE = 0,
@@ -326,7 +326,7 @@ pub enum Enum_CassErrorSource_ {
     CASS_ERROR_SOURCE_COMPRESSION = 4,
 }
 pub type CassErrorSource = Enum_CassErrorSource_;
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u32)]
 pub enum Enum_CassError_ {
     CASS_OK = 0,

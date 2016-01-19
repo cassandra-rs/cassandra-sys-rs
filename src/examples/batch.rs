@@ -10,7 +10,6 @@ use std::ffi::CString;
 use cassandra_sys::Enum_CassBatchType_::*;
 use cassandra_sys::*;
 use cassandra_sys::Enum_CassError_::*;
-use cassandra_sys::Enum_Unnamed1::*;
 
 struct Pair {
     key: String,

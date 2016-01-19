@@ -8,7 +8,6 @@ use std::ffi::CString;
 
 use cassandra_sys::*;
 use cassandra_sys::Enum_Unnamed1::*;
-use cassandra_sys::Enum_CassCollectionType_::*;
 use cassandra_sys::Enum_CassError_::*;
 fn main() {
     unsafe {

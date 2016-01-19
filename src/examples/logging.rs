@@ -17,10 +17,9 @@ use std::ffi::CStr;
 use cassandra_sys::*;
 
 unsafe extern "C" fn on_log(message: *const CassLogMessage, data: *mut libc::c_void) {
-    unsafe {
-        let _ = data;
-        let message = &*message;
-        info!(target: "cass_log", "{:?}.{:?} [{:?}] ({:?}:{:?}:{:?}) {:?}",
+    let _ = data;
+    let message = &*message;
+    info!(target: "cass_log", "{:?}.{:?} [{:?}] ({:?}:{:?}:{:?}) {:?}",
             message.time_ms / 1000,
             message.time_ms % 1000,
             message.severity,
@@ -29,7 +28,6 @@ unsafe extern "C" fn on_log(message: *const CassLogMessage, data: *mut libc::c_v
             message.function,
             CStr::from_ptr(message.message[..].as_ptr())
         );
-    }
 }
 
 fn main() {

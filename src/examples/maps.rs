@@ -8,7 +8,6 @@ mod examples_util;
 use examples_util::*;
 use cassandra_sys::Enum_CassError_::*;
 use cassandra_sys::Enum_Unnamed1::*;
-use cassandra_sys::Enum_CassValueType_::*;
 use cassandra_sys::Enum_CassCollectionType_::*;
 use std::mem;
 use std::ffi::CString;
