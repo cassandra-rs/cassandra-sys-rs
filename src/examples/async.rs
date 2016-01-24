@@ -8,8 +8,6 @@ use examples_util::*;
 use std::ffi::CString;
 
 use cassandra_sys::*;
-use cassandra_sys::Enum_CassError_::*;
-use cassandra_sys::Enum_Unnamed1::*;
 
 static NUM_CONCURRENT_REQUESTS: usize = 1000;
 
@@ -59,11 +57,13 @@ pub fn main() {
         match connect_session(session, &cluster) {
             Ok(()) => {
                 execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '3' };")
                     .unwrap();
 
                 execute_query(session,
-                              "CREATE TABLE IF NOT EXISTS examples.async (key text, bln boolean, flt float, dbl double,i32 int, i64 bigint, PRIMARY KEY (key));")
+                              "CREATE TABLE IF NOT EXISTS examples.async (key text, bln boolean, flt float, dbl \
+                               double,i32 int, i64 bigint, PRIMARY KEY (key));")
                     .unwrap();
 
                 execute_query(session, "USE examples").unwrap();

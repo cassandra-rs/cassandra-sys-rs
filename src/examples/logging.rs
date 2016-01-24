@@ -6,7 +6,6 @@ extern crate cassandra_sys;
 extern crate num;
 extern crate libc;
 extern crate env_logger;
-use cassandra_sys::Enum_CassLogLevel_::*;
 mod examples_util;
 use examples_util::*;
 

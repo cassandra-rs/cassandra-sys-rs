@@ -6,9 +6,6 @@ extern crate num;
 
 mod examples_util;
 use examples_util::*;
-use cassandra_sys::Enum_CassError_::*;
-use cassandra_sys::Enum_Unnamed1::*;
-use cassandra_sys::Enum_CassCollectionType_::*;
 use std::mem;
 use std::ffi::CString;
 
@@ -119,7 +116,8 @@ fn main() {
         connect_session(session, &cluster).unwrap();
 
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
+                       'replication_factor': '3' };")
             .unwrap();
 
         execute_query(session,

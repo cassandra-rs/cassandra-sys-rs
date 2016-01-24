@@ -9,10 +9,6 @@ use std::io::Read;
 use std::fs::File;
 use cassandra_sys::*;
 use std::ffi::CString;
-use cassandra_sys::Enum_Unnamed1::*;
-use cassandra_sys::Enum_CassSslVerifyFlags::*;
-use cassandra_sys::Enum_CassError_::*;
-
 
 fn load_trusted_cert_file(file: &str, ssl: &mut CassSsl) -> IoResult<()> {
     unsafe {

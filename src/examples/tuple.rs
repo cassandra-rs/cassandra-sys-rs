@@ -8,10 +8,7 @@ use examples_util::*;
 use std::ffi::CString;
 
 use std::mem;
-use cassandra_sys::Enum_CassError_::*;
-use cassandra_sys::Enum_CassValueType_::*;
 use cassandra_sys::*;
-use cassandra_sys::Enum_Unnamed1::*;
 
 
 fn insert_into_tuple(session: &mut CassSession, uuid_gen: &mut CassUuidGen) -> Result<(), CassError> {
@@ -129,10 +126,12 @@ fn main() {
         match connect_session(session, cluster) {
             Ok(()) => {
                 execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' }")
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '3' }")
                     .unwrap();
                 execute_query(session,
-                              "CREATE TABLE IF NOT EXISTS examples.tuples (id timeuuid, item frozen<tuple<text, bigint>>, PRIMARY KEY(id))")
+                              "CREATE TABLE IF NOT EXISTS examples.tuples (id timeuuid, item frozen<tuple<text, \
+                               bigint>>, PRIMARY KEY(id))")
                     .unwrap();
 
                 insert_into_tuple(session, uuid_gen).unwrap();

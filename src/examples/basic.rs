@@ -4,8 +4,6 @@
 extern crate cassandra_sys;
 mod examples_util;
 use examples_util::*;
-use cassandra_sys::Enum_CassError_::*;
-use cassandra_sys::Enum_Unnamed1::*;
 
 use cassandra_sys::*;
 
@@ -14,10 +12,10 @@ use std::ffi::CString;
 #[derive(Debug)]
 struct Basic {
     bln: cass_bool_t,
-    flt: cass_float_t,
-    dbl: cass_double_t,
-    i32: cass_int32_t,
-    i64: cass_int64_t,
+    flt: f32,
+    dbl: f64,
+    i32: i32,
+    i64: i64,
 }
 
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) -> Result<(), CassError> {
@@ -117,10 +115,12 @@ pub fn main() {
                     i64: 0,
                 };
                 execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };")
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '1' };")
                     .unwrap();
                 execute_query(session,
-                              "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double, i32 int, i64 bigint, PRIMARY KEY (key));")
+                              "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl \
+                               double, i32 int, i64 bigint, PRIMARY KEY (key));")
                     .unwrap();
 
                 insert_into_basic(session, "test", input).unwrap();

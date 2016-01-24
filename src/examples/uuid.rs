@@ -5,8 +5,6 @@ extern crate cassandra_sys;
 
 mod examples_util;
 use examples_util::*;
-use cassandra_sys::Enum_Unnamed1::*;
-use cassandra_sys::Enum_CassError_::*;
 
 use std::mem;
 use std::ffi::CStr;
@@ -67,8 +65,8 @@ fn select_from_log(session: &mut CassSession, key: &str) -> Result<(), CassError
 
                 while cass_iterator_next(iterator) == cass_true {
                     let row = cass_iterator_get_row(iterator);
-                    let mut key_length: size_t = mem::zeroed();
-                    let mut time: Struct_CassUuid_ = mem::zeroed();
+                    let mut key_length: u64 = mem::zeroed();
+                    let mut time: CassUuid = mem::zeroed();
                     let mut entry = mem::zeroed();
                     let mut entry_length = mem::zeroed();
                     let mut time_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
@@ -111,10 +109,12 @@ pub fn main() {
         match connect_session(session, cluster) {
             Ok(()) => {
                 execute_query(&mut *session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };")
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '1' };")
                     .unwrap();
                 execute_query(&mut *session,
-                              "CREATE TABLE IF NOT EXISTS examples.log (key text, time timeuuid, entry text, PRIMARY KEY (key, time));")
+                              "CREATE TABLE IF NOT EXISTS examples.log (key text, time timeuuid, entry text, PRIMARY \
+                               KEY (key, time));")
                     .unwrap();
 
                 cass_uuid_gen_time(uuid_gen, &mut uuid);

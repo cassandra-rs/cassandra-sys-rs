@@ -10,9 +10,6 @@ use examples_util::*;
 use std::mem;
 use std::ffi::CString;
 use cassandra_sys::*;
-use cassandra_sys::Enum_CassCollectionType_::*;
-use cassandra_sys::Enum_CassError_::*;
-use cassandra_sys::Enum_Unnamed1::*;
 
 
 fn insert_into_collections(session: &mut CassSession, key: &str, items: Vec<&str>) -> Result<(), CassError> {
@@ -104,7 +101,8 @@ fn main() {
 
         connect_session(session, cluster).unwrap();
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
+                       'replication_factor': '1' };")
             .unwrap();
 
         execute_query(session,

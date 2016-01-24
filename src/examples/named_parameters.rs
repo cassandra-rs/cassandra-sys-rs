@@ -6,14 +6,11 @@ extern crate num;
 
 use std::mem;
 use std::ffi::CString;
-use cassandra_sys::Enum_CassError_::*;
-use cassandra_sys::Enum_Unnamed1::*;
-
 use cassandra_sys::*;
 
 #[derive(Clone)]
 struct Basic {
-    bln: Enum_Unnamed1,
+    bln: cass_bool_t,
     flt: f32,
     dbl: f64,
     i32: i32,
@@ -70,7 +67,9 @@ fn execute_query(session: &mut CassSession, query: &str) -> Result<(), CassError
 
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
-        let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (:k, :b, :f, :d, :i32, :i64);").unwrap();
+        let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (:k, :b, :f, :d, \
+                                  :i32, :i64);")
+                        .unwrap();
         let key = CString::new(key).unwrap();
         let statement = &mut *cass_statement_new(query.as_ptr(), 6);
         let k = CString::new("k").unwrap().as_ptr();
@@ -168,12 +167,14 @@ fn main() {
         }
 
         execute_query(session,
-                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
+                      "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
+                       'replication_factor': '3' };")
             .unwrap();
 
 
         execute_query(session,
-                      "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 int, i64 bigint, PRIMARY KEY (key));")
+                      "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 \
+                       int, i64 bigint, PRIMARY KEY (key));")
             .unwrap();
 
 

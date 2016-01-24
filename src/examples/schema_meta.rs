@@ -7,10 +7,7 @@ extern crate cassandra_sys;
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
-use cassandra_sys::Enum_Unnamed1::*;
-use cassandra_sys::Enum_CassValueType_::*;
 use std::mem;
-use cassandra_sys::Enum_CassError_::*;
 
 use cassandra_sys::*;
 
@@ -23,9 +20,9 @@ fn print_indent(indent: u32) {
 }
 
 unsafe fn print_schema_value(value: &CassValue) {
-    let mut i: cass_int32_t = mem::zeroed();
+    let mut i: i32 = mem::zeroed();
     let mut b: cass_bool_t = mem::zeroed();
-    let mut d: cass_double_t = mem::zeroed();
+    let mut d: f64 = mem::zeroed();
     // let mut s:CassString=mem::zeroed();
     let mut u: CassUuid = mem::zeroed();
     let mut us: [i8; CASS_UUID_STRING_LENGTH] = mem::zeroed();
@@ -40,8 +37,8 @@ unsafe fn print_schema_value(value: &CassValue) {
             cass_value_get_bool(value, &mut b);
             println!("{}",
                      match b {
-                         Enum_Unnamed1::cass_true => "true", 
-                         Enum_Unnamed1::cass_false => "false",
+                         cass_true => "true",
+                         cass_false => "false",
                      });
         }
 
@@ -234,13 +231,15 @@ pub fn main() {
         if cass_future_error_code(connect_future) == CASS_OK {
 
             execute_query(&mut *session,
-                          "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '3' };")
+                          "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
+                           'replication_factor': '3' };")
                 .unwrap();
 
             print_keyspace(&mut *session, "examples");
 
             execute_query(&mut *session,
-                          "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY (key));")
+                          "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY \
+                           (key));")
                 .unwrap();
 
             print_table(&mut *session, "examples", "schema_meta");
