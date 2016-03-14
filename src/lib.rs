@@ -1,5 +1,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
+#![cfg_attr(feature="clippy", feature(plugin))]
+// #![cfg_attr(feature="clippy", plugin(clippy))]
 #[macro_use]
 extern crate log;
 extern crate libc;
@@ -589,6 +591,57 @@ pub use cassandra::cass_inet_from_string_n;
 pub use cassandra::cass_date_from_epoch;
 pub use cassandra::cass_time_from_epoch;
 pub use cassandra::cass_date_time_to_epoch;
+
+pub use cassandra::CassVersion;
+pub use cassandra::CassIndexMeta;
+pub use cassandra::CassMaterializedViewMeta;
+pub use cassandra::cass_cluster_set_blacklist_dc_filtering_n;
+pub use cassandra::cass_cluster_set_blacklist_dc_filtering;
+pub use cassandra::cass_cluster_set_blacklist_filtering_n;
+pub use cassandra::cass_cluster_set_blacklist_filtering;
+pub use cassandra::cass_cluster_set_whitelist_dc_filtering_n;
+pub use cassandra::cass_cluster_set_whitelist_dc_filtering;
+pub use cassandra::cass_data_type_is_frozen;
+pub use cassandra::cass_index_meta_field_by_name_n;
+pub use cassandra::cass_index_meta_field_by_name;
+pub use cassandra::cass_index_meta_name;
+pub use cassandra::cass_index_meta_type;
+pub use cassandra::cass_index_meta_target;
+pub use cassandra::cass_index_meta_options;
+pub use cassandra::cass_iterator_indexes_from_table_meta;
+pub use cassandra::cass_iterator_materialized_views_from_table_meta;
+pub use cassandra::cass_iterator_columns_from_materialized_view_meta;
+pub use cassandra::cass_iterator_fields_from_materialized_view_meta;
+pub use cassandra::cass_iterator_fields_from_index_meta;
+pub use cassandra::cass_iterator_get_index_meta;
+pub use cassandra::CassClusteringOrder;
+pub use cassandra::cass_iterator_get_materialized_view_meta;
+pub use cassandra::cass_iterator_materialized_views_from_keyspace_meta;
+pub use cassandra::cass_keyspace_meta_materialized_view_by_name;
+pub use cassandra::cass_keyspace_meta_materialized_view_by_name_n;
+pub use cassandra::cass_table_meta_index_by_name;
+pub use cassandra::cass_table_meta_index_by_name_n;
+pub use cassandra::cass_table_meta_index_count;
+pub use cassandra::cass_table_meta_index;
+pub use cassandra::cass_table_meta_materialized_view_by_name;
+pub use cassandra::cass_table_meta_materialized_view_by_name_n;
+pub use cassandra::cass_schema_meta_version;
+pub use cassandra::cass_table_meta_materialized_view_count;
+pub use cassandra::cass_table_meta_materialized_view;
+pub use cassandra::cass_table_meta_clustering_key_order;
+pub use cassandra::cass_materialized_view_meta_column_by_name;
+pub use cassandra::cass_materialized_view_meta_column_by_name_n;
+pub use cassandra::cass_materialized_view_meta_name;
+pub use cassandra::cass_materialized_view_meta_base_table;
+pub use cassandra::cass_materialized_view_meta_column_count;
+pub use cassandra::cass_materialized_view_meta_column;
+pub use cassandra::cass_materialized_view_meta_partition_key_count;
+pub use cassandra::cass_materialized_view_meta_partition_key;
+pub use cassandra::cass_materialized_view_meta_clustering_key_count;
+pub use cassandra::cass_materialized_view_meta_clustering_key;
+pub use cassandra::cass_materialized_view_meta_clustering_key_order;
+pub use cassandra::cass_materialized_view_meta_field_by_name;
+pub use cassandra::cass_materialized_view_meta_field_by_name_n;
 
 
 mod cassandra;

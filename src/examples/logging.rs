@@ -8,6 +8,7 @@ extern crate libc;
 extern crate env_logger;
 mod examples_util;
 use examples_util::*;
+use std::os::raw;
 
 use std::ptr;
 use std::env;
@@ -15,7 +16,7 @@ use std::ffi::CStr;
 
 use cassandra_sys::*;
 
-unsafe extern "C" fn on_log(message: *const CassLogMessage, data: *mut libc::c_void) {
+unsafe extern "C" fn on_log(message: *const CassLogMessage, data: *mut raw::c_void) {
     let _ = data;
     let message = &*message;
     info!(target: "cass_log", "{:?}.{:?} [{:?}] ({:?}:{:?}:{:?}) {:?}",
