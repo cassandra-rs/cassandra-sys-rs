@@ -252,7 +252,7 @@ pub fn main() {
             let mut l = mem::zeroed();
             cass_future_error_message(connect_future, &mut m, &mut l);
 
-            println!("Unable to connect: {}", raw2utf8(m, l as u64).unwrap());
+            println!("Unable to connect: {}", raw2utf8(m, l).unwrap());
         }
 
         cass_future_free(connect_future);

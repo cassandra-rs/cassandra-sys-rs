@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2014-2015 DataStax
+  Copyright (c) 2014-2016 DataStax
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@
  */
 
 #define CASS_VERSION_MAJOR 2
-#define CASS_VERSION_MINOR 2
+#define CASS_VERSION_MINOR 4
 #define CASS_VERSION_PATCH 2
 #define CASS_VERSION_SUFFIX ""
 
@@ -110,6 +110,8 @@ typedef unsigned long long int cass_uint64_t;
 typedef long long cass_int64_t;
 typedef unsigned long long cass_uint64_t;
 #endif
+
+#define CASS_UINT64_MAX 18446744073709551615ULL
 
 typedef cass_uint8_t cass_byte_t;
 typedef cass_uint64_t cass_duration_t;
@@ -611,9 +613,10 @@ typedef enum CassLogLevel_ {
 } CassLogLevel;
 
 typedef enum CassSslVerifyFlags {
-  CASS_SSL_VERIFY_NONE,
-  CASS_SSL_VERIFY_PEER_CERT,
-  CASS_SSL_VERIFY_PEER_IDENTITY
+  CASS_SSL_VERIFY_NONE              = 0x00,
+  CASS_SSL_VERIFY_PEER_CERT         = 0x01,
+  CASS_SSL_VERIFY_PEER_IDENTITY     = 0x02,
+  CASS_SSL_VERIFY_PEER_IDENTITY_DNS = 0x04
 } CassSslVerifyFlags;
 
 typedef enum  CassErrorSource_ {
@@ -652,6 +655,12 @@ typedef enum  CassErrorSource_ {
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_PARAMETER_UNSET, 25, "Parameter unset") \
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_INVALID_ERROR_RESULT_TYPE, 26, "Invalid error result type") \
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_INVALID_FUTURE_TYPE, 27, "Invalid future type") \
+  XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_INTERNAL_ERROR, 28, "Internal error") \
+  XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_INVALID_CUSTOM_TYPE, 29, "Invalid custom type") \
+  XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_INVALID_DATA, 30, "Invalid data") \
+  XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_NOT_ENOUGH_DATA, 31, "Not enough data") \
+  XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_INVALID_STATE, 32, "Invalid state") \
+  XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_NO_CUSTOM_PAYLOAD, 33, "No custom payload") \
   XX(CASS_ERROR_SOURCE_SERVER, CASS_ERROR_SERVER_SERVER_ERROR, 0x0000, "Server error") \
   XX(CASS_ERROR_SOURCE_SERVER, CASS_ERROR_SERVER_PROTOCOL_ERROR, 0x000A, "Protocol error") \
   XX(CASS_ERROR_SOURCE_SERVER, CASS_ERROR_SERVER_BAD_CREDENTIALS, 0x0100, "Bad credentials") \
@@ -704,7 +713,7 @@ typedef void (*CassFutureCallback)(CassFuture* future,
 /**
  * Maximum size of a log message
  */
-#define CASS_LOG_MAX_MESSAGE_SIZE 256
+#define CASS_LOG_MAX_MESSAGE_SIZE 1024
 
 /**
  * A log message.
@@ -732,6 +741,89 @@ typedef struct CassLogMessage_ {
  */
 typedef void (*CassLogCallback)(const CassLogMessage* message,
                                 void* data);
+
+/**
+ * An authenticator.
+ *
+ * @struct CassAuthenticator
+ */
+typedef struct CassAuthenticator_ CassAuthenticator;
+
+
+/**
+ * A callback used to initiate an authentication exchange.
+ *
+ * Use cass_authenticator_set_response() to set the response token.
+ *
+ * Use cass_authenticator_set_error() if an error occured during initialization.
+ *
+ * @param[in] auth
+ * @param[in] data
+ */
+typedef void (*CassAuthenticatorInitalCallback)(CassAuthenticator* auth,
+                                                void* data);
+
+/**
+ * A callback used when an authentication challenge initiated
+ * by the server.
+ *
+ * Use cass_authenticator_set_response() to set the response token.
+ *
+ * Use cass_authenticator_set_error() if an error occured during the challenge.
+ *
+ * @param[in] auth
+ * @param[in] data
+ * @param[in] token
+ * @param[in] token_size
+ */
+typedef void (*CassAuthenticatorChallengeCallback)(CassAuthenticator* auth,
+                                                   void* data,
+                                                   const char* token,
+                                                   size_t token_size);
+/**
+ * A callback used to indicate the success of the authentication
+ * exchange.
+ *
+ * Use cass_authenticator_set_error() if an error occured while evaluating
+ * the success token.
+ *
+ * @param[in] auth
+ * @param[in] data
+ * @param[in] token
+ * @param[in] token_size
+ */
+typedef void (*CassAuthenticatorSuccessCallback)(CassAuthenticator* auth,
+                                                 void* data,
+                                                 const char* token,
+                                                 size_t token_size);
+/**
+ * A callback used to cleanup resources that were acquired during
+ * the process of the authentication exchange. This is called after
+ * the termination of the exchange regardless of the outcome.
+ *
+ * @param[in] auth
+ * @param[in] data
+ */
+typedef void (*CassAuthenticatorCleanupCallback)(CassAuthenticator* auth,
+                                                 void* data);
+
+
+/**
+ * A callback used to cleanup resources.
+ *
+ * @param[in] data
+ */
+typedef void (*CassAuthenticatorDataCleanupCallback)(void* data);
+
+/**
+ * Authenticator callbacks
+ */
+typedef struct CassAuthenticatorCallbacks_ {
+  CassAuthenticatorInitalCallback initial_callback;
+  CassAuthenticatorChallengeCallback challenge_callback;
+  CassAuthenticatorSuccessCallback success_callback;
+  CassAuthenticatorCleanupCallback cleanup_callback;
+} CassAuthenticatorCallbacks;
 
 /***********************************************************************************
  *
@@ -828,6 +920,23 @@ cass_cluster_set_port(CassCluster* cluster,
 CASS_EXPORT void
 cass_cluster_set_ssl(CassCluster* cluster,
                      CassSsl* ssl);
+
+/**
+ * Sets custom authenticator
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] exchange_callbacks
+ * @param[in] cleanup_callback
+ * @param[in] data
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_authenticator_callbacks(CassCluster* cluster,
+                                         const CassAuthenticatorCallbacks* exchange_callbacks,
+                                         CassAuthenticatorDataCleanupCallback cleanup_callback,
+                                         void* data);
 
 /**
  * Sets the protocol version. This will automatically downgrade to the lowest
@@ -1097,10 +1206,24 @@ cass_cluster_set_connect_timeout(CassCluster* cluster,
  * @public @memberof CassCluster
  *
  * @param[in] cluster
- * @param[in] timeout_ms Request timeout in milliseconds
+ * @param[in] timeout_ms Request timeout in milliseconds. Use 0 for no timeout.
  */
 CASS_EXPORT void
 cass_cluster_set_request_timeout(CassCluster* cluster,
+                                 unsigned timeout_ms);
+
+/**
+ * Sets the timeout for waiting for DNS name resolution.
+ *
+ * <b>Default:</b> 2000 milliseconds
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] timeout_ms Request timeout in milliseconds
+ */
+CASS_EXPORT void
+cass_cluster_set_resolve_timeout(CassCluster* cluster,
                                  unsigned timeout_ms);
 
 /**
@@ -1388,8 +1511,8 @@ cass_cluster_set_whitelist_dc_filtering(CassCluster* cluster,
  * @public @memberof CassCluster
  *
  * @param[in] cluster
- * @param[in] hosts
- * @param[in] hosts_length
+ * @param[in] dcs
+ * @param[in] dcs_length
  * @return same as cass_cluster_set_whitelist_dc_filtering()
  *
  * @see cass_cluster_set_whitelist_dc_filtering()
@@ -1397,7 +1520,7 @@ cass_cluster_set_whitelist_dc_filtering(CassCluster* cluster,
 CASS_EXPORT void
 cass_cluster_set_whitelist_dc_filtering_n(CassCluster* cluster,
                                           const char* dcs,
-                                          size_t hosts_length);
+                                          size_t dcs_length);
 
 /**
  * Same as cass_cluster_set_blacklist_filtering(), but blacklist all hosts of a dc
@@ -1422,8 +1545,8 @@ cass_cluster_set_blacklist_dc_filtering(CassCluster* cluster,
  * @public @memberof CassCluster
  *
  * @param[in] cluster
- * @param[in] hosts
- * @param[in] hosts_length
+ * @param[in] dcs
+ * @param[in] dcs_length
  * @return same as cass_cluster_set_blacklist_dc_filtering()
  *
  * @see cass_cluster_set_blacklist_dc_filtering()
@@ -1431,7 +1554,7 @@ cass_cluster_set_blacklist_dc_filtering(CassCluster* cluster,
 CASS_EXPORT void
 cass_cluster_set_blacklist_dc_filtering_n(CassCluster* cluster,
                                           const char* dcs,
-                                          size_t hosts_length);
+                                          size_t dcs_length);
 
 /**
  * Enable/Disable Nagel's algorithm on connections.
@@ -1554,11 +1677,33 @@ cass_cluster_set_retry_policy(CassCluster* cluster,
  * @param[in] enabled
  *
  * @see cass_session_get_schema_meta()
- * @see cass_cluster_set_token_aware_routing();
+ * @see cass_cluster_set_token_aware_routing()
  */
 CASS_EXPORT void
 cass_cluster_set_use_schema(CassCluster* cluster,
                             cass_bool_t enabled);
+
+/**
+ * Enable/Disable retrieving hostnames for IP addresses using reverse IP lookup.
+ *
+ * This is useful for authentication (Kerberos) or encryption (SSL) services
+ * that require a valid hostname for verification.
+ *
+ * <b>Default:</b> cass_false (disabled).
+ *
+ * <b>Important:</b> Not implemented if using libuv 0.1x or earlier
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] enabled
+ * @return CASS_OK if successful, otherwise an error occurred
+ *
+ * @see cass_cluster_set_resolve_timeout()
+ */
+CASS_EXPORT CassError
+cass_cluster_set_use_hostname_resolution(CassCluster* cluster,
+                                         cass_bool_t enabled);
 
 /***********************************************************************************
  *
@@ -1598,7 +1743,8 @@ cass_session_free(CassSession* session);
  * @public @memberof CassSession
  *
  * @param[in] session
- * @param[in] cluster
+ * @param[in] cluster The cluster configuration is copied into the session and
+ * is immutable after connection.
  * @return A future that must be freed.
  *
  * @see cass_session_close()
@@ -1613,7 +1759,8 @@ cass_session_connect(CassSession* session,
  * @public @memberof CassSession
  *
  * @param[in] session
- * @param[in] cluster
+ * @param[in] cluster The cluster configuration is copied into the session and
+ * is immutable after connection.
  * @param[in] keyspace
  * @return A future that must be freed.
  *
@@ -3134,6 +3281,9 @@ cass_ssl_add_trusted_cert_n(CassSsl* ssl,
  * CASS_SSL_VERIFY_PEER_IDENTITY - IP address matches the certificate's
  * common name or one of its subject alternative names. This implies the
  * certificate is also present.
+ * CASS_SSL_VERIFY_PEER_IDENTITY_DNS - Hostname matches the certificate's
+ * common name or one of its subject alternative names. This implies the
+ * certificate is also present. Hostname resolution must also be enabled.
  *
  * <b>Default:</b> CASS_SSL_VERIFY_PEER_CERT
  *
@@ -3142,6 +3292,8 @@ cass_ssl_add_trusted_cert_n(CassSsl* ssl,
  * @param[in] ssl
  * @param[in] flags
  * @return CASS_OK if successful, otherwise an error occurred
+ *
+ * @see cass_cluster_set_use_hostname_resolution()
  */
 CASS_EXPORT void
 cass_ssl_set_verify_flags(CassSsl* ssl,
@@ -3220,6 +3372,135 @@ cass_ssl_set_private_key_n(CassSsl* ssl,
 
 /***********************************************************************************
  *
+ * Authenticator
+ *
+ ************************************************************************************/
+
+/**
+ * Gets the IP address of the host being authenticated.
+ *
+ * @param[in] auth
+ * @param[out] address
+ *
+ * @public @memberof CassAuthenticator
+ */
+CASS_EXPORT void
+cass_authenticator_address(const CassAuthenticator* auth,
+                           CassInet* address);
+
+/**
+ * Gets the hostname of the host being authenticated.
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @param[out] length
+ * @return A null-terminated string.
+ */
+CASS_EXPORT const char*
+cass_authenticator_hostname(const CassAuthenticator* auth,
+                            size_t* length);
+
+/**
+ * Gets the class name for the server-side IAuthentication implementation.
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @param[out] length
+ * @return A null-terminated string.
+ */
+CASS_EXPORT const char*
+cass_authenticator_class_name(const CassAuthenticator* auth,
+                              size_t* length);
+
+/**
+ * Gets the user data created during the authenticator exchange. This
+ * is set using cass_authenticator_set_exchange_data().
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @return User specified exchange data previously set by
+ * cass_authenticator_set_exchange_data().
+ *
+ * @see cass_authenticator_set_exchange_data()
+ */
+CASS_EXPORT void*
+cass_authenticator_exchange_data(CassAuthenticator* auth);
+
+/**
+ * Sets the user data to be used during the authenticator exchange.
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @param[in] exchange_data
+ *
+ * @see cass_authenticator_exchange_data()
+ */
+CASS_EXPORT void
+cass_authenticator_set_exchange_data(CassAuthenticator* auth,
+                                     void* exchange_data);
+
+/**
+ * Gets a response token buffer of the provided size.
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @param[in] size
+ * @return A buffer to copy the response token.
+ */
+CASS_EXPORT char*
+cass_authenticator_response(CassAuthenticator* auth,
+                            size_t size);
+
+/**
+ * Sets the response token.
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @param[in] response
+ * @param[in] response_size
+ */
+CASS_EXPORT void
+cass_authenticator_set_response(CassAuthenticator* auth,
+                                const char* response,
+                                size_t response_size);
+
+/**
+ * Sets an error for the authenticator exchange.
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @param[in] message
+ */
+CASS_EXPORT void
+cass_authenticator_set_error(CassAuthenticator* auth,
+                             const char* message);
+
+/**
+ * Same as cass_authenticator_set_error_n(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassAuthenticator
+ *
+ * @param[in] auth
+ * @param[in] message
+ * @param[in] message_length
+ *
+ * @see cass_authenticator_set_error()
+ */
+CASS_EXPORT void
+cass_authenticator_set_error_n(CassAuthenticator* auth,
+                               const char* message,
+                               size_t message_length);
+
+/***********************************************************************************
+ *
  * Future
  *
  ***********************************************************************************/
@@ -3261,7 +3542,7 @@ cass_future_ready(CassFuture* future);
 /**
  * Wait for the future to be set with either a result or error.
  *
- * Important: Do not wait in a future callback. Waiting in a future
+ * <b>Important:</b> Do not wait in a future callback. Waiting in a future
  * callback will cause a deadlock.
  *
  * @public @memberof CassFuture
@@ -3440,6 +3721,19 @@ cass_statement_new_n(const char* query,
                      size_t parameter_count);
 
 /**
+ * Clear and/or resize the statement's parameters.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] count
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_reset_parameters(CassStatement* statement,
+                                 size_t count);
+
+/**
  * Frees a statement instance. Statements can be immediately freed after
  * being prepared, executed or added to a batch.
  *
@@ -3610,6 +3904,23 @@ CASS_EXPORT CassError
 cass_statement_set_timestamp(CassStatement* statement,
                              cass_int64_t timestamp);
 
+/**
+ * Sets the statement's timeout for waiting for a response from a node.
+ *
+ * <b>Default:</b> Disabled (use the cluster-level request timeout)
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] timeout_ms Request timeout in milliseconds. Use 0 for no timeout
+ * or CASS_UINT64_MAX to disable (to use the cluster-level request timeout).
+ * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_cluster_set_request_timeout()
+ */
+CASS_EXPORT CassError
+cass_statement_set_request_timeout(CassStatement* statement,
+                                   cass_uint64_t timeout_ms);
 
 /**
  * Sets the statement's retry policy.
@@ -3656,7 +3967,7 @@ cass_statement_bind_null(CassStatement* statement,
  * Binds a null to all the values with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -3707,9 +4018,6 @@ cass_statement_bind_int8(CassStatement* statement,
  * Binds a "tinyint" to all the values with the specified name.
  *
  * @cassandra{2.2+}
- *
- * This can only be used with statements created by
- * cass_prepared_bind().
  *
  * @public @memberof CassStatement
  *
@@ -3767,9 +4075,6 @@ cass_statement_bind_int16(CassStatement* statement,
  *
  * @cassandra{2.2+}
  *
- * This can only be used with statements created by
- * cass_prepared_bind().
- *
  * @public @memberof CassStatement
  *
  * @param[in] statement
@@ -3823,7 +4128,7 @@ cass_statement_bind_int32(CassStatement* statement,
  * Binds an "int" to all the values with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -3878,9 +4183,6 @@ cass_statement_bind_uint32(CassStatement* statement,
  * Binds a "date" to all the values with the specified name.
  *
  * @cassandra{2.2+}
- *
- * This can only be used with statements created by
- * cass_prepared_bind().
  *
  * @public @memberof CassStatement
  *
@@ -3937,7 +4239,7 @@ cass_statement_bind_int64(CassStatement* statement,
  * with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -3990,7 +4292,7 @@ cass_statement_bind_float(CassStatement* statement,
  * Binds a "float" to all the values with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4043,7 +4345,7 @@ cass_statement_bind_double(CassStatement* statement,
  * Binds a "double" to all the values with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4096,7 +4398,7 @@ cass_statement_bind_bool(CassStatement* statement,
  * Binds a "boolean" to all the values with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4172,7 +4474,7 @@ cass_statement_bind_string_n(CassStatement* statement,
  * with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4232,7 +4534,7 @@ cass_statement_bind_bytes(CassStatement* statement,
  * specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4272,6 +4574,97 @@ cass_statement_bind_bytes_by_name_n(CassStatement* statement,
                                     size_t value_size);
 
 /**
+ * Binds a "custom" to a query or bound statement at the specified index.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] index
+ * @param[in] class_name
+ * @param[in] value The value is copied into the statement object; the
+ * memory pointed to by this parameter can be freed after this call.
+ * @param[in] value_size
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_bind_custom(CassStatement* statement,
+                           size_t index,
+                           const char* class_name,
+                           const cass_byte_t* value,
+                           size_t value_size);
+/**
+ * Same as cass_statement_bind_custom(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] index
+ * @param[in] class_name
+ * @param[in] class_name_length
+ * @param[in] value The value is copied into the statement object; the
+ * memory pointed to by this parameter can be freed after this call.
+ * @param[in] value_size
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_bind_custom_n(CassStatement* statement,
+                             size_t index,
+                             const char* class_name,
+                             size_t class_name_length,
+                             const cass_byte_t* value,
+                             size_t value_size);
+
+/**
+ * Binds a "custom" to all the values with the specified name.
+ *
+ * This can only be used with statements created by
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] name
+ * @param[in] class_name
+ * @param[in] value The value is copied into the statement object; the
+ * memory pointed to by this parameter can be freed after this call.
+ * @param[in] value_size
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_bind_custom_by_name(CassStatement* statement,
+                                   const char* name,
+                                   const char* class_name,
+                                   const cass_byte_t* value,
+                                   size_t value_size);
+
+/**
+ * Same as cass_statement_bind_custom_by_name(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] name
+ * @param[in] name_length
+ * @param[in] class_name
+ * @param[in] class_name_length
+ * @param[in] value
+ * @param[in] value_size
+ * @return same as cass_statement_bind_custom_by_name()
+ *
+ * @see cass_statement_bind_custom_by_name()
+ */
+CASS_EXPORT CassError
+cass_statement_bind_custom_by_name_n(CassStatement* statement,
+                                     const char* name,
+                                     size_t name_length,
+                                     const char* class_name,
+                                     size_t class_name_length,
+                                     const cass_byte_t* value,
+                                     size_t value_size);
+
+/**
  * Binds a "uuid" or "timeuuid" to a query or bound statement at the specified index.
  *
  * @public @memberof CassStatement
@@ -4291,7 +4684,7 @@ cass_statement_bind_uuid(CassStatement* statement,
  * with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4344,7 +4737,7 @@ cass_statement_bind_inet(CassStatement* statement,
  * Binds an "inet" to all the values with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4402,7 +4795,7 @@ cass_statement_bind_decimal(CassStatement* statement,
  * Binds a "decimal" to all the values with the specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4466,7 +4859,7 @@ cass_statement_bind_collection(CassStatement* statement,
  * specified name.
  *
  * This can only be used with statements created by
- * cass_prepared_bind().
+ * cass_prepared_bind() when using Cassandra 2.0 or earlier.
  *
  * @public @memberof CassStatement
  *
@@ -4521,9 +4914,6 @@ cass_statement_bind_tuple(CassStatement* statement,
  * Bind a "tuple" to all the values with the specified name.
  *
  * @cassandra{2.1+}
- *
- * This can only be used with statements created by
- * cass_prepared_bind().
  *
  * @public @memberof CassStatement
  *
@@ -4791,6 +5181,24 @@ cass_batch_set_timestamp(CassBatch* batch,
                          cass_int64_t timestamp);
 
 /**
+ * Sets the batch's timeout for waiting for a response from a node.
+ *
+ * <b>Default:</b> Disabled (use the cluster-level request timeout)
+ *
+ * @public @memberof CassBatch
+ *
+ * @param[in] batch
+ * @param[in] timeout_ms Request timeout in milliseconds. Use 0 for no timeout
+ * or CASS_UINT64_MAX to disable (to use the cluster-level request timeout).
+ * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_cluster_set_request_timeout()
+ */
+CASS_EXPORT CassError
+cass_batch_set_request_timeout(CassBatch* batch,
+                               cass_uint64_t timeout_ms);
+
+/**
  * Sets the batch's retry policy.
  *
  * @cassandra{2.0+}
@@ -4823,7 +5231,7 @@ cass_batch_set_custom_payload(CassBatch* batch,
 /**
  * Adds a statement to a batch.
  *
- * @cassandra{2.1+}
+ * @cassandra{2.0+}
  *
  * @public @memberof CassBatch
  *
@@ -5032,7 +5440,7 @@ cass_data_type_set_keyspace_n(CassDataType* data_type,
  * @return CASS_OK if successful, otherwise an error occurred.
  */
 CASS_EXPORT CassError
-cass_data_type_class_name(CassDataType* data_type,
+cass_data_type_class_name(const CassDataType* data_type,
                           const char** class_name,
                           size_t* class_name_length);
 
@@ -5484,6 +5892,46 @@ cass_collection_append_bytes(CassCollection* collection,
                              size_t value_size);
 
 /**
+ * Appends a "custom" to the collection.
+ *
+ * @public @memberof CassCollection
+ *
+ * @param[in] collection
+ * @param[in] class_name
+ * @param[in] value The value is copied into the collection object; the
+ * memory pointed to by this parameter can be freed after this call.
+ * @param[in] value_size
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_collection_append_custom(CassCollection* collection,
+                              const char* class_name,
+                              const cass_byte_t* value,
+                              size_t value_size);
+
+/**
+ * Same as cass_collection_append_custom(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassCollection
+ *
+ * @param[in] collection
+ * @param[in] class_name
+ * @param[in] class_name_length
+ * @param[in] value
+ * @param[in] value_size
+ * @return same as cass_collection_append_custom()
+ *
+ * @see cass_collection_append_custom()
+ */
+CASS_EXPORT CassError
+cass_collection_append_custom_n(CassCollection* collection,
+                                const char* class_name,
+                                size_t class_name_length,
+                                const cass_byte_t* value,
+                                size_t value_size);
+
+/**
  * Appends a "uuid" or "timeuuid"  to the collection.
  *
  * @public @memberof CassCollection
@@ -5842,6 +6290,50 @@ cass_tuple_set_bytes(CassTuple* tuple,
                      size_t index,
                      const cass_byte_t* value,
                      size_t value_size);
+
+/**
+ * Sets a "custom" in a tuple at the specified index.
+ *
+ * @public @memberof CassTuple
+ *
+ * @param[in] tuple
+ * @param[in] index
+ * @param[in] class_name
+ * @param[in] value The value is copied into the tuple object; the
+ * memory pointed to by this parameter can be freed after this call.
+ * @param[in] value_size
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_tuple_set_custom(CassTuple* tuple,
+                      size_t index,
+                      const char* class_name,
+                      const cass_byte_t* value,
+                      size_t value_size);
+
+/**
+ * Same as cass_tuple_set_custom(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassTuple
+ *
+ * @param[in] tuple
+ * @param[in] index
+ * @param[in] class_name
+ * @param[in] class_name_length
+ * @param[in] value
+ * @param[in] value_size
+ * @return same as cass_tuple_set_custom()
+ *
+ * @see cass_tuple_set_custom()
+ */
+CASS_EXPORT CassError
+cass_tuple_set_custom_n(CassTuple* tuple,
+                        size_t index,
+                        const char* class_name,
+                        size_t class_name_length,
+                        const cass_byte_t* value,
+                        size_t value_size);
 
 /**
  * Sets a "uuid" or "timeuuid" in a tuple at the specified index.
@@ -6642,6 +7134,94 @@ cass_user_type_set_bytes_by_name_n(CassUserType* user_type,
                                    size_t name_length,
                                    const cass_byte_t* value,
                                    size_t value_size);
+
+/**
+ * Sets a "custom" in a user defined type at the specified index.
+ *
+ * @public @memberof CassUserType
+ *
+ * @param[in] user_type
+ * @param[in] index
+ * @param[in] class_name
+ * @param[in] value
+ * @param[in] value_size
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_user_type_set_custom(CassUserType* user_type,
+                          size_t index,
+                          const char* class_name,
+                          const cass_byte_t* value,
+                          size_t value_size);
+
+/**
+ * Same as cass_user_type_set_custom(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassUserType
+ *
+ * @param[in] user_type
+ * @param[in] index
+ * @param[in] class_name
+ * @param[in] class_name_length
+ * @param[in] value
+ * @param[in] value_size
+ * @return same as cass_user_type_set_custom()
+ *
+ * @see cass_user_type_set_custom()
+ */
+CASS_EXPORT CassError
+cass_user_type_set_custom_n(CassUserType* user_type,
+                            size_t index,
+                            const char* class_name,
+                            size_t class_name_length,
+                            const cass_byte_t* value,
+                            size_t value_size);
+
+/**
+ * Sets a "custom" in a user defined type at the specified name.
+ *
+ * @public @memberof CassUserType
+ *
+ * @param[in] user_type
+ * @param[in] name
+ * @param[in] class_name
+ * @param[in] value
+ * @param[in] value_size
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_user_type_set_custom_by_name(CassUserType* user_type,
+                                  const char* name,
+                                  const char* class_name,
+                                  const cass_byte_t* value,
+                                  size_t value_size);
+
+/**
+ * Same as cass_user_type_set_custom_by_name(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassUserType
+ *
+ * @param[in] user_type
+ * @param[in] name
+ * @param[in] name_length
+ * @param[in] class_name
+ * @param[in] class_name_length
+ * @param[in] value
+ * @param[in] value_size
+ * @return same as cass_user_type_set_custom_by_name()
+ *
+ * @see cass_user_type_set_custom_by_name()
+ */
+CASS_EXPORT CassError
+cass_user_type_set_custom_by_name_n(CassUserType* user_type,
+                                    const char* name,
+                                    size_t name_length,
+                                    const char* class_name,
+                                    size_t class_name_length,
+                                    const cass_byte_t* value,
+                                    size_t value_size);
 
 /**
  * Sets a "uuid" or "timeuuid" in a user defined type at the specified index.
@@ -7634,7 +8214,7 @@ cass_iterator_indexes_from_table_meta(const CassTableMeta* table_meta);
  *
  * @public @memberof CassTableMeta
  *
- * @param[in] view_meta
+ * @param[in] table_meta
  * @return A new iterator that must be freed.
  *
  * @see cass_iterator_get_materialized_view_meta()
@@ -8771,7 +9351,7 @@ cass_custom_payload_set(CassCustomPayload* payload,
  *
  * @cassandra{2.2+}
  *
- * @public @memberof CassInet
+ * @public @memberof CassCustomPayload
  *
  * @param[in] payload
  * @param[in] name
@@ -8785,6 +9365,38 @@ cass_custom_payload_set_n(CassCustomPayload* payload,
                           size_t name_length,
                           const cass_byte_t* value,
                           size_t value_size);
+
+/**
+ * Removes an item from the custom payload.
+ *
+ * @cassandra{2.2+}
+ *
+ * @public @memberof CassCustomPayload
+ *
+ * @param[in] payload
+ * @param[in] name
+ */
+CASS_EXPORT void
+cass_custom_payload_remove(CassCustomPayload* payload,
+                           const char* name);
+
+/**
+ * Same as cass_custom_payload_set(), but with lengths for string
+ * parameters.
+ *
+ * @cassandra{2.2+}
+ *
+ * @public @memberof CassCustomPayload
+ *
+ * @param[in] payload
+ * @param[in] name
+ * @param[in] name_length
+ */
+CASS_EXPORT void
+cass_custom_payload_remove_n(CassCustomPayload* payload,
+                             const char* name,
+                             size_t name_length);
+
 
 /***********************************************************************************
  *

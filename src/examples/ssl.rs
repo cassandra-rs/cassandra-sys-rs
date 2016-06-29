@@ -18,7 +18,7 @@ fn load_trusted_cert_file(file: &str, ssl: &mut CassSsl) -> IoResult<()> {
         let byte_len = try!(file.read_to_end(&mut cert));
         match byte_len == cert_size {
             true => {
-                let rc = cass_ssl_add_trusted_cert_n(ssl, cert.as_ptr() as *const i8, cert_size as u64);
+                let rc = cass_ssl_add_trusted_cert_n(ssl, cert.as_ptr() as *const i8, cert_size);
                 match rc {
                     CASS_OK => Ok(()),
                     rc => {

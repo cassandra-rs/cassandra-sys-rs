@@ -9,10 +9,10 @@ extern crate libc;
 pub use ffi_util::*;
 
 pub use cassandra::cass_bool_t;
-pub use cassandra::Enum_Unnamed1::{cass_true, cass_false};
+pub use cassandra::cass_bool_t::{cass_true, cass_false};
 
 pub use cassandra::CassError;
-pub use cassandra::Enum_CassError_::{CASS_OK, 
+pub use cassandra::CassError_::{CASS_OK, 
     CASS_ERROR_LIB_BAD_PARAMS,
     CASS_ERROR_LIB_NO_STREAMS,
     CASS_ERROR_LIB_UNABLE_TO_INIT,
@@ -68,15 +68,15 @@ pub use cassandra::Enum_CassError_::{CASS_OK,
 
 };
 
-pub use cassandra::Enum_CassSslVerifyFlags::{CASS_SSL_VERIFY_NONE, CASS_SSL_VERIFY_PEER_CERT,
+pub use cassandra::CassSslVerifyFlags::{CASS_SSL_VERIFY_NONE, CASS_SSL_VERIFY_PEER_CERT,
                                              CASS_SSL_VERIFY_PEER_IDENTITY};
 
-pub use cassandra::Enum_CassBatchType_::CASS_BATCH_TYPE_LOGGED;
+pub use cassandra::CassBatchType_::CASS_BATCH_TYPE_LOGGED;
 
-pub use cassandra::Enum_CassLogLevel_::CASS_LOG_INFO;
+pub use cassandra::CassLogLevel_::CASS_LOG_INFO;
 
 
-pub use cassandra::Enum_CassValueType_::{CASS_VALUE_TYPE_UNKNOWN, CASS_VALUE_TYPE_CUSTOM, CASS_VALUE_TYPE_ASCII,
+pub use cassandra::CassValueType_::{CASS_VALUE_TYPE_UNKNOWN, CASS_VALUE_TYPE_CUSTOM, CASS_VALUE_TYPE_ASCII,
                                          CASS_VALUE_TYPE_BIGINT, CASS_VALUE_TYPE_BLOB, CASS_VALUE_TYPE_BOOLEAN,
                                          CASS_VALUE_TYPE_COUNTER, CASS_VALUE_TYPE_DECIMAL, CASS_VALUE_TYPE_DOUBLE,
                                          CASS_VALUE_TYPE_FLOAT, CASS_VALUE_TYPE_INT, CASS_VALUE_TYPE_TEXT,
@@ -87,7 +87,7 @@ pub use cassandra::Enum_CassValueType_::{CASS_VALUE_TYPE_UNKNOWN, CASS_VALUE_TYP
                                          CASS_VALUE_TYPE_SET, CASS_VALUE_TYPE_UDT, CASS_VALUE_TYPE_TUPLE,
                                          CASS_VALUE_TYPE_LAST_ENTRY};
 
-pub use cassandra::Enum_CassCollectionType_::{CASS_COLLECTION_TYPE_SET, CASS_COLLECTION_TYPE_LIST,
+pub use cassandra::CassCollectionType_::{CASS_COLLECTION_TYPE_SET, CASS_COLLECTION_TYPE_LIST,
                                               CASS_COLLECTION_TYPE_MAP};
 
 // pub use cassandra::ffi_util::raw2utf8;

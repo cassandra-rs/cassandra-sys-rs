@@ -65,7 +65,7 @@ fn select_from_log(session: &mut CassSession, key: &str) -> Result<(), CassError
 
                 while cass_iterator_next(iterator) == cass_true {
                     let row = cass_iterator_get_row(iterator);
-                    let mut key_length: u64 = mem::zeroed();
+                    let mut key_length = mem::zeroed();
                     let mut time: CassUuid = mem::zeroed();
                     let mut entry = mem::zeroed();
                     let mut entry_length = mem::zeroed();
