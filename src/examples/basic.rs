@@ -11,7 +11,7 @@ use std::ffi::CString;
 
 #[derive(Debug)]
 struct Basic {
-    bln: cass_bool_t,
+    bln: bool,
     flt: f32,
     dbl: f64,
     i32: i32,
@@ -24,7 +24,7 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
         let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 6);
 
         cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
-        cass_statement_bind_bool(statement, 1, basic.bln);
+        cass_statement_bind_bool(statement, 1, basic.bln.into());
         cass_statement_bind_float(statement, 2, basic.flt);
         cass_statement_bind_double(statement, 3, basic.dbl);
         cass_statement_bind_int32(statement, 4, basic.i32);
@@ -71,7 +71,7 @@ fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
                         let ref mut b_i32 = basic.i32;
                         let ref mut b_i64 = basic.i64;
 
-                        cass_value_get_bool(cass_row_get_column(row, 1), b_bln);
+                        cass_value_get_bool(cass_row_get_column(row, 1), &mut (*b_bln).into());
                         cass_value_get_double(cass_row_get_column(row, 2), b_dbl);
                         cass_value_get_float(cass_row_get_column(row, 3), b_flt);
                         cass_value_get_int32(cass_row_get_column(row, 4), b_i32);
@@ -98,7 +98,7 @@ pub fn main() {
         let session = &mut *cass_session_new();
 
         let input = &mut Basic {
-            bln: cass_true,
+            bln: true,
             flt: 0.001f32,
             dbl: 0.0002f64,
             i32: 1,
@@ -108,7 +108,7 @@ pub fn main() {
         match connect_session(session, cluster) {
             Ok(()) => {
                 let output = &mut Basic {
-                    bln: cass_false,
+                    bln: false,
                     flt: 0f32,
                     dbl: 0f64,
                     i32: 0,

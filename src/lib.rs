@@ -645,4 +645,4 @@ pub use cassandra::cass_materialized_view_meta_field_by_name_n;
 
 
 mod cassandra;
-mod ffi_util;
+pub mod ffi_util;

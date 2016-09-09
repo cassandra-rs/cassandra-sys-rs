@@ -7,22 +7,12 @@
 pub type ptrdiff_t = isize;
 pub type size_t = usize;
 pub type wchar_t = ::std::os::raw::c_int;
-#[repr(C)]
 #[derive(Copy, Clone)]
-#[derive(Debug)]
-pub struct max_align_t {
-    pub __clang_max_align_nonce1: ::std::os::raw::c_longlong,
-    pub __clang_max_align_nonce2: ::std::os::raw::c_double,
-}
-impl ::std::default::Default for max_align_t {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[derive(Copy, Clone, PartialEq)]
 #[repr(u32)]
 #[derive(Debug)]
 pub enum cass_bool_t { cass_false = 0, cass_true = 1, }
-pub type cass_float_t = ::std::os::raw::c_float;
-pub type cass_double_t = ::std::os::raw::c_double;
+pub type cass_float_t = f32;
+pub type cass_double_t = f64;
 pub type cass_int8_t = ::std::os::raw::c_char;
 pub type cass_uint8_t = ::std::os::raw::c_uchar;
 pub type cass_int16_t = ::std::os::raw::c_short;
@@ -232,7 +222,7 @@ pub enum CassIndexType_ {
     CASS_INDEX_TYPE_COMPOSITES = 3,
 }
 pub type CassIndexType = CassIndexType_;
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
 pub enum CassValueType_ {
@@ -348,7 +338,7 @@ pub enum CassErrorSource_ {
     CASS_ERROR_SOURCE_COMPRESSION = 4,
 }
 pub type CassErrorSource = CassErrorSource_;
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone)]
 #[repr(u32)]
 #[derive(Debug)]
 pub enum CassError_ {
@@ -440,7 +430,7 @@ pub type CassLogCallback =
                                                    *mut ::std::os::raw::c_void)>;
 pub enum CassAuthenticator_ { }
 pub type CassAuthenticator = CassAuthenticator_;
-pub type CassAuthenticatorInitalCallback =
+pub type CassAuthenticatorInitialCallback =
     ::std::option::Option<unsafe extern "C" fn(auth: *mut CassAuthenticator,
                                                data:
                                                    *mut ::std::os::raw::c_void)>;
@@ -469,7 +459,7 @@ pub type CassAuthenticatorDataCleanupCallback =
 #[derive(Copy, Clone)]
 #[derive(Debug)]
 pub struct CassAuthenticatorCallbacks_ {
-    pub initial_callback: CassAuthenticatorInitalCallback,
+    pub initial_callback: CassAuthenticatorInitialCallback,
     pub challenge_callback: CassAuthenticatorChallengeCallback,
     pub success_callback: CassAuthenticatorSuccessCallback,
     pub cleanup_callback: CassAuthenticatorCleanupCallback,
@@ -673,6 +663,11 @@ extern "C" {
                                        enabled: cass_bool_t);
     pub fn cass_cluster_set_use_hostname_resolution(cluster: *mut CassCluster,
                                                     enabled: cass_bool_t)
+     -> CassError;
+    pub fn cass_cluster_set_use_randomized_contact_points(cluster:
+                                                              *mut CassCluster,
+                                                          enabled:
+                                                              cass_bool_t)
      -> CassError;
     pub fn cass_session_new() -> *mut CassSession;
     pub fn cass_session_free(session: *mut CassSession);
