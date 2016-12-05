@@ -20,8 +20,9 @@ struct Basic {
 
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) -> Result<(), CassError> {
     unsafe {
-        let query = "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 6);
+        let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, \
+                                  ?);");
+        let statement = cass_statement_new(query.unwrap().as_ptr(), 6);
 
         cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
         cass_statement_bind_bool(statement, 1, basic.bln.into());

@@ -38,7 +38,8 @@ pub fn create_cluster() -> &'static mut CassCluster {
 
 pub fn execute_query(session: &mut CassSession, query: &str) -> Result<(), CassError> {
     unsafe {
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
+        let cstring = CString::new(query);
+        let statement = cass_statement_new(cstring.unwrap().as_ptr(), 0);
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
         cass_future_error_code(future);

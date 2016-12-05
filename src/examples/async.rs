@@ -14,8 +14,8 @@ static NUM_CONCURRENT_REQUESTS: usize = 1000;
 fn insert_into_async(session: &mut CassSession, key: &str) {
     unsafe {
         let query = CString::new("INSERT INTO async (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);")
-                        .unwrap()
-                        .as_ptr();
+            .unwrap()
+            .as_ptr();
         let futures = &mut Vec::with_capacity(NUM_CONCURRENT_REQUESTS);
 
         for i in 0..NUM_CONCURRENT_REQUESTS {

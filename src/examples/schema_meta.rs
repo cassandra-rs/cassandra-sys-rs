@@ -47,7 +47,9 @@ unsafe fn print_schema_value(value: &CassValue) {
             println!("{}", d);
         }
 
-        CASS_VALUE_TYPE_TEXT | CASS_VALUE_TYPE_ASCII | CASS_VALUE_TYPE_VARCHAR => {
+        CASS_VALUE_TYPE_TEXT |
+        CASS_VALUE_TYPE_ASCII |
+        CASS_VALUE_TYPE_VARCHAR => {
             let mut s = mem::zeroed();
             let mut s_size = mem::zeroed();
             cass_value_get_string(value, &mut s, &mut s_size);

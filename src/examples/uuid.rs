@@ -70,7 +70,7 @@ fn select_from_log(session: &mut CassSession, key: &str) -> Result<(), CassError
                     let mut entry = mem::zeroed();
                     let mut entry_length = mem::zeroed();
                     let mut time_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
- 
+
                     cass_value_get_string(cass_row_get_column(row, 0),
                                           &mut CString::new(key).unwrap().as_ptr(),
                                           &mut key_length);

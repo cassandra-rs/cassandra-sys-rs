@@ -69,7 +69,7 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Res
     unsafe {
         let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (:k, :b, :f, :d, \
                                   :i32, :i64);")
-                        .unwrap();
+            .unwrap();
         let key = CString::new(key).unwrap();
         let statement = &mut *cass_statement_new(query.as_ptr(), 6);
         let k = CString::new("k").unwrap().as_ptr();

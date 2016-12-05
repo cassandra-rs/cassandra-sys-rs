@@ -159,7 +159,7 @@ fn main() {
                         match prepare_query(session, &select_query) {
                             Ok(select_prepared) => {
                                 let output = select_from_basic(session, select_prepared, "prepared_test", input)
-                                                 .unwrap();
+                                    .unwrap();
 
                                 assert!(input.bln.clone() == output.bln);
                                 assert!(input.flt == output.flt);
