@@ -64,7 +64,7 @@ errors {
 }
 
 impl CassError_ {
-    pub fn to_result<T>(self,T:T) -> Result<T> {
+    pub fn to_result<T>(self,t:T) -> Result<T> {
         use self::CassError_::*;
         match self {
             CASS_OK => Ok(T),
