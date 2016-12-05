@@ -63,11 +63,11 @@ errors {
     }
 }
 
-impl Into<Result<()>> for CassError_ {
-    fn into(self) -> Result<()> {
+impl CassError_ {
+    fn to_result<T>(self,T:T) -> Result<T> {
         use self::CassError_::*;
         match self {
-            CASS_OK => Ok(()),
+            CASS_OK => Ok(T),
             CASS_ERROR_LIB_BAD_PARAMS => Err(ErrorKind::LIB_BAD_PARAMS(CASS_ERROR_LIB_BAD_PARAMS).into()),
             CASS_ERROR_LIB_NO_STREAMS => Err(ErrorKind::LIB_NO_STREAMS(CASS_ERROR_LIB_NO_STREAMS).into()),
             CASS_ERROR_LIB_UNABLE_TO_INIT => Err(ErrorKind::LIB_UNABLE_TO_INIT(CASS_ERROR_LIB_UNABLE_TO_INIT).into()),
