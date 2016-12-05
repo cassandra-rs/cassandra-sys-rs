@@ -1,3 +1,6 @@
+use std::fmt;
+use std::result;
+
 use cassandra::CassError_;
 
 error_chain! {
@@ -63,8 +66,20 @@ errors {
     }
 }
 
+impl ::std::error::Error for CassError_ {
+    fn description(&self) -> &str {
+        unimplemented!()
+    }
+}
+
+impl fmt::Display for CassError_ {
+    fn fmt(&self, f: &mut fmt::Formatter) -> result::Result<(), fmt::Error> {
+        write!(f, "{}", self)
+    }
+}
+
 impl CassError_ {
-    pub fn to_result<T>(self,t:T) -> Result<T> {
+    pub fn to_result<T>(self, t: T) -> Result<T> {
         use self::CassError_::*;
         match self {
             CASS_OK => Ok(t),
