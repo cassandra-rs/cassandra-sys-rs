@@ -67,7 +67,7 @@ impl CassError_ {
     pub fn to_result<T>(self,t:T) -> Result<T> {
         use self::CassError_::*;
         match self {
-            CASS_OK => Ok(T),
+            CASS_OK => Ok(t),
             CASS_ERROR_LIB_BAD_PARAMS => Err(ErrorKind::LIB_BAD_PARAMS(CASS_ERROR_LIB_BAD_PARAMS).into()),
             CASS_ERROR_LIB_NO_STREAMS => Err(ErrorKind::LIB_NO_STREAMS(CASS_ERROR_LIB_NO_STREAMS).into()),
             CASS_ERROR_LIB_UNABLE_TO_INIT => Err(ErrorKind::LIB_UNABLE_TO_INIT(CASS_ERROR_LIB_UNABLE_TO_INIT).into()),
