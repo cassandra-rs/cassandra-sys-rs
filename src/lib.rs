@@ -17,10 +17,8 @@ mod error;
 
 pub use ffi_util::*;
 
-pub use cassandra::cass_bool_t;
 pub use cassandra::cass_bool_t::{cass_true, cass_false};
 
-pub use cassandra::CassError;
 pub use cassandra::CassError_::*;
 pub use cassandra::CassSslVerifyFlags::*;
 pub use cassandra::CassBatchType_::*;

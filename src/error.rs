@@ -80,7 +80,6 @@ impl fmt::Display for CassError_ {
 
 impl CassError_ {
     pub fn to_result<T>(&self, t: T) -> Result<T> {
-        use self::CassError_::*;
         match self {
             &CASS_OK => Ok(t),
             &CASS_ERROR_LIB_BAD_PARAMS => Err(ErrorKind::LIB_BAD_PARAMS(CASS_ERROR_LIB_BAD_PARAMS).into()),
