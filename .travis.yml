@@ -9,6 +9,8 @@ directories:
 addons:
   apt:
     packages:
+    - cassandra-cpp-driver
+    - cassandra-cpp-driver-dev
     - libcurl4-openssl-dev
     - libelf-dev
     - libdw-dev
