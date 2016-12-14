@@ -34,13 +34,16 @@ fn insert_into_maps(session: &mut CassSession, key: &str, items: Vec<Pair>) -> R
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
-        let rc: CassError = cass_future_error_code(future);
-        if rc != CASS_OK {
-            print_error(future);
-        }
+        let result = match cass_future_error_code(future) {
+            CASS_OK => Ok(()),
+            rc => {
+                print_error(future);
+                Err(rc)
+            }
+        };
 
-        cass_future_free(future);
-        cass_statement_free(statement);
+        //        cass_future_free(future);
+        //        cass_statement_free(statement);
 
         Ok(())
     }
@@ -126,7 +129,7 @@ fn main() {
 
 
         insert_into_maps(session, "test", items).unwrap();
-        select_from_maps(session, "test").unwrap();
+        //        select_from_maps(session, "test").unwrap();
 
         let close_future = cass_session_close(session);
         cass_future_wait(close_future);

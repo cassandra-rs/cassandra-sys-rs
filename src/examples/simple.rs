@@ -20,58 +20,66 @@ fn main() {
         // Provide the cluster object as configuration to connect the session
         let connect_future = cass_session_connect(session, cluster);
 
-        if cass_future_error_code(connect_future) == CASS_OK {
+        let result = match cass_future_error_code(connect_future) {
+            CASS_OK => {
+                // Build statement and execute query
+                let query = "SELECT keyspace_name FROM system_schema.keyspaces;";
+                let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
 
-            // Build statement and execute query
-            let query = "SELECT keyspace_name FROM system.schema_keyspaces;";
-            let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
+                let result_future = cass_session_execute(session, statement);
 
-            let result_future = cass_session_execute(session, statement);
+                match cass_future_error_code(result_future) {
+                    CASS_OK => {
+                        // Retrieve result set and iterate over the rows
+                        let result = cass_future_get_result(result_future);
+                        let rows = cass_iterator_from_result(result);
 
-            if cass_future_error_code(result_future) == CASS_OK {
-                // Retrieve result set and iterate over the rows
-                let result = cass_future_get_result(result_future);
-                let rows = cass_iterator_from_result(result);
+                        while cass_iterator_next(rows) == cass_true {
+                            let row = cass_iterator_get_row(rows);
+                            let value = cass_row_get_column_by_name(row,
+                                                                    CString::new("keyspace_name").unwrap().as_ptr());
 
-                while cass_iterator_next(rows) == cass_true {
-                    let row = cass_iterator_get_row(rows);
-                    let value = cass_row_get_column_by_name(row, CString::new("keyspace_name").unwrap().as_ptr());
+                            let mut keyspace_name = mem::zeroed();
+                            let mut keyspace_name_length = mem::zeroed();
+                            cass_value_get_string(value, &mut keyspace_name, &mut keyspace_name_length);
+                            println!("keyspace_name: {:?}",
+                                     raw2utf8(keyspace_name, keyspace_name_length).unwrap());
+                        }
 
-                    let mut keyspace_name = mem::zeroed();
-                    let mut keyspace_name_length = mem::zeroed();
-                    cass_value_get_string(value, &mut keyspace_name, &mut keyspace_name_length);
-                    println!("keyspace_name: {:?}",
-                             raw2utf8(keyspace_name, keyspace_name_length).unwrap());
+                        cass_result_free(result);
+                        cass_iterator_free(rows);
+                    }
+                    rc => {
+                        // Handle error
+                        let mut message = mem::zeroed();
+                        let mut message_length = mem::zeroed();
+                        cass_future_error_message(result_future, &mut message, &mut message_length);
+                        println!("Unable to run query: {:?}",
+                                 raw2utf8(message, message_length));
+                    }
                 }
 
-                cass_result_free(result);
-                cass_iterator_free(rows);
-            } else {
+                cass_statement_free(statement);
+                cass_future_free(result_future);
+
+                // Close the session
+                let close_future = cass_session_close(session);
+                cass_future_wait(close_future);
+                cass_future_free(close_future);
+            }
+            rc => {
                 // Handle error
                 let mut message = mem::zeroed();
                 let mut message_length = mem::zeroed();
-                cass_future_error_message(result_future, &mut message, &mut message_length);
-                println!("Unable to run query: {:?}",
-                         raw2utf8(message, message_length));
+                cass_future_error_message(connect_future, &mut message, &mut message_length);
+                println!("Unable to connect: {:?}", raw2utf8(message, message_length));
             }
+        };
 
-            cass_statement_free(statement);
-            cass_future_free(result_future);
 
-            // Close the session
-            let close_future = cass_session_close(session);
-            cass_future_wait(close_future);
-            cass_future_free(close_future);
-        } else {
-            // Handle error
-            let mut message = mem::zeroed();
-            let mut message_length = mem::zeroed();
-            cass_future_error_message(connect_future, &mut message, &mut message_length);
-            println!("Unable to connect: {:?}", raw2utf8(message, message_length));
-        }
 
-        cass_future_free(connect_future);
-        cass_cluster_free(cluster);
-        cass_session_free(session);
-    }
+    };
+
+
+
 }

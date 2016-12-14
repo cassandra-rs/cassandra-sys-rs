@@ -90,9 +90,13 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Res
         cass_future_wait(future);
 
         let rc = cass_future_error_code(future);
-        if rc != CASS_OK {
-            print_error(future);
-        }
+        let result = match cass_future_error_code(future) {
+            CASS_OK => Ok(()),
+            rc => {
+                print_error(future);
+                Err(rc)
+            }
+        };
 
         cass_future_free(future);
         cass_statement_free(statement);
@@ -117,29 +121,32 @@ fn select_from_basic(session: &mut CassSession, key: &str) -> Result<Basic, Cass
         cass_future_wait(future);
 
         let rc = cass_future_error_code(future);
-        if rc != CASS_OK {
-            print_error(future);
-        } else {
-            let result = &*cass_future_get_result(future);
-            let iterator = &mut *cass_iterator_from_result(result);
 
-            if cass_iterator_next(iterator) == cass_true {
-                let row = &*cass_iterator_get_row(iterator);
 
-                cass_value_get_bool(cass_row_get_column_by_name(row, CString::new("BLN").unwrap().as_ptr()),
-                                    &mut output.bln);
-                cass_value_get_double(cass_row_get_column_by_name(row, CString::new("dbl").unwrap().as_ptr()),
-                                      &mut output.dbl);
-                cass_value_get_float(cass_row_get_column_by_name(row, CString::new("flt").unwrap().as_ptr()),
-                                     &mut output.flt);
-                cass_value_get_int32(cass_row_get_column_by_name(row, CString::new("\"i32\"").unwrap().as_ptr()),
-                                     &mut output.i32);
-                cass_value_get_int64(cass_row_get_column_by_name(row, CString::new("i64").unwrap().as_ptr()),
-                                     &mut output.i64);
+        match rc {
+            CASS_OK => {
+                let result = &*cass_future_get_result(future);
+                let iterator = &mut *cass_iterator_from_result(result);
+
+                if cass_iterator_next(iterator) == cass_true {
+                    let row = &*cass_iterator_get_row(iterator);
+
+                    cass_value_get_bool(cass_row_get_column_by_name(row, CString::new("BLN").unwrap().as_ptr()),
+                                        &mut output.bln);
+                    cass_value_get_double(cass_row_get_column_by_name(row, CString::new("dbl").unwrap().as_ptr()),
+                                          &mut output.dbl);
+                    cass_value_get_float(cass_row_get_column_by_name(row, CString::new("flt").unwrap().as_ptr()),
+                                         &mut output.flt);
+                    cass_value_get_int32(cass_row_get_column_by_name(row, CString::new("\"i32\"").unwrap().as_ptr()),
+                                         &mut output.i32);
+                    cass_value_get_int64(cass_row_get_column_by_name(row, CString::new("i64").unwrap().as_ptr()),
+                                         &mut output.i64);
+                    cass_result_free(result);
+                    cass_iterator_free(iterator);
+                }
             }
+            rc => println!("{:?}", rc),
 
-            cass_result_free(result);
-            cass_iterator_free(iterator);
         }
 
         cass_future_free(future);
@@ -161,10 +168,15 @@ fn main() {
             i64: 2,
         };
 
-        if connect_session(session, cluster) != CASS_OK {
-            cass_cluster_free(cluster);
-            cass_session_free(session);
-        }
+        let result = match connect_session(session, cluster) {
+            CASS_OK => {}
+            rc => {
+                cass_cluster_free(cluster);
+                cass_session_free(session);
+            }
+        };
+
+
 
         execute_query(session,
                       "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \

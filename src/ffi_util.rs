@@ -1,5 +1,6 @@
 use std::slice;
 use std::str;
+use std::ops::Deref;
 use cassandra::CassError;
 use cassandra::cass_bool_t;
 use cassandra::CassValueType_;
@@ -11,15 +12,10 @@ pub unsafe fn raw2utf8(data: *const i8, length: usize) -> Result<String, Utf8Err
     Ok(try!(str::from_utf8(slice)).to_owned())
 }
 
-impl PartialEq for CassError {
-    fn eq(&self, other: &CassError) -> bool {
-        self == other
-    }
-}
-
 impl PartialEq for cass_bool_t {
     fn eq(&self, other: &cass_bool_t) -> bool {
-        self == other
+        let s:bool = self.clone().into(); 
+        s == other.clone().into()
     }
 }
 
@@ -40,10 +36,6 @@ impl Into<bool> for cass_bool_t {
 
 impl From<bool> for cass_bool_t {
     fn from(b: bool) -> Self {
-        if b {
-            cass_bool_t::cass_true
-        } else {
-            cass_bool_t::cass_false
-        }
+        if b { cass_bool_t::cass_true } else { cass_bool_t::cass_false }
     }
 }

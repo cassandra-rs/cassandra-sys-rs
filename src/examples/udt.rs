@@ -179,10 +179,13 @@ fn main() {
 
         let uuid_gen = &mut *cass_uuid_gen_new();
 
-        if connect_session(session, cluster) != Ok(()) {
-            cass_cluster_free(cluster);
-            cass_session_free(session);
-            panic!();
+        match connect_session(session, cluster) {
+            Ok(_) => {}
+            _ => {
+                cass_cluster_free(cluster);
+                cass_session_free(session);
+                panic!();
+            }
         }
 
         execute_query(session,

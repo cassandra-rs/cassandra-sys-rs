@@ -68,7 +68,8 @@ fn main() {
 
                 let result_future = cass_session_execute(session, statement);
 
-                if cass_future_error_code(result_future) == CASS_OK {
+                match cass_future_error_code(result_future) {
+                     CASS_OK =>  {
                     // Retrieve result set and iterator over the rows
                     let result = cass_future_get_result(result_future);
                     let rows = cass_iterator_from_result(result);
@@ -86,13 +87,14 @@ fn main() {
 
                     cass_result_free(result);
                     cass_iterator_free(rows);
-                } else {
+                } rc => {
                     // Handle error
                     let mut message = mem::zeroed();
                     let mut message_length = mem::zeroed();
                     cass_future_error_message(result_future, &mut message, &mut message_length);
                     println!("Unable to run query: {:?}",
                              raw2utf8(message, message_length));
+                }
                 }
 
                 cass_statement_free(statement);

@@ -230,33 +230,35 @@ pub fn main() {
 
         let connect_future = cass_session_connect(session, cluster);
 
-        if cass_future_error_code(connect_future) == CASS_OK {
+        match cass_future_error_code(connect_future) {
+            CASS_OK => {
 
-            execute_query(&mut *session,
-                          "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
-                           'replication_factor': '3' };")
-                .unwrap();
+                execute_query(&mut *session,
+                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '3' };")
+                    .unwrap();
 
-            print_keyspace(&mut *session, "examples");
+                print_keyspace(&mut *session, "examples");
 
-            execute_query(&mut *session,
-                          "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY \
-                           (key));")
-                .unwrap();
+                execute_query(&mut *session,
+                              "CREATE TABLE IF NOT EXISTS examples.schema_meta (key text, value bigint, PRIMARY KEY \
+                               (key));")
+                    .unwrap();
 
-            print_table(&mut *session, "examples", "schema_meta");
+                print_table(&mut *session, "examples", "schema_meta");
 
-            let close_future = cass_session_close(session);
-            cass_future_wait(close_future);
-            cass_future_free(close_future);
-        } else {
-            let mut m = mem::zeroed();
-            let mut l = mem::zeroed();
-            cass_future_error_message(connect_future, &mut m, &mut l);
+                let close_future = cass_session_close(session);
+                cass_future_wait(close_future);
+                cass_future_free(close_future);
+            }
+            _ => {
+                let mut m = mem::zeroed();
+                let mut l = mem::zeroed();
+                cass_future_error_message(connect_future, &mut m, &mut l);
 
-            println!("Unable to connect: {}", raw2utf8(m, l).unwrap());
+                println!("Unable to connect: {}", raw2utf8(m, l).unwrap());
+            }
         }
-
         cass_future_free(connect_future);
         cass_cluster_free(cluster);
         cass_session_free(session);
