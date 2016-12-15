@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/tupshin/cassandra-sys-rs.svg?branch=master)](https://travis-ci.org/tupshin/cassandra-sys-rs)
+[![Current Version](http://meritbadge.herokuapp.com/cassandra-sys)](https://crates.io/crates/cassandra-sys)
+[![License: MPL-2.0](https://img.shields.io/crates/l/cassandra-sys.svg)](#License)
+
 # cassandra-sys
 This is the source for the cassandra-sys crate on crates.io.
 
