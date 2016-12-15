@@ -19,7 +19,7 @@ before_install:
   - wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/cassandra/v2.5.0/cassandra-cpp-driver-dbg_2.5.0-1_amd64.deb
   - wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/cassandra/v2.5.0/cassandra-cpp-driver-dev_2.5.0-1_amd64.deb
   - wget http://downloads.datastax.com/cpp-driver/ubuntu/14.04/cassandra/v2.5.0/cassandra-cpp-driver_2.5.0-1_amd64.deb
-- sudo dpkg -i cassandra-cpp-driver_2.5.0-1_amd64.deb cassandra-cpp-dbg-driver_2.5.0-1_amd64.deb cassandra-cpp-dbg-driver_2.5.0-1_amd64.deb
+  - sudo dpkg -i cassandra-cpp-driver_2.5.0-1_amd64.deb cassandra-cpp-dbg-driver_2.5.0-1_amd64.deb cassandra-cpp-dbg-driver_2.5.0-1_amd64.deb
 
 before_script:
 - |
