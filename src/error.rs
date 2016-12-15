@@ -79,7 +79,7 @@ impl fmt::Display for CassError_ {
 }
 
 impl CassError_ {
-   pub fn to_result<T>(&self, t: T) -> Result<T> {
+    pub fn to_result<T>(&self, t: T) -> Result<T> {
         use CassError_::*;
         match self {
             &CASS_OK => Ok(t),

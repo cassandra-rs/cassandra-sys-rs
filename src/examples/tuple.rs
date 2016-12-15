@@ -35,8 +35,8 @@ fn insert_into_tuple(session: &mut CassSession, uuid_gen: &mut CassUuidGen) -> R
 
         let rc = cass_future_error_code(future);
         match cass_future_error_code(future) {
-            CASS_OK => {},
-            rc => print_error(future)
+            CASS_OK => {}
+            rc => print_error(future),
         }
 
         cass_future_free(future);

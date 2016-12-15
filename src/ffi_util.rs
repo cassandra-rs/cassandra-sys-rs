@@ -14,7 +14,7 @@ pub unsafe fn raw2utf8(data: *const i8, length: usize) -> Result<String, Utf8Err
 
 impl PartialEq for cass_bool_t {
     fn eq(&self, other: &cass_bool_t) -> bool {
-        let s:bool = self.clone().into(); 
+        let s: bool = self.clone().into();
         s == other.clone().into()
     }
 }
@@ -36,6 +36,10 @@ impl Into<bool> for cass_bool_t {
 
 impl From<bool> for cass_bool_t {
     fn from(b: bool) -> Self {
-        if b { cass_bool_t::cass_true } else { cass_bool_t::cass_false }
+        if b {
+            cass_bool_t::cass_true
+        } else {
+            cass_bool_t::cass_false
+        }
     }
 }

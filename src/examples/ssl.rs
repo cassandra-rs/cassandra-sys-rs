@@ -69,32 +69,34 @@ fn main() {
                 let result_future = cass_session_execute(session, statement);
 
                 match cass_future_error_code(result_future) {
-                     CASS_OK =>  {
-                    // Retrieve result set and iterator over the rows
-                    let result = cass_future_get_result(result_future);
-                    let rows = cass_iterator_from_result(result);
+                    CASS_OK => {
+                        // Retrieve result set and iterator over the rows
+                        let result = cass_future_get_result(result_future);
+                        let rows = cass_iterator_from_result(result);
 
-                    while cass_iterator_next(rows) == cass_true {
-                        let row = cass_iterator_get_row(rows);
-                        let value = cass_row_get_column_by_name(row, CString::new("keyspace_name").unwrap().as_ptr());
+                        while cass_iterator_next(rows) == cass_true {
+                            let row = cass_iterator_get_row(rows);
+                            let value = cass_row_get_column_by_name(row,
+                                                                    CString::new("keyspace_name").unwrap().as_ptr());
 
-                        let mut keyspace_name = mem::zeroed();
-                        let mut keyspace_name_length = mem::zeroed();
-                        cass_value_get_string(value, &mut keyspace_name, &mut keyspace_name_length);
-                        println!("keyspace_name: {:?}",
-                                 raw2utf8(keyspace_name, keyspace_name_length));
+                            let mut keyspace_name = mem::zeroed();
+                            let mut keyspace_name_length = mem::zeroed();
+                            cass_value_get_string(value, &mut keyspace_name, &mut keyspace_name_length);
+                            println!("keyspace_name: {:?}",
+                                     raw2utf8(keyspace_name, keyspace_name_length));
+                        }
+
+                        cass_result_free(result);
+                        cass_iterator_free(rows);
                     }
-
-                    cass_result_free(result);
-                    cass_iterator_free(rows);
-                } rc => {
-                    // Handle error
-                    let mut message = mem::zeroed();
-                    let mut message_length = mem::zeroed();
-                    cass_future_error_message(result_future, &mut message, &mut message_length);
-                    println!("Unable to run query: {:?}",
-                             raw2utf8(message, message_length));
-                }
+                    rc => {
+                        // Handle error
+                        let mut message = mem::zeroed();
+                        let mut message_length = mem::zeroed();
+                        cass_future_error_message(result_future, &mut message, &mut message_length);
+                        println!("Unable to run query: {:?}",
+                                 raw2utf8(message, message_length));
+                    }
                 }
 
                 cass_statement_free(statement);
