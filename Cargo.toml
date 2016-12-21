@@ -92,10 +92,8 @@ env_logger = "0.3"
 error-chain = "0.7"
 
 [build-dependencies.libbindgen]
-git = "https://github.com/servo/rust-bindgen"
+version = "0.1"
 features = ["llvm_stable"]
-
-# clippy = {version = "*", optional = true}
 
 [features]
 default=[]
