@@ -12,34 +12,21 @@ pub unsafe fn raw2utf8(data: *const i8, length: usize) -> Result<String, Utf8Err
     Ok(try!(str::from_utf8(slice)).to_owned())
 }
 
-impl PartialEq for cass_bool_t {
-    fn eq(&self, other: &cass_bool_t) -> bool {
-        let s: bool = self.clone().into();
-        s == other.clone().into()
-    }
-}
-
-impl PartialEq for CassValueType_ {
-    fn eq(&self, other: &CassValueType_) -> bool {
-        self == other
-    }
-}
-
-impl Into<bool> for cass_bool_t {
-    fn into(self) -> bool {
-        match self {
-            cass_bool_t::cass_true => true,
-            cass_bool_t::cass_false => false,
-        }
-    }
-}
-
-impl From<bool> for cass_bool_t {
-    fn from(b: bool) -> Self {
-        if b {
-            cass_bool_t::cass_true
-        } else {
-            cass_bool_t::cass_false
-        }
-    }
-}
+//impl Into<bool> for cass_bool_t {
+//    fn into(self) -> bool {
+//        match self {
+//            cass_bool_t::cass_true => true,
+//            cass_bool_t::cass_false => false,
+//        }
+//    }
+//}
+//
+//impl From<bool> for cass_bool_t {
+//    fn from(b: bool) -> Self {
+//        if b {
+//            cass_bool_t::cass_true
+//        } else {
+//            cass_bool_t::cass_false
+//        }
+//    }
+//}

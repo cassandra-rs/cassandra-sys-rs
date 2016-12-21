@@ -1,3 +1,4 @@
+
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
 #![cfg_attr(feature="clippy", feature(plugin))]
@@ -6,6 +7,7 @@
 #[macro_use]
 extern crate log;
 extern crate libc;
+extern crate core;
 #[macro_use]
 extern crate error_chain;
 mod errors {
@@ -17,7 +19,7 @@ mod error;
 
 pub use ffi_util::*;
 
-pub use cassandra::cass_bool_t::{cass_true, cass_false};
+//pub use cassandra::cass_bool_t::{cass_true, cass_false};
 
 pub use cassandra::CassError_::*;
 pub use cassandra::CassSslVerifyFlags::*;

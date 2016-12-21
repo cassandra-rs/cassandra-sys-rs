@@ -14,7 +14,20 @@
 //use std::path::Path;
 //use std::process::Command;
 
+extern crate libbindgen;
+
+use std::env;
+use std::path::Path;
+
+
 fn main() {
+  let _ = libbindgen::builder()
+    .header("cassandra.h")
+    .use_core()
+    .generate().unwrap()
+    .write_to_file(Path::new("./src/").join("cassandra.rs"));
+
+
     if let Some(datastax_dir) = option_env!("CASSANDRA_SYS_LIB_PATH") {
         for p in datastax_dir.split(";") {
             println!("cargo:rustc-link-search={}", p);

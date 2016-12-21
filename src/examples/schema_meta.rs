@@ -11,8 +11,6 @@ use std::mem;
 
 use cassandra_sys::*;
 
-const CASS_UUID_STRING_LENGTH: usize = 37;
-
 fn print_indent(indent: u32) {
     for _ in 0..indent {
         print!("\t");
@@ -25,7 +23,7 @@ unsafe fn print_schema_value(value: &CassValue) {
     let mut d: f64 = mem::zeroed();
     // let mut s:CassString=mem::zeroed();
     let mut u: CassUuid = mem::zeroed();
-    let mut us: [i8; CASS_UUID_STRING_LENGTH] = mem::zeroed();
+    let mut us: [i8; CASS_UUID_STRING_LENGTH as usize] = mem::zeroed();
 
     match cass_value_type(value) {
         CASS_VALUE_TYPE_INT => {

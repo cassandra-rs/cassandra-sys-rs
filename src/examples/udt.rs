@@ -9,12 +9,10 @@ use std::ffi::CString;
 use std::mem;
 use cassandra_sys::*;
 
-const CASS_UUID_STRING_LENGTH: usize = 37;
-
 fn insert_into_udt(session: &mut CassSession, schema_meta: &CassSchemaMeta, uuid_gen: &mut CassUuidGen)
                    -> Result<(), CassError> {
     unsafe {
-        let mut id_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
+        let mut id_str: [i8; CASS_UUID_STRING_LENGTH as usize] = [0; CASS_UUID_STRING_LENGTH as usize];
 
         let query = "INSERT INTO examples.udt (id, address) VALUES (?, ?)";
 
@@ -100,7 +98,7 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                 let rows = cass_iterator_from_result(result);
 
                 while cass_iterator_next(rows) == cass_true {
-                    let mut id_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
+                    let mut id_str: [i8; CASS_UUID_STRING_LENGTH as usize] = [0; CASS_UUID_STRING_LENGTH as usize];
                     let row = cass_iterator_get_row(rows);
                     let id_value = cass_row_get_column_by_name(row, CString::new("id").unwrap().as_ptr());
                     let address_value = cass_row_get_column_by_name(row, CString::new("address").unwrap().as_ptr());
