@@ -13,3 +13,8 @@
 .project
 .settings/
 Cargo.lock
+
+# Other
+*.bk
+.idea/
+
