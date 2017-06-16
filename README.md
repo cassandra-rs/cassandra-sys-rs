@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/Metaswitch/cassandra-sys-rs.svg?branch=master)](https://travis-ci.org/Metaswitch/cassandra-sys-rs)
-[![Current Version](http://img.shield.io/crates/v/cassandra-sys-metaswitch.svg)](https://crates.io/crates/cassandra-sys-metaswitch)
-[![License](https://img.shields.io/github/license/Metaswitch/cassandra-sys.svg)](#License)
+[![Current Version](http://img.shields.io/crates/v/cassandra-sys-metaswitch.svg)](https://crates.io/crates/cassandra-sys-metaswitch)
+[![License](https://img.shields.io/github/license/Metaswitch/cassandra-sys-rs.svg)](#LICENSE)
 
 # cassandra-sys
 
