@@ -14,6 +14,12 @@ It is quite possible to use this crate directly from your rust code, but it will
 
 Instead it is recommended that you use the safe wrapper of this FFI interface: [cassandra-rs](https://github.com/Metaswitch/cassandra-rs).
 
+## Important note regarding version 0.9.0
+
+This branch is version 0.8.x of cassandra-sys. Development has begun on version 0.9.x using a newer version of bindgen,
+but it is not yet ready for use. See the [version-0.9](https://github.com/Metaswitch/cassandra-sys-rs/tree/version-0.9) branch
+to follow its development. In due course this will be merged to master, but for the moment we recommend you use version 0.8.x.
+
 ## License
 
 This code is open source, licensed under the Apache License Version 2.0 as
