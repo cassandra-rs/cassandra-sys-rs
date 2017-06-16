@@ -4,6 +4,7 @@ license = "Apache-2.0"
 name = "cassandra-sys"
 version = "0.8.7"
 authors = ["Tupshin Harper <tupshin@tupshin.com>", "Keith Wansbrough <Keith.Wansbrough@metaswitch.com>"]
+links = "cassandra"
 build = "build.rs"
 homepage = "https://github.com/Metaswitch/cassandra-sys-rs"
 documentation = "https://github.com/Metaswitch/cassandra-sys-rs"
