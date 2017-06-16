@@ -507,9 +507,10 @@ extern "C" {
                                              queue_size:
                                                  ::std::os::raw::c_uint)
      -> CassError;
-    pub fn cass_cluster_set_queue_size_log(cluster: *mut CassCluster,
-                                           queue_size: ::std::os::raw::c_uint)
-     -> CassError;
+// CPP-473 this symbol does not exist
+//    pub fn cass_cluster_set_queue_size_log(cluster: *mut CassCluster,
+//                                           queue_size: ::std::os::raw::c_uint)
+//     -> CassError;
     pub fn cass_cluster_set_core_connections_per_host(cluster:
                                                           *mut CassCluster,
                                                       num_connections:
