@@ -57,4 +57,4 @@ A semicolon separated list of additional directories to add to the linker search
 
 ## History
 
-This project was forked from [cassandra-sys](https://github.com/tupshin/cassandra-rs), which was no longer being maintained.
+This project was forked from [cassandra-sys](https://github.com/tupshin/cassandra-sys-rs), which was no longer being maintained.
