@@ -1,17 +1,22 @@
 [package]
-description = "A bindgen-genderated rust wrapper around the Cassandra c++ driver plus working examples\n with no additional dependencies.\nYou probably want to use the \"cassandra\" crate that provides a safe wrapper"
+description = "A bindgen-generated Rust wrapper around the DataStax Cassandra C++ driver plus working examples. You probably want to use the \"cassandra-cpp\" crate which provides a safe wrapper."
+documentation = "https://docs.rs/cassandra-sys-rs"
+# no homepage yet
+repository = "https://github.com/Metaswitch/cassandra-sys-rs"
+readme = "README.md"
+keywords = ["Cassandra", "DataStax", "C", "C++", "driver", "binding", "CQL", "client", "database", "DB", "CassandraDB"]
+categories = [ "api-bindings", "database", "external-ffi-bindings" ]
 license = "Apache-2.0"
-name = "cassandra-sys"
-version = "0.8.7"
+name = "cassandra-cpp-sys"
+version = "0.8.8"
 authors = ["Tupshin Harper <tupshin@tupshin.com>", "Keith Wansbrough <Keith.Wansbrough@metaswitch.com>"]
-links = "cassandra"
 build = "build.rs"
-homepage = "https://github.com/Metaswitch/cassandra-sys-rs"
-documentation = "https://github.com/Metaswitch/cassandra-sys-rs"
-publish = false
+
+[badges]
+travis-ci = { repository = "Metaswitch/cassandra-sys-rs" }
 
 [lib]
-name = "cassandra_sys"
+name = "cassandra_cpp_sys"
 
 [[bin]]
 name="basic"

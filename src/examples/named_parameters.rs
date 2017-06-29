@@ -1,12 +1,12 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cassandra_sys;
+extern crate cassandra_cpp_sys;
 extern crate num;
 
 use std::mem;
 use std::ffi::CString;
-use cassandra_sys::*;
+use cassandra_cpp_sys::*;
 
 #[derive(Clone)]
 struct Basic {

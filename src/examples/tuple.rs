@@ -1,14 +1,14 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cassandra_sys;
+extern crate cassandra_cpp_sys;
 
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
 
 use std::mem;
-use cassandra_sys::*;
+use cassandra_cpp_sys::*;
 
 
 fn insert_into_tuple(session: &mut CassSession, uuid_gen: &mut CassUuidGen) -> Result<(), CassError> {

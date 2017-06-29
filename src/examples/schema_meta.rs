@@ -2,14 +2,14 @@
 // #![plugin(clippy)]
 
 #![allow(non_snake_case)]
-extern crate cassandra_sys;
+extern crate cassandra_cpp_sys;
 
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
 use std::mem;
 
-use cassandra_sys::*;
+use cassandra_cpp_sys::*;
 
 const CASS_UUID_STRING_LENGTH: usize = 37;
 
