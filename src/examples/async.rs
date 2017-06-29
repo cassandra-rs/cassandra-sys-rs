@@ -1,13 +1,13 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cassandra_sys;
+extern crate cassandra_cpp_sys;
 
 mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
 
-use cassandra_sys::*;
+use cassandra_cpp_sys::*;
 
 static NUM_CONCURRENT_REQUESTS: usize = 1000;
 

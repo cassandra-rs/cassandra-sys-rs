@@ -468,6 +468,15 @@ impl ::std::default::Default for CassAuthenticatorCallbacks_ {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 pub type CassAuthenticatorCallbacks = CassAuthenticatorCallbacks_;
+
+/// Per DataStax issue CPP-473, this symbol does not exist in the driver; expose it for
+/// back-compatibility only.
+pub fn cass_cluster_set_queue_size_log(cluster: *mut CassCluster,
+                                       queue_size: ::std::os::raw::c_uint)
+ -> CassError {
+    CassError_::CASS_OK
+}
+
 #[link(name = "cassandra", kind = "dylib")]
 extern "C" {
     pub fn cass_cluster_new() -> *mut CassCluster;
@@ -507,7 +516,7 @@ extern "C" {
                                              queue_size:
                                                  ::std::os::raw::c_uint)
      -> CassError;
-// CPP-473 this symbol does not exist
+// CPP-473 this symbol does not exist - exposed above.
 //    pub fn cass_cluster_set_queue_size_log(cluster: *mut CassCluster,
 //                                           queue_size: ::std::os::raw::c_uint)
 //     -> CassError;

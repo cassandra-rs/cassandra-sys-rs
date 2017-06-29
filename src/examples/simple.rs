@@ -1,12 +1,12 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 
-extern crate cassandra_sys;
+extern crate cassandra_cpp_sys;
 
 use std::mem;
 use std::ffi::CString;
 
-use cassandra_sys::*;
+use cassandra_cpp_sys::*;
 
 fn main() {
     unsafe {

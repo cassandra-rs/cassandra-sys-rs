@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use cassandra_sys::*;
+use cassandra_cpp_sys::*;
 
 use std::mem;
 use std::ffi::CString;
