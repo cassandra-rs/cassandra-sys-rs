@@ -4,7 +4,7 @@ documentation = "https://docs.rs/cassandra-sys-rs"
 # no homepage yet
 repository = "https://github.com/Metaswitch/cassandra-sys-rs"
 readme = "README.md"
-keywords = ["Cassandra", "DataStax", "C", "C++", "driver", "binding", "CQL", "client", "database", "DB", "CassandraDB"]
+keywords = ["Cassandra", "binding", "CQL", "client", "database" ]
 categories = [ "api-bindings", "database", "external-ffi-bindings" ]
 license = "Apache-2.0"
 name = "cassandra-cpp-sys"
