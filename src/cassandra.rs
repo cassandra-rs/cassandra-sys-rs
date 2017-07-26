@@ -2052,11 +2052,11 @@ extern "C" {
      -> CassError;
     pub fn cass_error_result_consistency(error_result: *const CassErrorResult)
      -> CassConsistency;
-    pub fn cass_error_result_responses_received(error_result:
-                                                    *const CassErrorResult)
+    // Name corrected; see CPP-502
+    pub fn cass_error_result_actual(error_result: *const CassErrorResult)
      -> cass_int32_t;
-    pub fn cass_error_result_responses_required(error_result:
-                                                    *const CassErrorResult)
+    // Name corrected; see CPP-502
+    pub fn cass_error_result_required(error_result: *const CassErrorResult)
      -> cass_int32_t;
     pub fn cass_error_result_num_failures(error_result:
                                               *const CassErrorResult)
