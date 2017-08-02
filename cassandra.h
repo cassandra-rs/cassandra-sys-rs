@@ -7793,8 +7793,9 @@ cass_error_result_consistency(const CassErrorResult* error_result);
  * acknowledgments for a write timeout or actual alive nodes for a unavailable
  * error. Undefined for other error result types.
  */
+// Name corrected; see CPP-502
 CASS_EXPORT cass_int32_t
-cass_error_result_responses_received(const CassErrorResult* error_result);
+cass_error_result_actual(const CassErrorResult* error_result);
 
 /**
  * Gets required responses, required acknowledgments or required alive nodes
@@ -7816,8 +7817,9 @@ cass_error_result_responses_received(const CassErrorResult* error_result);
  * for a write timeout or required alive nodes for an unavailable error result.
  * Undefined for other error result types.
  */
+// Name corrected; see CPP-502
 CASS_EXPORT cass_int32_t
-cass_error_result_responses_required(const CassErrorResult* error_result);
+cass_error_result_required(const CassErrorResult* error_result);
 
 /**
  * Gets the number of nodes that experienced failures for the following error types:

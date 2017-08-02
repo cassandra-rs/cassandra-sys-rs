@@ -471,8 +471,8 @@ pub type CassAuthenticatorCallbacks = CassAuthenticatorCallbacks_;
 
 /// Per DataStax issue CPP-473, this symbol does not exist in the driver; expose it for
 /// back-compatibility only.
-pub fn cass_cluster_set_queue_size_log(cluster: *mut CassCluster,
-                                       queue_size: ::std::os::raw::c_uint)
+pub fn cass_cluster_set_queue_size_log(_cluster: *mut CassCluster,
+                                       _queue_size: ::std::os::raw::c_uint)
  -> CassError {
     CassError_::CASS_OK
 }
@@ -2052,11 +2052,11 @@ extern "C" {
      -> CassError;
     pub fn cass_error_result_consistency(error_result: *const CassErrorResult)
      -> CassConsistency;
-    pub fn cass_error_result_responses_received(error_result:
-                                                    *const CassErrorResult)
+    // Name corrected; see CPP-502
+    pub fn cass_error_result_actual(error_result: *const CassErrorResult)
      -> cass_int32_t;
-    pub fn cass_error_result_responses_required(error_result:
-                                                    *const CassErrorResult)
+    // Name corrected; see CPP-502
+    pub fn cass_error_result_required(error_result: *const CassErrorResult)
      -> cass_int32_t;
     pub fn cass_error_result_num_failures(error_result:
                                               *const CassErrorResult)

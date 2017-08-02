@@ -1,7 +1,5 @@
 use std::slice;
 use std::str;
-use std::ops::Deref;
-use cassandra::CassError;
 use cassandra::cass_bool_t;
 use cassandra::CassValueType_;
 

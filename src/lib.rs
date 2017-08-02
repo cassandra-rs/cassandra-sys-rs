@@ -3,17 +3,7 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![recursion_limit = "1024"]
 // #![cfg_attr(feature="clippy", plugin(clippy))]
-#[macro_use]
-extern crate log;
 extern crate libc;
-#[macro_use]
-extern crate error_chain;
-mod errors {
-    error_chain!{}
-}
-
-mod error;
-
 
 pub use ffi_util::*;
 

@@ -24,14 +24,16 @@ You can use this crate from cargo with
 
 ```toml
     [dependencies]
-    cassandra-cpp-sys = "0.8"
+    cassandra-cpp-sys = "0.10"
 ```
 
 ## Important note regarding version 0.9.0
 
-This branch is version 0.8.x of cassandra-cpp-sys. Development has begun on version 0.9.x using a newer version of bindgen,
-but it is not yet ready for use. See the [version-0.9](https://github.com/Metaswitch/cassandra-sys-rs/tree/version-0.9) branch
-to follow its development. In due course this will be merged to master, but for the moment we recommend you use version 0.8.x.
+At one point some development was done on preparing a version 0.9.0 
+using a newer version of bindgen, but the work was not completed or released. See the 
+[version-0.9](https://github.com/Metaswitch/cassandra-sys-rs/tree/version-0.9) branch
+to follow that development. In due course this may be merged to master, but for the moment we recommend you use the
+released versions.
 
 
 ## License
