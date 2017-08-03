@@ -13,7 +13,7 @@ This project also includes a fairly complete set of examples equivalent to the o
 It is quite possible to use this crate directly from your Rust code, but it will mean littering unsafe all over the place.
 Instead it is recommended that you use the safe wrapper of this interface: [cassandra-cpp](https://github.com/Metaswitch/cassandra-rs).
 
-[Documentation (crates.io)](https://docs.rs/error-chain).
+[Documentation (crates.io)](https://docs.rs/cassandra-cpp-sys).
 
 
 ## Getting started
