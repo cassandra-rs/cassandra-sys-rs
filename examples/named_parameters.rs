@@ -2,7 +2,6 @@
 // #![plugin(clippy)]
 
 extern crate cassandra_cpp_sys;
-extern crate num;
 
 use std::mem;
 use std::ffi::CString;

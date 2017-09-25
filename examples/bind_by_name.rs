@@ -1,7 +1,6 @@
 // #![feature(plugin)]
 // #![plugin(clippy)]
 extern crate cassandra_cpp_sys;
-extern crate num;
 
 mod examples_util;
 use examples_util::*;
