@@ -3,7 +3,6 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![recursion_limit = "1024"]
 // #![cfg_attr(feature="clippy", plugin(clippy))]
-extern crate libc;
 
 pub use ffi_util::*;
 

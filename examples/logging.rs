@@ -3,8 +3,6 @@
 #[macro_use]
 extern crate log;
 extern crate cassandra_cpp_sys;
-extern crate num;
-extern crate libc;
 extern crate env_logger;
 mod examples_util;
 use examples_util::*;
