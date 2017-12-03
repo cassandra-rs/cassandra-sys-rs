@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2014-2016 DataStax
+  Copyright (c) DataStax, Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 #    if defined(CASS_BUILDING)
 #      define CASS_EXPORT __declspec(dllexport)
 #    else
-#      define CASS_EXPORT __declspec(dllexport)
+#      define CASS_EXPORT __declspec(dllimport)
 #    endif
 #  elif (defined(__SUNPRO_C)  || defined(__SUNPRO_CC)) && !defined(CASS_STATIC)
 #    define CASS_EXPORT __global
@@ -47,12 +47,12 @@
  * @file include/cassandra.h
  *
  * C/C++ driver for Apache Cassandra. Uses the Cassandra Query Language versions 3
- * over the Cassandra Binary Protocol (versions 1 or 2).
+ * over the Cassandra Binary Protocol (versions 1, 2, or 3).
  */
 
 #define CASS_VERSION_MAJOR 2
-#define CASS_VERSION_MINOR 4
-#define CASS_VERSION_PATCH 3
+#define CASS_VERSION_MINOR 8
+#define CASS_VERSION_PATCH 0
 #define CASS_VERSION_SUFFIX ""
 
 #ifdef __cplusplus
@@ -68,10 +68,10 @@ typedef double cass_double_t;
 typedef __INT8_TYPE__ cass_int8_t;
 typedef __UINT8_TYPE__ cass_uint8_t;
 #elif defined(__INT8_TYPE__)
-typedef __INT8_TYPE__ cass_int8_t;
+typedef signed __INT8_TYPE__ cass_int8_t;
 typedef unsigned __INT8_TYPE__ cass_uint8_t;
 #else
-typedef char cass_int8_t;
+typedef signed char cass_int8_t;
 typedef unsigned char cass_uint8_t;
 #endif
 
@@ -104,8 +104,13 @@ typedef __UINT64_TYPE__ cass_uint64_t;
 typedef __INT64_TYPE__ cass_int64_t;
 typedef unsigned __INT64_TYPE__ cass_uint64_t;
 #elif defined(__GNUC__)
+#  if  defined(__x86_64__)
+typedef long int cass_int64_t;
+typedef unsigned long int cass_uint64_t;
+#  else
 typedef long long int cass_int64_t;
 typedef unsigned long long int cass_uint64_t;
+#  endif
 #else
 typedef long long cass_int64_t;
 typedef unsigned long long cass_uint64_t;
@@ -450,9 +455,9 @@ typedef struct CassMetrics_ {
 
   struct {
     cass_uint64_t total_connections; /**< The total number of connections */
-    cass_uint64_t available_connections; /**< The number of connections available to take requests */
-    cass_uint64_t exceeded_pending_requests_water_mark; /**< Occurrences when requests exceeded a pool's water mark */
-    cass_uint64_t exceeded_write_bytes_water_mark; /**< Occurrences when number of bytes exceeded a connection's water mark */
+    cass_uint64_t available_connections; /**< Deprecated */
+    cass_uint64_t exceeded_pending_requests_water_mark; /**< Deprecated */
+    cass_uint64_t exceeded_write_bytes_water_mark; /**< Deprecated */
   } stats;
 
   struct {
@@ -478,7 +483,7 @@ typedef enum CassConsistency_ {
   CASS_CONSISTENCY_LOCAL_ONE    = 0x000A
 } CassConsistency;
 
-#define CASS_CONSISTENCY_MAP(XX) \
+#define CASS_CONSISTENCY_MAPPING(XX) \
   XX(CASS_CONSISTENCY_UNKNOWN, "UNKNOWN") \
   XX(CASS_CONSISTENCY_ANY, "ANY") \
   XX(CASS_CONSISTENCY_ONE, "ONE") \
@@ -492,23 +497,35 @@ typedef enum CassConsistency_ {
   XX(CASS_CONSISTENCY_LOCAL_SERIAL, "LOCAL_SERIAL") \
   XX(CASS_CONSISTENCY_LOCAL_ONE, "LOCAL_ONE")
 
+/* @cond IGNORE */
+#define CASS_CONSISTENCY_MAP CASS_CONSISTENCY_MAPPING /* Deprecated */
+/* @endcond */
+
 typedef enum CassWriteType_ {
-  CASS_WRITE_TYPE_UKNOWN,
+  CASS_WRITE_TYPE_UNKNOWN,
   CASS_WRITE_TYPE_SIMPLE,
   CASS_WRITE_TYPE_BATCH,
   CASS_WRITE_TYPE_UNLOGGED_BATCH,
   CASS_WRITE_TYPE_COUNTER,
   CASS_WRITE_TYPE_BATCH_LOG,
-  CASS_WRITE_TYPE_CAS
+  CASS_WRITE_TYPE_CAS,
+  CASS_WRITE_TYPE_VIEW,
+  CASS_WRITE_TYPE_CDC
 } CassWriteType;
 
-#define CASS_WRITE_TYPE_MAP(XX) \
+#define CASS_WRITE_TYPE_MAPPING(XX) \
   XX(CASS_WRITE_TYPE_SIMPLE, "SIMPLE") \
   XX(CASS_WRITE_TYPE_BATCH, "BATCH") \
   XX(CASS_WRITE_TYPE_UNLOGGED_BATCH, "UNLOGGED_BATCH") \
   XX(CASS_WRITE_TYPE_COUNTER, "COUNTER") \
   XX(CASS_WRITE_TYPE_BATCH_LOG, "BATCH_LOG") \
-  XX(CASS_WRITE_TYPE_CAS, "CAS")
+  XX(CASS_WRITE_TYPE_CAS, "CAS") \
+  XX(CASS_WRITE_TYPE_VIEW, "VIEW") \
+  XX(CASS_WRITE_TYPE_CDC, "CDC")
+
+/* @cond IGNORE */
+#define CASS_WRITE_TYPE_MAP CASS_WRITE_TYPE_MAPPING /* Deprecated */
+/* @endcond */
 
 typedef enum CassColumnType_ {
   CASS_COLUMN_TYPE_REGULAR,
@@ -525,34 +542,40 @@ typedef enum CassIndexType_ {
   CASS_INDEX_TYPE_COMPOSITES
 } CassIndexType;
 
+#define CASS_VALUE_TYPE_MAPPING(XX) \
+  XX(CASS_VALUE_TYPE_CUSTOM,  0x0000, "", "") \
+  XX(CASS_VALUE_TYPE_ASCII,  0x0001, "ascii", "org.apache.cassandra.db.marshal.AsciiType") \
+  XX(CASS_VALUE_TYPE_BIGINT,  0x0002, "bigint", "org.apache.cassandra.db.marshal.LongType") \
+  XX(CASS_VALUE_TYPE_BLOB,  0x0003, "blob", "org.apache.cassandra.db.marshal.BytesType") \
+  XX(CASS_VALUE_TYPE_BOOLEAN,  0x0004, "boolean", "org.apache.cassandra.db.marshal.BooleanType") \
+  XX(CASS_VALUE_TYPE_COUNTER,  0x0005, "counter", "org.apache.cassandra.db.marshal.CounterColumnType") \
+  XX(CASS_VALUE_TYPE_DECIMAL,  0x0006, "decimal", "org.apache.cassandra.db.marshal.DecimalType") \
+  XX(CASS_VALUE_TYPE_DOUBLE,  0x0007, "double", "org.apache.cassandra.db.marshal.DoubleType") \
+  XX(CASS_VALUE_TYPE_FLOAT,  0x0008, "float", "org.apache.cassandra.db.marshal.FloatType") \
+  XX(CASS_VALUE_TYPE_INT,  0x0009, "int", "org.apache.cassandra.db.marshal.Int32Type") \
+  XX(CASS_VALUE_TYPE_TEXT,  0x000A, "text", "org.apache.cassandra.db.marshal.UTF8Type") \
+  XX(CASS_VALUE_TYPE_TIMESTAMP,  0x000B, "timestamp", "org.apache.cassandra.db.marshal.TimestampType") \
+  XX(CASS_VALUE_TYPE_UUID,  0x000C, "uuid", "org.apache.cassandra.db.marshal.UUIDType") \
+  XX(CASS_VALUE_TYPE_VARCHAR,  0x000D, "varchar", "") \
+  XX(CASS_VALUE_TYPE_VARINT,  0x000E, "varint", "org.apache.cassandra.db.marshal.IntegerType") \
+  XX(CASS_VALUE_TYPE_TIMEUUID,  0x000F, "timeuuid", "org.apache.cassandra.db.marshal.TimeUUIDType") \
+  XX(CASS_VALUE_TYPE_INET,  0x0010, "inet", "org.apache.cassandra.db.marshal.InetAddressType") \
+  XX(CASS_VALUE_TYPE_DATE,  0x0011, "date", "org.apache.cassandra.db.marshal.SimpleDateType") \
+  XX(CASS_VALUE_TYPE_TIME,  0x0012, "time", "org.apache.cassandra.db.marshal.TimeType") \
+  XX(CASS_VALUE_TYPE_SMALL_INT,  0x0013, "smallint", "org.apache.cassandra.db.marshal.ShortType") \
+  XX(CASS_VALUE_TYPE_TINY_INT,  0x0014, "tinyint", "org.apache.cassandra.db.marshal.ByteType") \
+  XX(CASS_VALUE_TYPE_DURATION,  0x0015, "duration", "org.apache.cassandra.db.marshal.DurationType") \
+  XX(CASS_VALUE_TYPE_LIST,  0x0020, "list", "org.apache.cassandra.db.marshal.ListType") \
+  XX(CASS_VALUE_TYPE_MAP,  0x0021, "map", "org.apache.cassandra.db.marshal.MapType") \
+  XX(CASS_VALUE_TYPE_SET,  0x0022, "set", "org.apache.cassandra.db.marshal.SetType") \
+  XX(CASS_VALUE_TYPE_UDT,  0x0030, "", "") \
+  XX(CASS_VALUE_TYPE_TUPLE,  0x0031, "tuple", "org.apache.cassandra.db.marshal.TupleType")
+
 typedef enum CassValueType_ {
-  CASS_VALUE_TYPE_UNKNOWN   = 0xFFFF,
-  CASS_VALUE_TYPE_CUSTOM    = 0x0000,
-  CASS_VALUE_TYPE_ASCII     = 0x0001,
-  CASS_VALUE_TYPE_BIGINT    = 0x0002,
-  CASS_VALUE_TYPE_BLOB      = 0x0003,
-  CASS_VALUE_TYPE_BOOLEAN   = 0x0004,
-  CASS_VALUE_TYPE_COUNTER   = 0x0005,
-  CASS_VALUE_TYPE_DECIMAL   = 0x0006,
-  CASS_VALUE_TYPE_DOUBLE    = 0x0007,
-  CASS_VALUE_TYPE_FLOAT     = 0x0008,
-  CASS_VALUE_TYPE_INT       = 0x0009,
-  CASS_VALUE_TYPE_TEXT      = 0x000A,
-  CASS_VALUE_TYPE_TIMESTAMP = 0x000B,
-  CASS_VALUE_TYPE_UUID      = 0x000C,
-  CASS_VALUE_TYPE_VARCHAR   = 0x000D,
-  CASS_VALUE_TYPE_VARINT    = 0x000E,
-  CASS_VALUE_TYPE_TIMEUUID  = 0x000F,
-  CASS_VALUE_TYPE_INET      = 0x0010,
-  CASS_VALUE_TYPE_DATE      = 0x0011,
-  CASS_VALUE_TYPE_TIME      = 0x0012,
-  CASS_VALUE_TYPE_SMALL_INT = 0x0013,
-  CASS_VALUE_TYPE_TINY_INT  = 0x0014,
-  CASS_VALUE_TYPE_LIST      = 0x0020,
-  CASS_VALUE_TYPE_MAP       = 0x0021,
-  CASS_VALUE_TYPE_SET       = 0x0022,
-  CASS_VALUE_TYPE_UDT       = 0x0030,
-  CASS_VALUE_TYPE_TUPLE     = 0x0031,
+  CASS_VALUE_TYPE_UNKNOWN = 0xFFFF,
+#define XX_VALUE_TYPE(name, type, cql, klass) name = type,
+  CASS_VALUE_TYPE_MAPPING(XX_VALUE_TYPE)
+#undef XX_VALUE_TYPE
   /* @cond IGNORE */
   CASS_VALUE_TYPE_LAST_ENTRY
   /* @endcond */
@@ -594,7 +617,7 @@ typedef enum CassIteratorType_ {
   CASS_ITERATOR_TYPE_MATERIALIZED_VIEW_META
 } CassIteratorType;
 
-#define CASS_LOG_LEVEL_MAP(XX) \
+#define CASS_LOG_LEVEL_MAPPING(XX) \
   XX(CASS_LOG_DISABLED, "") \
   XX(CASS_LOG_CRITICAL, "CRITICAL") \
   XX(CASS_LOG_ERROR, "ERROR") \
@@ -603,21 +626,33 @@ typedef enum CassIteratorType_ {
   XX(CASS_LOG_DEBUG, "DEBUG") \
   XX(CASS_LOG_TRACE, "TRACE")
 
+/* @cond IGNORE */
+#define CASS_LOG_LEVEL_MAP CASS_LOG_LEVEL_MAPPING /* Deprecated */
+/* @endcond */
+
 typedef enum CassLogLevel_ {
 #define XX_LOG(log_level, _) log_level,
-  CASS_LOG_LEVEL_MAP(XX_LOG)
+  CASS_LOG_LEVEL_MAPPING(XX_LOG)
 #undef XX_LOG
   /* @cond IGNORE */
   CASS_LOG_LAST_ENTRY
   /* @endcond */
 } CassLogLevel;
 
-typedef enum CassSslVerifyFlags {
+typedef enum CassSslVerifyFlags_ {
   CASS_SSL_VERIFY_NONE              = 0x00,
   CASS_SSL_VERIFY_PEER_CERT         = 0x01,
   CASS_SSL_VERIFY_PEER_IDENTITY     = 0x02,
   CASS_SSL_VERIFY_PEER_IDENTITY_DNS = 0x04
 } CassSslVerifyFlags;
+
+typedef enum CassProtocolVersion_ {
+  CASS_PROTOCOL_VERSION_V1    = 0x01,
+  CASS_PROTOCOL_VERSION_V2    = 0x02,
+  CASS_PROTOCOL_VERSION_V3    = 0x03,
+  CASS_PROTOCOL_VERSION_V4    = 0x04,
+  CASS_PROTOCOL_VERSION_V5    = 0x05
+} CassProtocolVersion;
 
 typedef enum  CassErrorSource_ {
   CASS_ERROR_SOURCE_NONE,
@@ -627,7 +662,7 @@ typedef enum  CassErrorSource_ {
   CASS_ERROR_SOURCE_COMPRESSION
 } CassErrorSource;
 
-#define CASS_ERROR_MAP(XX) \
+#define CASS_ERROR_MAPPING(XX) \
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_BAD_PARAMS, 1, "Bad parameters") \
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_NO_STREAMS, 2, "No streams available") \
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_UNABLE_TO_INIT, 3, "Unable to initialize") \
@@ -686,12 +721,16 @@ typedef enum  CassErrorSource_ {
   XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_IDENTITY_MISMATCH, 5, "Certificate does not match host or IP address") \
   XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_PROTOCOL_ERROR, 6, "Protocol error")
 
+/* @cond IGNORE */
+#define CASS_ERROR_MAP CASS_ERROR_MAPPING /* Deprecated */
+/* @endcond*/
+
 #define CASS_ERROR(source, code) ((source << 24) | code)
 
 typedef enum CassError_ {
   CASS_OK = 0,
 #define XX_ERROR(source, name, code, _) name = CASS_ERROR(source, code),
-  CASS_ERROR_MAP(XX_ERROR)
+  CASS_ERROR_MAPPING(XX_ERROR)
 #undef XX_ERROR
   /* @cond IGNORE */
   CASS_ERROR_LAST_ENTRY
@@ -942,17 +981,35 @@ cass_cluster_set_authenticator_callbacks(CassCluster* cluster,
  * Sets the protocol version. This will automatically downgrade to the lowest
  * supported protocol version.
  *
- * <b>Default:</b> 4
+ * <b>Default:</b> CASS_PROTOCOL_VERSION_V4
  *
  * @public @memberof CassCluster
  *
  * @param[in] cluster
  * @param[in] protocol_version
  * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_cluster_set_use_beta_protocol_version()
  */
 CASS_EXPORT CassError
 cass_cluster_set_protocol_version(CassCluster* cluster,
                                   int protocol_version);
+
+/**
+ * Use the newest beta protocol version. This currently enables the use of
+ * protocol version v5 (CASS_PROTOCOL_VERSION_V5).
+ *
+ * <b>Default:</b> cass_false
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] enable if false the highest non-beta protocol version will be used
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_use_beta_protocol_version(CassCluster* cluster,
+                                           cass_bool_t enable);
 
 /**
  * Sets the number of IO threads. This is the number of threads
@@ -1001,23 +1058,6 @@ cass_cluster_set_queue_size_io(CassCluster* cluster,
 CASS_EXPORT CassError
 cass_cluster_set_queue_size_event(CassCluster* cluster,
                                   unsigned queue_size);
-
-// CPP-473 this symbol does not exist
-///**
-// * Sets the size of the fixed size queue that stores
-// * log messages.
-// *
-// * <b>Default:</b> 8192
-// *
-// * @public @memberof CassCluster
-// *
-// * @param[in] cluster
-// * @param[in] queue_size
-// * @return CASS_OK if successful, otherwise an error occurred.
-// */
-//CASS_EXPORT CassError
-//cass_cluster_set_queue_size_log(CassCluster* cluster,
-//                                unsigned queue_size);
 
 /**
  * Sets the number of connections made to each server in each
@@ -1124,13 +1164,16 @@ cass_cluster_set_max_requests_per_flush(CassCluster* cluster,
  *
  * @public @memberof CassCluster
  *
+ * @deprecated This is no longer useful and does nothing. Expect this to be
+ * removed in a future release.
+ *
  * @param[in] cluster
  * @param[in] num_bytes
  * @return CASS_OK if successful, otherwise an error occurred.
  */
 CASS_EXPORT CassError
-cass_cluster_set_write_bytes_high_water_mark(CassCluster* cluster,
-                                             unsigned num_bytes);
+CASS_DEPRECATED(cass_cluster_set_write_bytes_high_water_mark(CassCluster* cluster,
+                                                             unsigned num_bytes));
 
 /**
  * Sets the low water mark for number of bytes outstanding on a
@@ -1141,13 +1184,16 @@ cass_cluster_set_write_bytes_high_water_mark(CassCluster* cluster,
  *
  * @public @memberof CassCluster
  *
+ * @deprecated This is no longer useful and does nothing. Expect this to be
+ * removed in a future release.
+ *
  * @param[in] cluster
  * @param[in] num_bytes
  * @return CASS_OK if successful, otherwise an error occurred.
  */
 CASS_EXPORT CassError
-cass_cluster_set_write_bytes_low_water_mark(CassCluster* cluster,
-                                            unsigned num_bytes);
+CASS_DEPRECATED(cass_cluster_set_write_bytes_low_water_mark(CassCluster* cluster,
+                                                            unsigned num_bytes));
 
 /**
  * Sets the high water mark for the number of requests queued waiting
@@ -1159,13 +1205,16 @@ cass_cluster_set_write_bytes_low_water_mark(CassCluster* cluster,
  *
  * @public @memberof CassCluster
  *
+ * @deprecated This is no longer useful and does nothing. Expect this to be
+ * removed in a future release.
+ *
  * @param[in] cluster
  * @param[in] num_requests
  * @return CASS_OK if successful, otherwise an error occurred.
  */
 CASS_EXPORT CassError
-cass_cluster_set_pending_requests_high_water_mark(CassCluster* cluster,
-                                                  unsigned num_requests);
+CASS_DEPRECATED(cass_cluster_set_pending_requests_high_water_mark(CassCluster* cluster,
+                                                                  unsigned num_requests));
 
 /**
  * Sets the low water mark for the number of requests queued waiting
@@ -1177,13 +1226,16 @@ cass_cluster_set_pending_requests_high_water_mark(CassCluster* cluster,
  *
  * @public @memberof CassCluster
  *
+ * @deprecated This is no longer useful and does nothing. Expect this to be
+ * removed in a future release.
+ *
  * @param[in] cluster
  * @param[in] num_requests
  * @return CASS_OK if successful, otherwise an error occurred.
  */
 CASS_EXPORT CassError
-cass_cluster_set_pending_requests_low_water_mark(CassCluster* cluster,
-                                                 unsigned num_requests);
+CASS_DEPRECATED(cass_cluster_set_pending_requests_low_water_mark(CassCluster* cluster,
+                                                                 unsigned num_requests));
 
 /**
  * Sets the timeout for connecting to a node.
@@ -1556,9 +1608,9 @@ cass_cluster_set_blacklist_dc_filtering_n(CassCluster* cluster,
                                           size_t dcs_length);
 
 /**
- * Enable/Disable Nagel's algorithm on connections.
+ * Enable/Disable Nagle's algorithm on connections.
  *
- * <b>Default:</b> cass_true (disables Nagel's algorithm).
+ * <b>Default:</b> cass_true (disables Nagle's algorithm).
  *
  * @public @memberof CassCluster
  *
@@ -1715,12 +1767,73 @@ cass_cluster_set_use_hostname_resolution(CassCluster* cluster,
  * @param[in] cluster
  * @param[in] enabled
  * @return CASS_OK if successful, otherwise an error occurred
- *
- * @see cass_cluster_set_resolve_timeout()
  */
 CASS_EXPORT CassError
 cass_cluster_set_use_randomized_contact_points(CassCluster* cluster,
                                                cass_bool_t enabled);
+
+/**
+ * Enable constant speculative executions with the supplied settings.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] constant_delay_ms
+ * @param[in] max_speculative_executions
+ * @return CASS_OK if successful, otherwise an error occurred
+ */
+CASS_EXPORT CassError
+cass_cluster_set_constant_speculative_execution_policy(CassCluster* cluster,
+                                                       cass_int64_t constant_delay_ms,
+                                                       int max_speculative_executions);
+
+/**
+ * Disable speculative executions
+ *
+ * <b>Default:</b> This is the default speculative execution policy.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @return CASS_OK if successful, otherwise an error occurred
+ */
+CASS_EXPORT CassError
+cass_cluster_set_no_speculative_execution_policy(CassCluster* cluster);
+
+/**
+ * Prepare statements on all available hosts.
+ *
+ * <b>Default:</b> cass_true
+ *
+ * @public @memberof CassCluster
+ *
+ * @param cluster
+ * @param enabled
+ * @return CASS_OK if successful, otherwise an error occurred
+ */
+CASS_EXPORT CassError
+cass_cluster_set_prepare_on_all_hosts(CassCluster* cluster,
+                                      cass_bool_t enabled);
+
+/**
+ * Enable pre-preparing cached prepared statements when existing hosts become
+ * available again or when new hosts are added to the cluster.
+ *
+ * This can help mitigate request latency when executing prepared statements
+ * by avoiding an extra round trip in cases where the statement is
+ * unprepared on a freshly started server. The main tradeoff is extra background
+ * network traffic is required to prepare the statements on hosts as they become
+ * available.
+ *
+ * <b>Default:</b> cass_true
+ *
+ * @param cluster
+ * @param enabled
+ * @return CASS_OK if successful, otherwise an error occurred
+ */
+CASS_EXPORT CassError
+cass_cluster_set_prepare_on_up_or_add_host(CassCluster* cluster,
+                                           cass_bool_t enabled);
 
 /***********************************************************************************
  *
@@ -1856,6 +1969,25 @@ cass_session_prepare_n(CassSession* session,
                        size_t query_length);
 
 /**
+ * Create a prepared statement from an existing statement.
+ *
+ * <b>Note:</b> Bound statements will inherit the keyspace, consistency,
+ * serial consistency, request timeout and retry policy of the existing
+ * statement.
+ *
+ * @public @memberof CassSession
+ *
+ * @param[in] session
+ * @param[in] statement
+ * @return A future that must be freed.
+ *
+ * @see cass_future_get_prepared()
+ */
+CASS_EXPORT CassFuture*
+cass_session_prepare_from_existing(CassSession* session,
+                                   CassStatement* statement);
+
+/**
  * Execute a query or bound statement.
  *
  * @public @memberof CassSession
@@ -1898,7 +2030,7 @@ cass_session_execute_batch(CassSession* session,
  * @param[in] session
  * @return A schema instance that must be freed.
  *
- * @see cass_schema_free()
+ * @see cass_schema_meta_free()
  */
 CASS_EXPORT const CassSchemaMeta*
 cass_session_get_schema_meta(const CassSession* session);
@@ -1910,8 +2042,6 @@ cass_session_get_schema_meta(const CassSession* session);
  *
  * @param[in] session
  * @param[out] output
- *
- * @see cass_schema_free()
  */
 CASS_EXPORT void
 cass_session_get_metrics(const CassSession* session,
@@ -3249,6 +3379,37 @@ CASS_EXPORT CassSsl*
 cass_ssl_new();
 
 /**
+ * Creates a new SSL context <b>without</b> initializing the underlying library
+ * implementation. The integrating application is responsible for
+ * initializing the underlying SSL implementation. The driver uses the SSL
+ * implmentation from several threads concurrently so it's important that it's
+ * properly setup for multithreaded use e.g. lock callbacks for OpenSSL.
+ *
+ * <b>Important:</b> The SSL library must be initialized before calling this
+ * function.
+ *
+ * When using OpenSSL the following components need to be initialized:
+ *
+ * SSL_library_init();
+ * SSL_load_error_strings();
+ * OpenSSL_add_all_algorithms();
+ *
+ * The following thread-safety callbacks also need to be set:
+ *
+ * CRYPTO_set_locking_callback(...);
+ * CRYPTO_set_id_callback(...);
+ *
+ * @public @memberof CassSsl
+ *
+ * @return Returns a SSL context that must be freed.
+ *
+ * @see cass_ssl_new()
+ * @see cass_ssl_free()
+ */
+CASS_EXPORT CassSsl*
+cass_ssl_new_no_lib_init();
+
+/**
  * Frees a SSL context instance.
  *
  * @public @memberof CassSsl
@@ -3500,7 +3661,7 @@ cass_authenticator_set_error(CassAuthenticator* auth,
                              const char* message);
 
 /**
- * Same as cass_authenticator_set_error_n(), but with lengths for string
+ * Same as cass_authenticator_set_error(), but with lengths for string
  * parameters.
  *
  * @public @memberof CassAuthenticator
@@ -3782,12 +3943,13 @@ CASS_EXPORT CassError
 cass_statement_add_key_index(CassStatement* statement,
                              size_t index);
 
-
 /**
- * Sets the statement's keyspace for use with token-aware routing.
+ * Sets the statement's keyspace. This is used for token-aware routing and when
+ * using protocol v5 or greater it also overrides the session's current
+ * keyspace for the statement.
  *
- * This is not necessary for prepared statements, as the keyspace
- * is determined in the metadata processed in the prepare phase.
+ * This is not necessary and will not work for bound statements, as the keyspace
+ * is determined by the prepared statement metadata.
  *
  * @public @memberof CassStatement
  *
@@ -3938,6 +4100,22 @@ cass_statement_set_timestamp(CassStatement* statement,
 CASS_EXPORT CassError
 cass_statement_set_request_timeout(CassStatement* statement,
                                    cass_uint64_t timeout_ms);
+
+/**
+ * Sets whether the statement is idempotent. Idempotent statements are able to be
+ * automatically retried after timeouts/errors and can be speculatively executed.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] is_idempotent
+ * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_cluster_set_constant_speculative_execution_policy()
+ */
+CASS_EXPORT CassError
+cass_statement_set_is_idempotent(CassStatement* statement,
+                                 cass_bool_t is_idempotent);
 
 /**
  * Sets the statement's retry policy.
@@ -4856,6 +5034,74 @@ cass_statement_bind_decimal_by_name_n(CassStatement* statement,
                                       cass_int32_t scale);
 
 /**
+ * Binds a "duration" to a query or bound statement at the specified index.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] index
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_bind_duration(CassStatement* statement,
+                             size_t index,
+                             cass_int32_t months,
+                             cass_int32_t days,
+                             cass_int64_t nanos);
+
+/**
+ * Binds a "duration" to all the values with the specified name.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] name
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_bind_duration_by_name(CassStatement* statement,
+                                     const char* name,
+                                     cass_int32_t months,
+                                     cass_int32_t days,
+                                     cass_int64_t nanos);
+
+/**
+ * Same as cass_statement_bind_duration_by_name(), but with lengths for string
+ * parameters.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] name
+ * @param[in] name_length
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return same as cass_statement_bind_duration_by_name()
+ *
+ * @see cass_statement_bind_duration_by_name()
+ */
+CASS_EXPORT CassError
+cass_statement_bind_duration_by_name_n(CassStatement* statement,
+                                       const char* name,
+                                       size_t name_length,
+                                       cass_int32_t months,
+                                       cass_int32_t days,
+                                       cass_int64_t nanos);
+
+/**
  * Bind a "list", "map" or "set" to a query or bound statement at the
  * specified index.
  *
@@ -5151,6 +5397,41 @@ CASS_EXPORT void
 cass_batch_free(CassBatch* batch);
 
 /**
+ * Sets the batch's keyspace. When using protocol v5 or greater it overrides
+ * the session's keyspace for the batch.
+ *
+ * <b>Note:</b> If not set explicitly then the batch will inherit the keyspace
+ * of the first child statement with a non-empty keyspace.
+ *
+ * @public @memberof CassBatch
+ *
+ * @param[in] batch
+ * @param[in] keyspace
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_batch_set_keyspace(CassBatch* batch,
+                        const char* keyspace);
+
+/**
+ * Same as cass_batch_set_keyspace(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassBatch
+ *
+ * @param[in] batch
+ * @param[in] keyspace
+ * @param[in] keyspace_length
+ * @return same as cass_batch_set_keyspace()
+ *
+ * @see cass_batch_set_keyspace()
+ */
+CASS_EXPORT CassError
+cass_batch_set_keyspace_n(CassBatch* batch,
+                          const char* keyspace,
+                          size_t keyspace_length);
+
+/**
  * Sets the batch's consistency level
  *
  * @cassandra{2.0+}
@@ -5214,6 +5495,23 @@ cass_batch_set_timestamp(CassBatch* batch,
 CASS_EXPORT CassError
 cass_batch_set_request_timeout(CassBatch* batch,
                                cass_uint64_t timeout_ms);
+
+/**
+ * Sets whether the statements in a batch are idempotent. Idempotent batches
+ * are able to be automatically retried after timeouts/errors and can be
+ * speculatively executed.
+ *
+ * @public @memberof CassBatch
+ *
+ * @param[in] batch
+ * @param[in] is_idempotent
+ * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_cluster_set_constant_speculative_execution_policy()
+ */
+CASS_EXPORT CassError
+cass_batch_set_is_idempotent(CassBatch* batch,
+                             cass_bool_t is_idempotent);
 
 /**
  * Sets the batch's retry policy.
@@ -5993,6 +6291,25 @@ cass_collection_append_decimal(CassCollection* collection,
                                cass_int32_t scale);
 
 /**
+ * Appends a "duration" to the collection.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassCollection
+ *
+ * @param[in] collection
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_collection_append_duration(CassCollection* collection,
+                                cass_int32_t months,
+                                cass_int32_t days,
+                                cass_int64_t nanos);
+
+/**
  * Appends a "list", "map" or "set" to the collection.
  *
  * @cassandra{2.1+}
@@ -6407,6 +6724,27 @@ cass_tuple_set_decimal(CassTuple* tuple,
                        const cass_byte_t* varint,
                        size_t varint_size,
                        cass_int32_t scale);
+
+/**
+ * Sets a "duration" in a tuple at the specified index.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassTuple
+ *
+ * @param[in] tuple
+ * @param[in] index
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_tuple_set_duration(CassTuple* tuple,
+                        size_t index,
+                        cass_int32_t months,
+                        cass_int32_t days,
+                        cass_int64_t nanos);
 
 /**
  * Sets a "list", "map" or "set" in a tuple at the specified index.
@@ -7421,6 +7759,74 @@ cass_user_type_set_decimal_by_name_n(CassUserType* user_type,
                                      int scale);
 
 /**
+ * Sets a "duration" in a user defined type at the specified index.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassUserType
+ *
+ * @param[in] user_type
+ * @param[in] index
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_user_type_set_duration(CassUserType* user_type,
+                            size_t index,
+                            cass_int32_t months,
+                            cass_int32_t days,
+                            cass_int64_t nanos);
+
+/**
+ * Sets "duration" in a user defined type at the specified name.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassUserType
+ *
+ * @param[in] user_type
+ * @param[in] name
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_user_type_set_duration_by_name(CassUserType* user_type,
+                                    const char* name,
+                                    cass_int32_t months,
+                                    cass_int32_t days,
+                                    cass_int64_t nanos);
+
+/**
+ * Same as cass_user_type_set_duration_by_name(), but with lengths for string
+ * parameters.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassUserType
+ *
+ * @param[in] user_type
+ * @param[in] name
+ * @param[in] name_length
+ * @param[in] months
+ * @param[in] days
+ * @param[in] nanos
+ * @return same as cass_user_type_set_duration_by_name()
+ *
+ * @see cass_user_type_set_duration_by_name()
+ */
+CASS_EXPORT CassError
+cass_user_type_set_duration_by_name_n(CassUserType* user_type,
+                                      const char* name,
+                                      size_t name_length,
+                                      cass_int32_t months,
+                                      cass_int32_t days,
+                                      cass_int64_t nanos);
+
+/**
  * Sets a "list", "map" or "set" in a user defined type at the
  * specified index.
  *
@@ -7793,9 +8199,8 @@ cass_error_result_consistency(const CassErrorResult* error_result);
  * acknowledgments for a write timeout or actual alive nodes for a unavailable
  * error. Undefined for other error result types.
  */
-// Name corrected; see CPP-502
 CASS_EXPORT cass_int32_t
-cass_error_result_actual(const CassErrorResult* error_result);
+cass_error_result_responses_received(const CassErrorResult* error_result);
 
 /**
  * Gets required responses, required acknowledgments or required alive nodes
@@ -7817,9 +8222,8 @@ cass_error_result_actual(const CassErrorResult* error_result);
  * for a write timeout or required alive nodes for an unavailable error result.
  * Undefined for other error result types.
  */
-// Name corrected; see CPP-502
 CASS_EXPORT cass_int32_t
-cass_error_result_required(const CassErrorResult* error_result);
+cass_error_result_responses_required(const CassErrorResult* error_result);
 
 /**
  * Gets the number of nodes that experienced failures for the following error types:
@@ -8896,6 +9300,25 @@ cass_value_get_decimal(const CassValue* value,
                        cass_int32_t* scale);
 
 /**
+ * Gets a duration for the specified value.
+ *
+ * @cassandra{3.10+}
+ *
+ * @public @memberof CassValue
+ *
+ * @param[in] value
+ * @param[out] months
+ * @param[out] days
+ * @param[out] nanos
+ * @return CASS_OK if successful, otherwise error occurred
+ */
+CASS_EXPORT CassError
+cass_value_get_duration(const CassValue* value,
+                        cass_int32_t* months,
+                        cass_int32_t* days,
+                        cass_int64_t* nanos);
+
+/**
  * Gets the type of the specified value.
  *
  * @public @memberof CassValue
@@ -8927,6 +9350,17 @@ cass_value_is_null(const CassValue* value);
  */
 CASS_EXPORT cass_bool_t
 cass_value_is_collection(const CassValue* value);
+
+/**
+ * Returns true if a specified value is a duration.
+ *
+ * @public @memberof CassValue
+ *
+ * @param[in] value
+ * @return true if the value is a duration, otherwise false.
+ */
+CASS_EXPORT cass_bool_t
+cass_value_is_duration(const CassValue* value);
 
 /**
  * Get the number of items in a collection. Works for all collection types.
@@ -9176,14 +9610,23 @@ CASS_EXPORT CassTimestampGen*
 cass_timestamp_gen_server_side_new();
 
 /**
- * Creates a new monotonically increasing timestamp generator. This generates
- * microsecond timestamps with the sub-millisecond part generated using a counter.
- * The implementation guarantees that no more than 1000 timestamps will be generated
- * for a given clock tick even if shared by multiple session objects. If that rate is
- * exceeded then a warning is logged and timestamps stop incrementing until the next
- * clock tick.
+ * Creates a new monotonically increasing timestamp generator with microsecond
+ * precision.
  *
- * <b>Note:</b> This generator is thread-safe and can be shared by multiple sessions.
+ * This implementation guarantees a monotonically increasing timestamp. If the
+ * timestamp generation rate exceeds one per microsecond or if the clock skews
+ * into the past the generator will artificially increment the previously
+ * generated timestamp until the request rate decreases or the clock skew
+ * is corrected.
+ *
+ * By default, this timestamp generator will generate warnings if more than
+ * 1 second of clock skew is detected. It will print an error every second until
+ * the clock skew is resolved. These settings can be changed by using
+ * `cass_timestamp_gen_monotonic_new_with_settings()` to create the generator
+ * instance.
+ *
+ * <b>Note:</b> This generator is thread-safe and can be shared by multiple
+ * sessions.
  *
  * @cassandra{2.1+}
  *
@@ -9191,10 +9634,27 @@ cass_timestamp_gen_server_side_new();
  *
  * @return Returns a timestamp generator that must be freed.
  *
+ * @see cass_timestamp_gen_monotonic_new_with_settings();
  * @see cass_timestamp_gen_free()
  */
 CASS_EXPORT CassTimestampGen*
 cass_timestamp_gen_monotonic_new();
+
+/**
+ * Same as cass_timestamp_gen_monotonic_new(), but with settings for controlling
+ * warnings about clock skew.
+ *
+ * @param warning_threshold_us The amount of clock skew, in microseconds, that
+ * must be detected before a warning is triggered. A threshold less than 0 can
+ * be used to disable warnings.
+ * @param warning_interval_ms The amount of time, in milliseonds, to wait before
+ * warning again about clock skew. An interval value less than or equal to 0 allows
+ * the warning to be triggered every millisecond.
+ * @return Returns a timestamp generator that must be freed.
+ */
+CASS_EXPORT CassTimestampGen*
+cass_timestamp_gen_monotonic_new_with_settings(cass_int64_t warning_threshold_us,
+                                               cass_int64_t warning_interval_ms);
 
 /**
  * Frees a timestamp generator instance.
@@ -9475,7 +9935,7 @@ cass_error_desc(CassError error);
  * to call any cass_*() functions after this call.
  *
  * @deprecated This is no longer useful and does nothing. Expect this to be
- * removed in a few releases.
+ * removed in a future release.
  */
 CASS_EXPORT void
 CASS_DEPRECATED(cass_log_cleanup());
@@ -9518,7 +9978,7 @@ cass_log_set_callback(CassLogCallback callback,
  * <b>Default:</b> 2048
  *
  * @deprecated This is no longer useful and does nothing. Expect this to be
- * removed in a few releases.
+ * removed in a future release.
  *
  * @param[in] queue_size
  */
