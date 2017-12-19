@@ -12,6 +12,7 @@ pub const CASS_UUID_STRING_LENGTH: ::std::os::raw::c_uint = 37;
 pub const CASS_LOG_MAX_MESSAGE_SIZE: ::std::os::raw::c_uint = 1024;
 pub type wchar_t = ::std::os::raw::c_int;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum cass_bool_t {
     cass_false = 0,
@@ -430,6 +431,7 @@ pub struct CassMetrics___bindgen_ty_3 {
 }
 pub type CassMetrics = CassMetrics_;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassConsistency_ {
     CASS_CONSISTENCY_UNKNOWN = 65535,
@@ -447,6 +449,7 @@ pub enum CassConsistency_ {
 }
 pub use self::CassConsistency_ as CassConsistency;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassWriteType_ {
     CASS_WRITE_TYPE_UNKNOWN = 0,
@@ -461,6 +464,7 @@ pub enum CassWriteType_ {
 }
 pub use self::CassWriteType_ as CassWriteType;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassColumnType_ {
     CASS_COLUMN_TYPE_REGULAR = 0,
@@ -471,6 +475,7 @@ pub enum CassColumnType_ {
 }
 pub use self::CassColumnType_ as CassColumnType;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassIndexType_ {
     CASS_INDEX_TYPE_UNKNOWN = 0,
@@ -480,6 +485,7 @@ pub enum CassIndexType_ {
 }
 pub use self::CassIndexType_ as CassIndexType;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassValueType_ {
     CASS_VALUE_TYPE_UNKNOWN = 65535,
@@ -514,6 +520,7 @@ pub enum CassValueType_ {
 }
 pub use self::CassValueType_ as CassValueType;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassClusteringOrder_ {
     CASS_CLUSTERING_ORDER_NONE = 0,
@@ -522,6 +529,7 @@ pub enum CassClusteringOrder_ {
 }
 pub use self::CassClusteringOrder_ as CassClusteringOrder;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassCollectionType_ {
     CASS_COLLECTION_TYPE_LIST = 32,
@@ -530,6 +538,7 @@ pub enum CassCollectionType_ {
 }
 pub use self::CassCollectionType_ as CassCollectionType;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassBatchType_ {
     CASS_BATCH_TYPE_LOGGED = 0,
@@ -538,6 +547,7 @@ pub enum CassBatchType_ {
 }
 pub use self::CassBatchType_ as CassBatchType;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassIteratorType_ {
     CASS_ITERATOR_TYPE_RESULT = 0,
@@ -558,6 +568,7 @@ pub enum CassIteratorType_ {
 }
 pub use self::CassIteratorType_ as CassIteratorType;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassLogLevel_ {
     CASS_LOG_DISABLED = 0,
@@ -571,6 +582,7 @@ pub enum CassLogLevel_ {
 }
 pub use self::CassLogLevel_ as CassLogLevel;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassSslVerifyFlags_ {
     CASS_SSL_VERIFY_NONE = 0,
@@ -580,6 +592,7 @@ pub enum CassSslVerifyFlags_ {
 }
 pub use self::CassSslVerifyFlags_ as CassSslVerifyFlags;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassProtocolVersion_ {
     CASS_PROTOCOL_VERSION_V1 = 1,
@@ -590,6 +603,7 @@ pub enum CassProtocolVersion_ {
 }
 pub use self::CassProtocolVersion_ as CassProtocolVersion;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassErrorSource_ {
     CASS_ERROR_SOURCE_NONE = 0,
@@ -600,6 +614,7 @@ pub enum CassErrorSource_ {
 }
 pub use self::CassErrorSource_ as CassErrorSource;
 #[repr(u32)]
+#[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum CassError_ {
     CASS_OK = 0,
