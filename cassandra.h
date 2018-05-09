@@ -52,7 +52,7 @@
 
 #define CASS_VERSION_MAJOR 2
 #define CASS_VERSION_MINOR 8
-#define CASS_VERSION_PATCH 0
+#define CASS_VERSION_PATCH 1
 #define CASS_VERSION_SUFFIX ""
 
 #ifdef __cplusplus
@@ -447,24 +447,24 @@ typedef struct CassMetrics_ {
     cass_uint64_t percentile_98th; /**< 98th percentile in microseconds */
     cass_uint64_t percentile_99th; /**< 99the percentile in microseconds */
     cass_uint64_t percentile_999th; /**< 99.9th percentile in microseconds */
-    cass_double_t mean_rate; /**<  Mean rate in requests per second*/
+    cass_double_t mean_rate; /**<  Mean rate in requests per second */
     cass_double_t one_minute_rate; /**< 1 minute rate in requests per second */
-    cass_double_t five_minute_rate; /**<  5 minute rate in requests per second*/
-    cass_double_t fifteen_minute_rate; /**< 15 minute rate in requests per second*/
-  } requests;
+    cass_double_t five_minute_rate; /**<  5 minute rate in requests per second */
+    cass_double_t fifteen_minute_rate; /**< 15 minute rate in requests per second */
+  } requests; /**< Performance request metrics */
 
   struct {
     cass_uint64_t total_connections; /**< The total number of connections */
     cass_uint64_t available_connections; /**< Deprecated */
     cass_uint64_t exceeded_pending_requests_water_mark; /**< Deprecated */
     cass_uint64_t exceeded_write_bytes_water_mark; /**< Deprecated */
-  } stats;
+  } stats; /**< Diagnostic metrics */
 
   struct {
     cass_uint64_t connection_timeouts; /**< Occurrences of a connection timeout */
-    cass_uint64_t pending_request_timeouts; /** Occurrences of requests that timed out waiting for a connection */
-    cass_uint64_t request_timeouts; /** Occurrences of requests that timed out waiting for a request to finish */
-  } errors;
+    cass_uint64_t pending_request_timeouts; /**< Occurrences of requests that timed out waiting for a connection */
+    cass_uint64_t request_timeouts; /**< Occurrences of requests that timed out waiting for a request to finish */
+  } errors; /**< Error metrics */
 
 } CassMetrics;
 
@@ -947,6 +947,39 @@ cass_cluster_set_port(CassCluster* cluster,
                       int port);
 
 /**
+ * Sets the local address to bind when connecting to the cluster,
+ * if desired.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] name IP address to bind, or empty string for no binding.
+ * Only numeric addresses are supported; no resolution is done.
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_local_address(CassCluster* cluster,
+                               const char* name);
+
+/**
+ * Same as cass_cluster_set_local_address(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] name
+ * @param[in] name_length
+ * @return same as cass_cluster_set_local_address()
+ *
+ * @see cass_cluster_set_local_address()
+ */
+CASS_EXPORT CassError
+cass_cluster_set_local_address_n(CassCluster* cluster,
+                                 const char* name,
+                                 size_t name_length);
+
+/**
  * Sets the SSL context and enables SSL.
  *
  * @public @memberof CassCluster
@@ -1010,6 +1043,36 @@ cass_cluster_set_protocol_version(CassCluster* cluster,
 CASS_EXPORT CassError
 cass_cluster_set_use_beta_protocol_version(CassCluster* cluster,
                                            cass_bool_t enable);
+
+/**
+ * Sets default consistency level of statement.
+ *
+ * <b>Default:</b> CASS_CONSISTENCY_LOCAL_ONE
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] consistency
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_consistency(CassCluster* cluster,
+                             CassConsistency consistency);
+
+/**
+ * Sets default serial consistency level of statement.
+ *
+ * <b>Default:</b> CASS_CONSISTENCY_ANY
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] consistency
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_serial_consistency(CassCluster* cluster,
+                                    CassConsistency consistency);
 
 /**
  * Sets the number of IO threads. This is the number of threads
@@ -1834,6 +1897,28 @@ cass_cluster_set_prepare_on_all_hosts(CassCluster* cluster,
 CASS_EXPORT CassError
 cass_cluster_set_prepare_on_up_or_add_host(CassCluster* cluster,
                                            cass_bool_t enabled);
+
+/**
+ * Enable the <b>NO_COMPACT</b> startup option.
+ *
+ * This can help facilitate uninterrupted cluster upgrades where tables using
+ * <b>COMPACT_STORAGE</b> will operate in "compatibility mode" for
+ * <b>BATCH</b>, <b>DELETE</b>, <b>SELECT</b>, and <b>UPDATE</b> CQL operations.
+ *
+ * <b>Default:</b> cass_false
+ *
+ * @cassandra{3.0.16+}
+ * @cassandra{3.11.2+}
+ * @cassandra{4.0+}
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] enabled
+ */
+CASS_EXPORT CassError
+cass_cluster_set_no_compact(CassCluster* cluster,
+                            cass_bool_t enabled);
 
 /***********************************************************************************
  *

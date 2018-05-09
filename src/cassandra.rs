@@ -854,6 +854,11 @@ extern "C" {
     /// @return CASS_OK if successful, otherwise an error occurred.
     pub fn cass_cluster_set_port(cluster: *mut CassCluster, port: ::std::os::raw::c_int) -> CassError;
 }
+pub fn cass_cluster_set_local_address(cluster: *mut CassCluster,
+                                      name: *const ::std::os::raw::c_char) -> CassError;
+pub fn cass_cluster_set_local_address_n(cluster: *mut CassCluster,
+                                        name: *const ::std::os::raw::c_char, name_length: usize
+) -> CassError;
 extern "C" {
 
     /// Sets the SSL context and enables SSL.
