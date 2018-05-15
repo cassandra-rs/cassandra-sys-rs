@@ -854,11 +854,40 @@ extern "C" {
     /// @return CASS_OK if successful, otherwise an error occurred.
     pub fn cass_cluster_set_port(cluster: *mut CassCluster, port: ::std::os::raw::c_int) -> CassError;
 }
-pub fn cass_cluster_set_local_address(cluster: *mut CassCluster,
-                                      name: *const ::std::os::raw::c_char) -> CassError;
-pub fn cass_cluster_set_local_address_n(cluster: *mut CassCluster,
-                                        name: *const ::std::os::raw::c_char, name_length: usize
-) -> CassError;
+extern "C" {
+
+    /// Sets the local address to bind when connecting to the cluster,
+    /// if desired.
+    ///
+    /// @public @memberof CassCluster
+    ///
+    /// @param[in] cluster
+    /// @param[in] name IP address to bind, or empty string for no binding.
+    /// Only numeric addresses are supported; no resolution is done.
+    /// @return CASS_OK if successful, otherwise an error occurred.
+
+    pub fn cass_cluster_set_local_address(cluster: *mut CassCluster,
+                                          name: *const ::std::os::raw::c_char) -> CassError;
+
+}
+extern "C" {
+
+    /// Same as cass_cluster_set_local_address(), but with lengths for string
+    /// parameters.
+    ///
+    /// @public @memberof CassCluster
+    ///
+    /// @param[in] cluster
+    /// @param[in] name
+    /// @param[in] name_length
+    /// @return same as cass_cluster_set_local_address()
+    ///
+    /// @see cass_cluster_set_local_address()
+
+    pub fn cass_cluster_set_local_address_n(cluster: *mut CassCluster,
+                                            name: *const ::std::os::raw::c_char, name_length: usize
+    ) -> CassError;
+}
 extern "C" {
 
     /// Sets the SSL context and enables SSL.
