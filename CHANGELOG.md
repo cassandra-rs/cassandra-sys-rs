@@ -1,4 +1,5 @@
 ## 0.12.0 (unreleased)
+* Upgraded cassandra-cpp-driver to 2.10.0 to get datastax's fix for CPP-499
 
 * Upgraded to version 2.8.0 of the C++ driver (was previously 2.4.3).  See that project's [CHANGELOG](https://github.com/datastax/cpp-driver/blob/master/CHANGELOG.md) for more details.  We noticed the following breaking changes:
   * `cass_error_result_actual` becomes `cass_error_result_responses_received`
