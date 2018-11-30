@@ -29,7 +29,7 @@ You can use this crate from cargo with
 
 ```toml
     [dependencies]
-    cassandra-cpp-sys = "0.11"
+    cassandra-cpp-sys = "0.12"
 ```
 
 ## License
