@@ -1,3 +1,5 @@
+## 0.13.0 (Unreleased)
+
 ## 0.12.0 (2018-11-30)
 * Upgraded cassandra-cpp-driver to 2.10.0 to get Datastax's fix for CPP-499
 
