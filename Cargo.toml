@@ -8,7 +8,7 @@ keywords = ["Cassandra", "binding", "CQL", "client", "database" ]
 categories = [ "api-bindings", "database", "external-ffi-bindings" ]
 license = "Apache-2.0"
 name = "cassandra-cpp-sys"
-version = "0.13.0-pre"
+version = "0.12.1"
 authors = ["Tupshin Harper <tupshin@tupshin.com>", "Keith Wansbrough <Keith.Wansbrough@metaswitch.com>"]
 build = "build.rs"
 
