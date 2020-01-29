@@ -8,6 +8,9 @@ fn main() {
     println!("cargo:rustc-flags=-l dylib=cassandra");
     println!("cargo:rustc-flags=-l dylib=crypto");
     println!("cargo:rustc-flags=-l dylib=ssl");
+    #[cfg(target_os = "macos")]
+    println!("cargo:rustc-flags=-l dylib=c++");
+    #[cfg(not(target_os = "macos"))]
     println!("cargo:rustc-flags=-l dylib=stdc++");
     println!("cargo:rustc-flags=-l dylib=uv");
     println!("cargo:rustc-link-search={}", "/usr/lib/x86_64-linux-gnu");
@@ -16,4 +19,5 @@ fn main() {
     println!("cargo:rustc-link-search={}", "/usr/local/lib");
     println!("cargo:rustc-link-search={}", "/usr/lib64/");
     println!("cargo:rustc-link-search={}", "/usr/lib/");
+    println!("cargo:rustc-link-search={}", "/usr/local/opt/openssl/lib");
 }
