@@ -10,6 +10,7 @@ license = "Apache-2.0"
 name = "cassandra-cpp-sys"
 version = "0.12.1"
 authors = ["Tupshin Harper <tupshin@tupshin.com>", "Keith Wansbrough <Keith.Wansbrough@metaswitch.com>"]
+links = "cassandra"
 build = "build.rs"
 
 [badges]
