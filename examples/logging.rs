@@ -31,7 +31,7 @@ unsafe extern "C" fn on_log(message: *const CassLogMessage, data: *mut raw::c_vo
 fn main() {
     unsafe {
         env::set_var("RUST_LOG", "info");
-        env_logger::init().unwrap();
+        env_logger::init();
         // Log configuration *MUST* be done before any other driver call
         cass_log_set_level(CASS_LOG_INFO);
         cass_log_set_callback(Some(on_log), ptr::null_mut());
