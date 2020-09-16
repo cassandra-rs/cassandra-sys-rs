@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [0.12.2] - 2020-09-16
+### Added
 * `links` manifest key was added for customized build
 
 ### Changed
+* Bumped dependencies on `log` and `env_logger`.
+
 ### Fixed
 
 ## [0.12.1] - 2020-01-29
