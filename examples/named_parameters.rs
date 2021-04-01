@@ -3,9 +3,9 @@
 
 extern crate cassandra_cpp_sys;
 
-use std::mem;
-use std::ffi::CString;
 use cassandra_cpp_sys::*;
+use std::ffi::CString;
+use std::mem;
 
 #[derive(Clone)]
 struct Basic {
@@ -21,7 +21,10 @@ fn print_error(future: &mut CassFuture) {
         let mut message = mem::zeroed();
         let mut message_length = mem::zeroed();
         cass_future_error_message(future, &mut message, &mut message_length);
-        println!("Error: {:?}", raw2utf8(message, message_length).unwrap());
+        println!(
+            "Error: {:?}",
+            raw2utf8(message, message_length as usize).unwrap()
+        );
     }
 }
 
@@ -66,9 +69,11 @@ fn execute_query(session: &mut CassSession, query: &str) -> Result<(), CassError
 
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
-        let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (:k, :b, :f, :d, \
-                                  :i32, :i64);")
-            .unwrap();
+        let query = CString::new(
+            "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (:k, :b, :f, :d, \
+                                  :i32, :i64);",
+        )
+        .unwrap();
         let key = CString::new(key).unwrap();
         let statement = &mut *cass_statement_new(query.as_ptr(), 6);
         let k = CString::new("k").unwrap().as_ptr();
@@ -112,15 +117,16 @@ fn select_from_basic(session: &mut CassSession, key: &str) -> Result<Basic, Cass
 
         let statement = &mut *cass_statement_new(query.as_ptr(), 1);
 
-        cass_statement_bind_string_by_name(statement,
-                                           CString::new("key").unwrap().as_ptr(),
-                                           key.as_ptr());
+        cass_statement_bind_string_by_name(
+            statement,
+            CString::new("key").unwrap().as_ptr(),
+            key.as_ptr(),
+        );
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
 
         let rc = cass_future_error_code(future);
-
 
         match rc {
             CASS_OK => {
@@ -130,22 +136,31 @@ fn select_from_basic(session: &mut CassSession, key: &str) -> Result<Basic, Cass
                 if cass_iterator_next(iterator) == cass_true {
                     let row = &*cass_iterator_get_row(iterator);
 
-                    cass_value_get_bool(cass_row_get_column_by_name(row, CString::new("BLN").unwrap().as_ptr()),
-                                        &mut output.bln);
-                    cass_value_get_double(cass_row_get_column_by_name(row, CString::new("dbl").unwrap().as_ptr()),
-                                          &mut output.dbl);
-                    cass_value_get_float(cass_row_get_column_by_name(row, CString::new("flt").unwrap().as_ptr()),
-                                         &mut output.flt);
-                    cass_value_get_int32(cass_row_get_column_by_name(row, CString::new("\"i32\"").unwrap().as_ptr()),
-                                         &mut output.i32);
-                    cass_value_get_int64(cass_row_get_column_by_name(row, CString::new("i64").unwrap().as_ptr()),
-                                         &mut output.i64);
+                    cass_value_get_bool(
+                        cass_row_get_column_by_name(row, CString::new("BLN").unwrap().as_ptr()),
+                        &mut output.bln,
+                    );
+                    cass_value_get_double(
+                        cass_row_get_column_by_name(row, CString::new("dbl").unwrap().as_ptr()),
+                        &mut output.dbl,
+                    );
+                    cass_value_get_float(
+                        cass_row_get_column_by_name(row, CString::new("flt").unwrap().as_ptr()),
+                        &mut output.flt,
+                    );
+                    cass_value_get_int32(
+                        cass_row_get_column_by_name(row, CString::new("\"i32\"").unwrap().as_ptr()),
+                        &mut output.i32,
+                    );
+                    cass_value_get_int64(
+                        cass_row_get_column_by_name(row, CString::new("i64").unwrap().as_ptr()),
+                        &mut output.i64,
+                    );
                     cass_result_free(result);
                     cass_iterator_free(iterator);
                 }
             }
             rc => println!("{:?}", rc),
-
         }
 
         cass_future_free(future);
@@ -175,19 +190,15 @@ fn main() {
             }
         };
 
-
-
         execute_query(session,
                       "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
                        'replication_factor': '3' };")
             .unwrap();
 
-
         execute_query(session,
                       "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl double,i32 \
                        int, i64 bigint, PRIMARY KEY (key));")
             .unwrap();
-
 
         insert_into_basic(session, "named_parameters", &input).unwrap();
         let output = select_from_basic(session, "named_parameters").unwrap();
@@ -204,6 +215,5 @@ fn main() {
 
         cass_cluster_free(cluster);
         cass_session_free(session);
-
     }
 }

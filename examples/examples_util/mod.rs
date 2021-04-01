@@ -2,15 +2,15 @@
 
 use cassandra_cpp_sys::*;
 
-use std::mem;
 use std::ffi::CString;
+use std::mem;
 
 pub fn print_error(future: &mut CassFuture) {
     unsafe {
         let mut message = mem::zeroed();
         let mut message_length = mem::zeroed();
         cass_future_error_message(future, &mut message, &mut message_length);
-        println!("Error: {:?}", raw2utf8(message, message_length));
+        println!("Error: {:?}", raw2utf8(message, message_length as usize));
     }
 }
 

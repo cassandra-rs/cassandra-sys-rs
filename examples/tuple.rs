@@ -7,11 +7,13 @@ mod examples_util;
 use examples_util::*;
 use std::ffi::CString;
 
-use std::mem;
 use cassandra_cpp_sys::*;
+use std::mem;
 
-
-fn insert_into_tuple(session: &mut CassSession, uuid_gen: &mut CassUuidGen) -> Result<(), CassError> {
+fn insert_into_tuple(
+    session: &mut CassSession,
+    uuid_gen: &mut CassUuidGen,
+) -> Result<(), CassError> {
     unsafe {
         let mut id = mem::zeroed();
         let mut id_str: [i8; 37] = mem::zeroed();
@@ -65,8 +67,10 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                     let mut id = mem::zeroed();
                     let mut id_str = mem::zeroed();
                     let row = cass_iterator_get_row(rows);
-                    let id_value = cass_row_get_column_by_name(row, CString::new("id").unwrap().as_ptr());
-                    let item_value = cass_row_get_column_by_name(row, CString::new("item").unwrap().as_ptr());
+                    let id_value =
+                        cass_row_get_column_by_name(row, CString::new("id").unwrap().as_ptr());
+                    let item_value =
+                        cass_row_get_column_by_name(row, CString::new("item").unwrap().as_ptr());
                     let item = cass_iterator_from_tuple(item_value);
 
                     cass_value_get_uuid(id_value, &mut id);
@@ -78,24 +82,22 @@ fn select_from_tuple(session: &mut CassSession) -> Result<(), CassError> {
                         let value = cass_iterator_get_value(item);
 
                         match cass_value_is_null(value) {
-                            cass_true => {
-                                match cass_value_type(value) {
-                                    CASS_VALUE_TYPE_VARCHAR => {
-                                        let mut text = mem::zeroed();
-                                        let mut text_length = mem::zeroed();
-                                        cass_value_get_string(value, &mut text, &mut text_length);
-                                        print!("{:?} ", raw2utf8(text, text_length).unwrap());
-                                    }
-                                    CASS_VALUE_TYPE_BIGINT => {
-                                        let mut i = mem::zeroed();
-                                        cass_value_get_int64(value, &mut i);
-                                        print!("{:?} ", i);
-                                    }
-                                    other_type => {
-                                        print!("<invalid type {:?}> ", other_type);
-                                    }
+                            cass_true => match cass_value_type(value) {
+                                CASS_VALUE_TYPE_VARCHAR => {
+                                    let mut text = mem::zeroed();
+                                    let mut text_length = mem::zeroed();
+                                    cass_value_get_string(value, &mut text, &mut text_length);
+                                    print!("{:?} ", raw2utf8(text, text_length as usize).unwrap());
                                 }
-                            }
+                                CASS_VALUE_TYPE_BIGINT => {
+                                    let mut i = mem::zeroed();
+                                    cass_value_get_int64(value, &mut i);
+                                    print!("{:?} ", i);
+                                }
+                                other_type => {
+                                    print!("<invalid type {:?}> ", other_type);
+                                }
+                            },
                             cass_false => print!("<null> "),
                         }
                     }
@@ -126,10 +128,12 @@ fn main() {
 
         match connect_session(session, cluster) {
             Ok(()) => {
-                execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
-                               'SimpleStrategy', 'replication_factor': '3' }")
-                    .unwrap();
+                execute_query(
+                    session,
+                    "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '3' }",
+                )
+                .unwrap();
                 execute_query(session,
                               "CREATE TABLE IF NOT EXISTS examples.tuples (id timeuuid, item frozen<tuple<text, \
                                bigint>>, PRIMARY KEY(id))")

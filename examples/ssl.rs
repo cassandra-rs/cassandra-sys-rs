@@ -18,7 +18,7 @@ fn load_trusted_cert_file(file: &str, ssl: &mut CassSsl) -> IoResult<()> {
         let byte_len = try!(file.read_to_end(&mut cert));
         match byte_len == cert_size {
             true => {
-                let rc = cass_ssl_add_trusted_cert_n(ssl, cert.as_ptr() as *const i8, cert_size);
+                let rc = cass_ssl_add_trusted_cert_n(ssl, cert.as_ptr() as *const i8, cert_size as u64);
                 match rc {
                     CASS_OK => Ok(()),
                     rc => {
@@ -83,7 +83,7 @@ fn main() {
                             let mut keyspace_name_length = mem::zeroed();
                             cass_value_get_string(value, &mut keyspace_name, &mut keyspace_name_length);
                             println!("keyspace_name: {:?}",
-                                     raw2utf8(keyspace_name, keyspace_name_length));
+                                     raw2utf8(keyspace_name, keyspace_name_length as usize));
                         }
 
                         cass_result_free(result);
@@ -95,7 +95,7 @@ fn main() {
                         let mut message_length = mem::zeroed();
                         cass_future_error_message(result_future, &mut message, &mut message_length);
                         println!("Unable to run query: {:?}",
-                                 raw2utf8(message, message_length));
+                                 raw2utf8(message, message_length as usize));
                     }
                 }
 
@@ -113,7 +113,7 @@ fn main() {
                 let mut message_length = mem::zeroed();
                 cass_future_error_message(connect_future, &mut message, &mut message_length);
                 println!("Unable to connect: : {:?}",
-                         raw2utf8(message, message_length));
+                         raw2utf8(message, message_length as usize));
             }
         }
         cass_future_free(connect_future);
