@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 ### Changed
 ### Fixed
+
+## [0.12.3] - 2021-04-30
+### Fixed
 * Remove assumption that char is signed. Allows building on M1.
 
 ## [0.12.2] - 2020-09-16
@@ -62,7 +65,9 @@ released versions.
 ### Changed
 - (Pre-fork version.)
 
-[Unreleased]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.1...HEAD
+[Unreleased]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.3...HEAD
+[0.12.3]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.2...0.12.3
+[0.12.2]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.1...0.12.2
 [0.12.1]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.0...0.12.1
 [0.12.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.10.0...0.11.0
