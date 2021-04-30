@@ -7,8 +7,8 @@ use std::ffi::CString;
 mod examples_util;
 use examples_util::*;
 
-use std::mem;
 use std::ffi::CStr;
+use std::mem;
 
 use cassandra_cpp_sys::*;
 
@@ -79,10 +79,16 @@ fn select_from_paging(session: &mut CassSession) {
                         cass_value_get_uuid(cass_row_get_column(row, 0), &mut key);
                         cass_uuid_string(key, key_str[..].as_mut_ptr());
 
-                        cass_value_get_string(cass_row_get_column(row, 1), &mut value, &mut value_length);
-                        println!("key: {:?} value: {:?}",
-                                 CStr::from_ptr(key_str[..].as_ptr()),
-                                 raw2utf8(value, value_length).unwrap());
+                        cass_value_get_string(
+                            cass_row_get_column(row, 1),
+                            &mut value,
+                            &mut value_length,
+                        );
+                        println!(
+                            "key: {:?} value: {:?}",
+                            CStr::from_ptr(key_str[..].as_ptr()),
+                            raw2utf8(value, value_length).unwrap()
+                        );
                     }
                     match cass_result_has_more_pages(result) == cass_true {
                         true => {
@@ -115,7 +121,6 @@ fn main() {
                        'replication_factor': '3' };")
             .unwrap();
 
-
         execute_query(session,
                       "CREATE TABLE IF NOT EXISTS examples.paging (key timeuuid, value text, PRIMARY KEY (key));")
             .unwrap();
@@ -132,6 +137,5 @@ fn main() {
         cass_uuid_gen_free(uuid_gen);
         cass_cluster_free(cluster);
         cass_session_free(session);
-
     }
 }

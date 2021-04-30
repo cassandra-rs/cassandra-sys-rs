@@ -803,10 +803,7 @@ pub use self::CassError_ as CassError;
 ///
 /// @see cass_future_set_callback()
 pub type CassFutureCallback = ::std::option::Option<
-    unsafe extern "C" fn(
-        future: *mut CassFuture,
-        data: *mut ::std::os::raw::c_void,
-    ),
+    unsafe extern "C" fn(future: *mut CassFuture, data: *mut ::std::os::raw::c_void),
 >;
 /// A log message.
 #[repr(C)]
@@ -834,10 +831,7 @@ pub type CassLogMessage = CassLogMessage_;
 ///
 /// @see cass_log_set_callback()
 pub type CassLogCallback = ::std::option::Option<
-    unsafe extern "C" fn(
-        message: *const CassLogMessage,
-        data: *mut ::std::os::raw::c_void,
-    ),
+    unsafe extern "C" fn(message: *const CassLogMessage, data: *mut ::std::os::raw::c_void),
 >;
 /// A custom malloc function. This function should allocate "size" bytes and
 /// return a pointer to that memory
@@ -846,9 +840,8 @@ pub type CassLogCallback = ::std::option::Option<
 ///
 /// @see CassFreeFunction
 /// @see cass_alloc_set_functions()
-pub type CassMallocFunction = ::std::option::Option<
-    unsafe extern "C" fn(size: usize) -> *mut ::std::os::raw::c_void,
->;
+pub type CassMallocFunction =
+    ::std::option::Option<unsafe extern "C" fn(size: usize) -> *mut ::std::os::raw::c_void>;
 /// A custom realloc function. This function attempts to change the size of the
 /// memory pointed to by "ptr". If the memory cannot be resized then new memory
 /// should be allocated and contain the contents of the original memory at "ptr".
@@ -861,8 +854,10 @@ pub type CassMallocFunction = ::std::option::Option<
 /// @see CassFreeFunction
 /// @see cass_alloc_set_functions()
 pub type CassReallocFunction = ::std::option::Option<
-    unsafe extern "C" fn(ptr: *mut ::std::os::raw::c_void, size: usize)
-        -> *mut ::std::os::raw::c_void,
+    unsafe extern "C" fn(
+        ptr: *mut ::std::os::raw::c_void,
+        size: usize,
+    ) -> *mut ::std::os::raw::c_void,
 >;
 /// A custom free function. This function deallocates the memory pointed to by
 /// "ptr" that was previously allocated by a "CassMallocFunction" or
@@ -874,9 +869,8 @@ pub type CassReallocFunction = ::std::option::Option<
 /// @see CassMallocFunction
 /// @see CassReallocFunction
 /// @see cass_alloc_set_functions()
-pub type CassFreeFunction = ::std::option::Option<
-    unsafe extern "C" fn(ptr: *mut ::std::os::raw::c_void),
->;
+pub type CassFreeFunction =
+    ::std::option::Option<unsafe extern "C" fn(ptr: *mut ::std::os::raw::c_void)>;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CassAuthenticator_ {
@@ -896,10 +890,7 @@ pub type CassAuthenticator = CassAuthenticator_;
 /// @param[in] auth
 /// @param[in] data
 pub type CassAuthenticatorInitialCallback = ::std::option::Option<
-    unsafe extern "C" fn(
-        auth: *mut CassAuthenticator,
-        data: *mut ::std::os::raw::c_void,
-    ),
+    unsafe extern "C" fn(auth: *mut CassAuthenticator, data: *mut ::std::os::raw::c_void),
 >;
 /// A callback used when an authentication challenge initiated
 /// by the server.
@@ -946,17 +937,13 @@ pub type CassAuthenticatorSuccessCallback = ::std::option::Option<
 /// @param[in] auth
 /// @param[in] data
 pub type CassAuthenticatorCleanupCallback = ::std::option::Option<
-    unsafe extern "C" fn(
-        auth: *mut CassAuthenticator,
-        data: *mut ::std::os::raw::c_void,
-    ),
+    unsafe extern "C" fn(auth: *mut CassAuthenticator, data: *mut ::std::os::raw::c_void),
 >;
 /// A callback used to cleanup resources.
 ///
 /// @param[in] data
-pub type CassAuthenticatorDataCleanupCallback = ::std::option::Option<
-    unsafe extern "C" fn(data: *mut ::std::os::raw::c_void),
->;
+pub type CassAuthenticatorDataCleanupCallback =
+    ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void)>;
 /// Authenticator callbacks
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -2001,10 +1988,7 @@ extern "C" {
     ///
     /// @param[in] cluster
     /// @param[in] enabled
-    pub fn cass_cluster_set_token_aware_routing(
-        cluster: *mut CassCluster,
-        enabled: cass_bool_t,
-    );
+    pub fn cass_cluster_set_token_aware_routing(cluster: *mut CassCluster, enabled: cass_bool_t);
 }
 extern "C" {
     /// Configures token-aware routing to randomly shuffle replicas. This can reduce
@@ -2038,10 +2022,7 @@ extern "C" {
     ///
     /// @param[in] cluster
     /// @param[in] enabled
-    pub fn cass_cluster_set_latency_aware_routing(
-        cluster: *mut CassCluster,
-        enabled: cass_bool_t,
-    );
+    pub fn cass_cluster_set_latency_aware_routing(cluster: *mut CassCluster, enabled: cass_bool_t);
 }
 extern "C" {
     /// Configures the settings for latency-aware request routing.
@@ -2239,10 +2220,7 @@ extern "C" {
     ///
     /// @param[in] cluster
     /// @param[in] enabled
-    pub fn cass_cluster_set_tcp_nodelay(
-        cluster: *mut CassCluster,
-        enabled: cass_bool_t,
-    );
+    pub fn cass_cluster_set_tcp_nodelay(cluster: *mut CassCluster, enabled: cass_bool_t);
 }
 extern "C" {
     /// Enable/Disable TCP keep-alive
@@ -2351,10 +2329,7 @@ extern "C" {
     /// @param[in] enabled
     ///
     /// @see cass_session_get_schema_meta()
-    pub fn cass_cluster_set_use_schema(
-        cluster: *mut CassCluster,
-        enabled: cass_bool_t,
-    );
+    pub fn cass_cluster_set_use_schema(cluster: *mut CassCluster, enabled: cass_bool_t);
 }
 extern "C" {
     /// Enable/Disable retrieving hostnames for IP addresses using reverse IP lookup.
@@ -2418,9 +2393,8 @@ extern "C" {
     ///
     /// @param[in] cluster
     /// @return CASS_OK if successful, otherwise an error occurred
-    pub fn cass_cluster_set_no_speculative_execution_policy(
-        cluster: *mut CassCluster,
-    ) -> CassError;
+    pub fn cass_cluster_set_no_speculative_execution_policy(cluster: *mut CassCluster)
+        -> CassError;
 }
 extern "C" {
     /// Sets the maximum number of "pending write" objects that will be
@@ -2728,9 +2702,7 @@ extern "C" {
     /// @return A schema instance that must be freed.
     ///
     /// @see cass_schema_meta_free()
-    pub fn cass_session_get_schema_meta(
-        session: *const CassSession,
-    ) -> *const CassSchemaMeta;
+    pub fn cass_session_get_schema_meta(session: *const CassSession) -> *const CassSchemaMeta;
 }
 extern "C" {
     /// Gets a copy of this session's performance/diagnostic metrics.
@@ -2739,10 +2711,7 @@ extern "C" {
     ///
     /// @param[in] session
     /// @param[out] output
-    pub fn cass_session_get_metrics(
-        session: *const CassSession,
-        output: *mut CassMetrics,
-    );
+    pub fn cass_session_get_metrics(session: *const CassSession, output: *mut CassMetrics);
 }
 extern "C" {
     /// Gets a copy of this session's speculative execution metrics.
@@ -2772,9 +2741,7 @@ extern "C" {
     /// @param[in] schema_meta
     ///
     /// @return The snapshot version.
-    pub fn cass_schema_meta_snapshot_version(
-        schema_meta: *const CassSchemaMeta,
-    ) -> cass_uint32_t;
+    pub fn cass_schema_meta_snapshot_version(schema_meta: *const CassSchemaMeta) -> cass_uint32_t;
 }
 extern "C" {
     /// Gets the version of the connected Cassandra cluster.
@@ -2784,9 +2751,7 @@ extern "C" {
     /// @param[in] schema_meta
     ///
     /// @return Cassandra's version
-    pub fn cass_schema_meta_version(
-        schema_meta: *const CassSchemaMeta,
-    ) -> CassVersion;
+    pub fn cass_schema_meta_version(schema_meta: *const CassSchemaMeta) -> CassVersion;
 }
 extern "C" {
     /// Gets the keyspace metadata for the provided keyspace name.
@@ -2841,9 +2806,7 @@ extern "C" {
     ///
     /// @param[in] keyspace_meta
     /// @return cass_true is the keyspace is virtual, otherwise cass_false
-    pub fn cass_keyspace_meta_is_virtual(
-        keyspace_meta: *const CassKeyspaceMeta,
-    ) -> cass_bool_t;
+    pub fn cass_keyspace_meta_is_virtual(keyspace_meta: *const CassKeyspaceMeta) -> cass_bool_t;
 }
 extern "C" {
     /// Gets the table metadata for the provided table name.
@@ -3088,9 +3051,7 @@ extern "C" {
     ///
     /// @param[in] table_meta
     /// @return cass_true is the table is virtual, otherwise cass_false
-    pub fn cass_table_meta_is_virtual(
-        table_meta: *const CassTableMeta,
-    ) -> cass_bool_t;
+    pub fn cass_table_meta_is_virtual(table_meta: *const CassTableMeta) -> cass_bool_t;
 }
 extern "C" {
     /// Gets the column metadata for the provided column name.
@@ -3131,9 +3092,7 @@ extern "C" {
     ///
     /// @param[in] table_meta
     /// @return The total column count.
-    pub fn cass_table_meta_column_count(
-        table_meta: *const CassTableMeta,
-    ) -> usize;
+    pub fn cass_table_meta_column_count(table_meta: *const CassTableMeta) -> usize;
 }
 extern "C" {
     /// Gets the column metadata for the provided index.
@@ -3187,9 +3146,7 @@ extern "C" {
     ///
     /// @param[in] table_meta
     /// @return The total index count.
-    pub fn cass_table_meta_index_count(
-        table_meta: *const CassTableMeta,
-    ) -> usize;
+    pub fn cass_table_meta_index_count(table_meta: *const CassTableMeta) -> usize;
 }
 extern "C" {
     /// Gets the index metadata for the provided index.
@@ -3249,9 +3206,7 @@ extern "C" {
     ///
     /// @param[in] table_meta
     /// @return The total view count.
-    pub fn cass_table_meta_materialized_view_count(
-        table_meta: *const CassTableMeta,
-    ) -> usize;
+    pub fn cass_table_meta_materialized_view_count(table_meta: *const CassTableMeta) -> usize;
 }
 extern "C" {
     /// Gets the materialized view metadata for the provided index.
@@ -3275,9 +3230,7 @@ extern "C" {
     ///
     /// @param[in] table_meta
     /// @return The count for the number of columns in the partition key.
-    pub fn cass_table_meta_partition_key_count(
-        table_meta: *const CassTableMeta,
-    ) -> usize;
+    pub fn cass_table_meta_partition_key_count(table_meta: *const CassTableMeta) -> usize;
 }
 extern "C" {
     /// Gets the partition key column metadata for the provided index.
@@ -3301,9 +3254,7 @@ extern "C" {
     ///
     /// @param[in] table_meta
     /// @return The count for the number of columns in the clustering key.
-    pub fn cass_table_meta_clustering_key_count(
-        table_meta: *const CassTableMeta,
-    ) -> usize;
+    pub fn cass_table_meta_clustering_key_count(table_meta: *const CassTableMeta) -> usize;
 }
 extern "C" {
     /// Gets the clustering key column metadata for the provided index.
@@ -3591,9 +3542,7 @@ extern "C" {
     ///
     /// @param[in] column_meta
     /// @return The column's type.
-    pub fn cass_column_meta_type(
-        column_meta: *const CassColumnMeta,
-    ) -> CassColumnType;
+    pub fn cass_column_meta_type(column_meta: *const CassColumnMeta) -> CassColumnType;
 }
 extern "C" {
     /// Gets the data type of the column.
@@ -3602,9 +3551,7 @@ extern "C" {
     ///
     /// @param[in] column_meta
     /// @return The column's data type.
-    pub fn cass_column_meta_data_type(
-        column_meta: *const CassColumnMeta,
-    ) -> *const CassDataType;
+    pub fn cass_column_meta_data_type(column_meta: *const CassColumnMeta) -> *const CassDataType;
 }
 extern "C" {
     /// Gets a metadata field for the provided name. Metadata fields allow direct
@@ -3659,9 +3606,7 @@ extern "C" {
     ///
     /// @param[in] index_meta
     /// @return The index's type.
-    pub fn cass_index_meta_type(
-        index_meta: *const CassIndexMeta,
-    ) -> CassIndexType;
+    pub fn cass_index_meta_type(index_meta: *const CassIndexMeta) -> CassIndexType;
 }
 extern "C" {
     /// Gets the target of the index.
@@ -3684,9 +3629,7 @@ extern "C" {
     ///
     /// @param[in] index_meta
     /// @return The index's options.
-    pub fn cass_index_meta_options(
-        index_meta: *const CassIndexMeta,
-    ) -> *const CassValue;
+    pub fn cass_index_meta_options(index_meta: *const CassIndexMeta) -> *const CassValue;
 }
 extern "C" {
     /// Gets a metadata field for the provided name. Metadata fields allow direct
@@ -3808,9 +3751,7 @@ extern "C" {
     ///
     /// @param[in] function_meta
     /// @return The number of arguments.
-    pub fn cass_function_meta_argument_count(
-        function_meta: *const CassFunctionMeta,
-    ) -> usize;
+    pub fn cass_function_meta_argument_count(function_meta: *const CassFunctionMeta) -> usize;
 }
 extern "C" {
     /// Gets the function's argument name and type for the provided index.
@@ -3960,9 +3901,7 @@ extern "C" {
     ///
     /// @param[in] aggregate_meta
     /// @return The number of arguments.
-    pub fn cass_aggregate_meta_argument_count(
-        aggregate_meta: *const CassAggregateMeta,
-    ) -> usize;
+    pub fn cass_aggregate_meta_argument_count(aggregate_meta: *const CassAggregateMeta) -> usize;
 }
 extern "C" {
     /// Gets the aggregate's argument type for the provided index.
@@ -4183,10 +4122,7 @@ extern "C" {
     /// @return CASS_OK if successful, otherwise an error occurred
     ///
     /// @see cass_cluster_set_use_hostname_resolution()
-    pub fn cass_ssl_set_verify_flags(
-        ssl: *mut CassSsl,
-        flags: ::std::os::raw::c_int,
-    );
+    pub fn cass_ssl_set_verify_flags(ssl: *mut CassSsl, flags: ::std::os::raw::c_int);
 }
 extern "C" {
     /// Set client-side certificate chain. This is used to authenticate
@@ -4198,10 +4134,7 @@ extern "C" {
     /// @param[in] ssl
     /// @param[in] cert PEM formatted certificate string
     /// @return CASS_OK if successful, otherwise an error occurred
-    pub fn cass_ssl_set_cert(
-        ssl: *mut CassSsl,
-        cert: *const ::std::os::raw::c_char,
-    ) -> CassError;
+    pub fn cass_ssl_set_cert(ssl: *mut CassSsl, cert: *const ::std::os::raw::c_char) -> CassError;
 }
 extern "C" {
     /// Same as cass_ssl_set_cert(), but with lengths for string
@@ -4266,10 +4199,7 @@ extern "C" {
     /// @param[out] address
     ///
     /// @public @memberof CassAuthenticator
-    pub fn cass_authenticator_address(
-        auth: *const CassAuthenticator,
-        address: *mut CassInet,
-    );
+    pub fn cass_authenticator_address(auth: *const CassAuthenticator, address: *mut CassInet);
 }
 extern "C" {
     /// Gets the hostname of the host being authenticated.
@@ -4447,8 +4377,7 @@ extern "C" {
     /// must be freed using cass_result_free().
     ///
     /// @see cass_session_execute() and cass_session_execute_batch()
-    pub fn cass_future_get_result(future: *mut CassFuture)
-        -> *const CassResult;
+    pub fn cass_future_get_result(future: *mut CassFuture) -> *const CassResult;
 }
 extern "C" {
     /// Gets the error result from a future that failed as a result of a server error. If the
@@ -4462,9 +4391,7 @@ extern "C" {
     /// a server error. The return instance must be freed using cass_error_result_free().
     ///
     /// @see cass_session_execute() and cass_session_execute_batch()
-    pub fn cass_future_get_error_result(
-        future: *mut CassFuture,
-    ) -> *const CassErrorResult;
+    pub fn cass_future_get_error_result(future: *mut CassFuture) -> *const CassErrorResult;
 }
 extern "C" {
     /// Gets the result of a successful future. If the future is not ready this method will
@@ -4478,9 +4405,7 @@ extern "C" {
     /// must be freed using cass_prepared_free().
     ///
     /// @see cass_session_prepare()
-    pub fn cass_future_get_prepared(
-        future: *mut CassFuture,
-    ) -> *const CassPrepared;
+    pub fn cass_future_get_prepared(future: *mut CassFuture) -> *const CassPrepared;
 }
 extern "C" {
     /// Gets the error code from future. If the future is not ready this method will
@@ -4520,9 +4445,7 @@ extern "C" {
     ///
     /// @param[in] future
     /// @return the number of custom payload items.
-    pub fn cass_future_custom_payload_item_count(
-        future: *mut CassFuture,
-    ) -> usize;
+    pub fn cass_future_custom_payload_item_count(future: *mut CassFuture) -> usize;
 }
 extern "C" {
     /// Gets a custom payload item from a response future at the specified index. If the future is not
@@ -4620,10 +4543,7 @@ extern "C" {
     /// @param[in] statement
     /// @param[in] index
     /// @return CASS_OK if successful, otherwise an error occurred.
-    pub fn cass_statement_add_key_index(
-        statement: *mut CassStatement,
-        index: usize,
-    ) -> CassError;
+    pub fn cass_statement_add_key_index(statement: *mut CassStatement, index: usize) -> CassError;
 }
 extern "C" {
     /// Sets the statement's keyspace. This is used for token-aware routing and when
@@ -4836,10 +4756,7 @@ extern "C" {
     /// @param[in] statement
     /// @param[in] index
     /// @return CASS_OK if successful, otherwise an error occurred.
-    pub fn cass_statement_bind_null(
-        statement: *mut CassStatement,
-        index: usize,
-    ) -> CassError;
+    pub fn cass_statement_bind_null(statement: *mut CassStatement, index: usize) -> CassError;
 }
 extern "C" {
     /// Binds a null to all the values with the specified name.
@@ -6006,9 +5923,7 @@ extern "C" {
     /// @return Returns a bound statement that must be freed.
     ///
     /// @see cass_statement_free()
-    pub fn cass_prepared_bind(
-        prepared: *const CassPrepared,
-    ) -> *mut CassStatement;
+    pub fn cass_prepared_bind(prepared: *const CassPrepared) -> *mut CassStatement;
 }
 extern "C" {
     /// Gets the name of a parameter at the specified index.
@@ -6175,10 +6090,7 @@ extern "C" {
     /// @param[in] batch
     /// @param[in] timestamp
     /// @return CASS_OK if successful, otherwise an error occurred.
-    pub fn cass_batch_set_timestamp(
-        batch: *mut CassBatch,
-        timestamp: cass_int64_t,
-    ) -> CassError;
+    pub fn cass_batch_set_timestamp(batch: *mut CassBatch, timestamp: cass_int64_t) -> CassError;
 }
 extern "C" {
     /// Sets the batch's timeout for waiting for a response from a node.
@@ -6316,9 +6228,7 @@ extern "C" {
     /// @return Returns a data type that must be freed.
     ///
     /// @see cass_data_type_free()
-    pub fn cass_data_type_new_from_existing(
-        data_type: *const CassDataType,
-    ) -> *mut CassDataType;
+    pub fn cass_data_type_new_from_existing(data_type: *const CassDataType) -> *mut CassDataType;
 }
 extern "C" {
     /// Creates a new tuple data type.
@@ -6359,8 +6269,7 @@ extern "C" {
     ///
     /// @param[in] data_type
     /// @return The value type
-    pub fn cass_data_type_type(data_type: *const CassDataType)
-        -> CassValueType;
+    pub fn cass_data_type_type(data_type: *const CassDataType) -> CassValueType;
 }
 extern "C" {
     /// Gets whether a data type is frozen.
@@ -6369,9 +6278,7 @@ extern "C" {
     ///
     /// @param[in] data_type
     /// @return cass_true if the data type is frozen, otherwise cass_false.
-    pub fn cass_data_type_is_frozen(
-        data_type: *const CassDataType,
-    ) -> cass_bool_t;
+    pub fn cass_data_type_is_frozen(data_type: *const CassDataType) -> cass_bool_t;
 }
 extern "C" {
     /// Gets the type name of a UDT data type.
@@ -6519,9 +6426,7 @@ extern "C" {
     ///
     /// @param[in] data_type
     /// @return Returns the number of sub-data types
-    pub fn cass_data_type_sub_type_count(
-        data_type: *const CassDataType,
-    ) -> usize;
+    pub fn cass_data_type_sub_type_count(data_type: *const CassDataType) -> usize;
 }
 extern "C" {
     pub fn cass_data_sub_type_count(data_type: *const CassDataType) -> usize;
@@ -6708,10 +6613,8 @@ extern "C" {
     /// @return Returns a collection that must be freed.
     ///
     /// @see cass_collection_free()
-    pub fn cass_collection_new(
-        type_: CassCollectionType,
-        item_count: usize,
-    ) -> *mut CassCollection;
+    pub fn cass_collection_new(type_: CassCollectionType, item_count: usize)
+        -> *mut CassCollection;
 }
 extern "C" {
     /// Creates a new collection from an existing data type.
@@ -6742,9 +6645,7 @@ extern "C" {
     /// @param[in] collection
     /// @return Returns a reference to the data type of the collection. Do not free
     /// this reference as it is bound to the lifetime of the collection.
-    pub fn cass_collection_data_type(
-        collection: *const CassCollection,
-    ) -> *const CassDataType;
+    pub fn cass_collection_data_type(collection: *const CassCollection) -> *const CassDataType;
 }
 extern "C" {
     /// Appends a "tinyint" to the collection.
@@ -7077,9 +6978,7 @@ extern "C" {
     /// @return Returns a tuple that must be freed.
     ///
     /// @see cass_tuple_free();
-    pub fn cass_tuple_new_from_data_type(
-        data_type: *const CassDataType,
-    ) -> *mut CassTuple;
+    pub fn cass_tuple_new_from_data_type(data_type: *const CassDataType) -> *mut CassTuple;
 }
 extern "C" {
     /// Frees a tuple instance.
@@ -7099,8 +6998,7 @@ extern "C" {
     /// @param[in] tuple
     /// @return Returns a reference to the data type of the tuple. Do not free
     /// this reference as it is bound to the lifetime of the tuple.
-    pub fn cass_tuple_data_type(tuple: *const CassTuple)
-        -> *const CassDataType;
+    pub fn cass_tuple_data_type(tuple: *const CassTuple) -> *const CassDataType;
 }
 extern "C" {
     /// Sets an null in a tuple at the specified index.
@@ -7112,10 +7010,7 @@ extern "C" {
     /// @param[in] tuple
     /// @param[in] index
     /// @return CASS_OK if successful, otherwise an error occurred.
-    pub fn cass_tuple_set_null(
-        tuple: *mut CassTuple,
-        index: usize,
-    ) -> CassError;
+    pub fn cass_tuple_set_null(tuple: *mut CassTuple, index: usize) -> CassError;
 }
 extern "C" {
     /// Sets a "tinyint" in a tuple at the specified index.
@@ -7369,11 +7264,7 @@ extern "C" {
     /// @param[in] index
     /// @param[in] value
     /// @return CASS_OK if successful, otherwise an error occurred.
-    pub fn cass_tuple_set_uuid(
-        tuple: *mut CassTuple,
-        index: usize,
-        value: CassUuid,
-    ) -> CassError;
+    pub fn cass_tuple_set_uuid(tuple: *mut CassTuple, index: usize, value: CassUuid) -> CassError;
 }
 extern "C" {
     /// Sets an "inet" in a tuple at the specified index.
@@ -7386,11 +7277,7 @@ extern "C" {
     /// @param[in] index
     /// @param[in] value
     /// @return CASS_OK if successful, otherwise an error occurred.
-    pub fn cass_tuple_set_inet(
-        tuple: *mut CassTuple,
-        index: usize,
-        value: CassInet,
-    ) -> CassError;
+    pub fn cass_tuple_set_inet(tuple: *mut CassTuple, index: usize, value: CassInet) -> CassError;
 }
 extern "C" {
     /// Sets a "decimal" in a tuple at the specified index.
@@ -7498,9 +7385,7 @@ extern "C" {
     /// the data type is not a user defined type.
     ///
     /// @see cass_user_type_free()
-    pub fn cass_user_type_new_from_data_type(
-        data_type: *const CassDataType,
-    ) -> *mut CassUserType;
+    pub fn cass_user_type_new_from_data_type(data_type: *const CassDataType) -> *mut CassUserType;
 }
 extern "C" {
     /// Frees a user defined type instance.
@@ -7521,9 +7406,7 @@ extern "C" {
     /// @return Returns a reference to the data type of the user defined type.
     /// Do not free this reference as it is bound to the lifetime of the
     /// user defined type.
-    pub fn cass_user_type_data_type(
-        user_type: *const CassUserType,
-    ) -> *const CassDataType;
+    pub fn cass_user_type_data_type(user_type: *const CassUserType) -> *const CassDataType;
 }
 extern "C" {
     /// Sets a null in a user defined type at the specified index.
@@ -7535,10 +7418,7 @@ extern "C" {
     /// @param[in] user_type
     /// @param[in] index
     /// @return CASS_OK if successful, otherwise an error occurred.
-    pub fn cass_user_type_set_null(
-        user_type: *mut CassUserType,
-        index: usize,
-    ) -> CassError;
+    pub fn cass_user_type_set_null(user_type: *mut CassUserType, index: usize) -> CassError;
 }
 extern "C" {
     /// Sets a null in a user defined type at the specified name.
@@ -8730,10 +8610,7 @@ extern "C" {
     /// @param[in] index
     /// @return The column type at the specified index. CASS_VALUE_TYPE_UNKNOWN
     /// is returned if the index is out of bounds.
-    pub fn cass_result_column_type(
-        result: *const CassResult,
-        index: usize,
-    ) -> CassValueType;
+    pub fn cass_result_column_type(result: *const CassResult, index: usize) -> CassValueType;
 }
 extern "C" {
     /// Gets the column data type at index for the specified result.
@@ -8767,8 +8644,7 @@ extern "C" {
     ///
     /// @param[in] result
     /// @return cass_true if there are more pages
-    pub fn cass_result_has_more_pages(result: *const CassResult)
-        -> cass_bool_t;
+    pub fn cass_result_has_more_pages(result: *const CassResult) -> cass_bool_t;
 }
 extern "C" {
     /// Gets the raw paging state from the result. The paging state is bound to the
@@ -8811,9 +8687,7 @@ extern "C" {
     ///
     /// @param[in] error_result
     /// @return The server error code
-    pub fn cass_error_result_code(
-        error_result: *const CassErrorResult,
-    ) -> CassError;
+    pub fn cass_error_result_code(error_result: *const CassErrorResult) -> CassError;
 }
 extern "C" {
     /// Gets consistency that triggered the error result of the
@@ -8833,9 +8707,7 @@ extern "C" {
     /// @return The consistency that triggered the error for a read timeout,
     /// write timeout or an unavailable error result. Undefined for other
     /// error result types.
-    pub fn cass_error_result_consistency(
-        error_result: *const CassErrorResult,
-    ) -> CassConsistency;
+    pub fn cass_error_result_consistency(error_result: *const CassErrorResult) -> CassConsistency;
 }
 extern "C" {
     /// Gets the actual number of received responses, received acknowledgments
@@ -8894,9 +8766,7 @@ extern "C" {
     ///
     /// @param[in] error_result
     /// @return The number of nodes that failed during a read or write request.
-    pub fn cass_error_result_num_failures(
-        error_result: *const CassErrorResult,
-    ) -> cass_int32_t;
+    pub fn cass_error_result_num_failures(error_result: *const CassErrorResult) -> cass_int32_t;
 }
 extern "C" {
     /// Determines whether the actual data was present in the responses from the
@@ -8912,9 +8782,7 @@ extern "C" {
     /// @param[in] error_result
     /// @return cass_true if the data was present in the received responses when the
     /// read timeout occurred. Undefined for other error result types.
-    pub fn cass_error_result_data_present(
-        error_result: *const CassErrorResult,
-    ) -> cass_bool_t;
+    pub fn cass_error_result_data_present(error_result: *const CassErrorResult) -> cass_bool_t;
 }
 extern "C" {
     /// Gets the write type of a request for the following error result types:
@@ -8929,9 +8797,7 @@ extern "C" {
     /// @param[in] error_result
     /// @return The type of the write that timed out. Undefined for
     /// other error result types.
-    pub fn cass_error_result_write_type(
-        error_result: *const CassErrorResult,
-    ) -> CassWriteType;
+    pub fn cass_error_result_write_type(error_result: *const CassErrorResult) -> CassWriteType;
 }
 extern "C" {
     /// Gets the affected keyspace for the following error result types:
@@ -8997,9 +8863,7 @@ extern "C" {
     ///
     /// @param[in] error_result
     /// @return The number of arguments for the affected function.
-    pub fn cass_error_num_arg_types(
-        error_result: *const CassErrorResult,
-    ) -> usize;
+    pub fn cass_error_num_arg_types(error_result: *const CassErrorResult) -> usize;
 }
 extern "C" {
     /// Gets the argument type at the specified index for the function failure
@@ -9048,9 +8912,7 @@ extern "C" {
     /// @return A new iterator that must be freed.
     ///
     /// @see cass_iterator_free()
-    pub fn cass_iterator_from_result(
-        result: *const CassResult,
-    ) -> *mut CassIterator;
+    pub fn cass_iterator_from_result(result: *const CassResult) -> *mut CassIterator;
 }
 extern "C" {
     /// Creates a new iterator for the specified row. This can be
@@ -9075,9 +8937,7 @@ extern "C" {
     /// value is not a collection.
     ///
     /// @see cass_iterator_free()
-    pub fn cass_iterator_from_collection(
-        value: *const CassValue,
-    ) -> *mut CassIterator;
+    pub fn cass_iterator_from_collection(value: *const CassValue) -> *mut CassIterator;
 }
 extern "C" {
     /// Creates a new iterator for the specified map. This can be
@@ -9090,8 +8950,7 @@ extern "C" {
     /// value is not a map.
     ///
     /// @see cass_iterator_free()
-    pub fn cass_iterator_from_map(value: *const CassValue)
-        -> *mut CassIterator;
+    pub fn cass_iterator_from_map(value: *const CassValue) -> *mut CassIterator;
 }
 extern "C" {
     /// Creates a new iterator for the specified tuple. This can be
@@ -9106,9 +8965,7 @@ extern "C" {
     /// value is not a tuple.
     ///
     /// @see cass_iterator_free()
-    pub fn cass_iterator_from_tuple(
-        value: *const CassValue,
-    ) -> *mut CassIterator;
+    pub fn cass_iterator_from_tuple(value: *const CassValue) -> *mut CassIterator;
 }
 extern "C" {
     /// Creates a new iterator for the specified user defined type. This can be
@@ -9123,9 +8980,7 @@ extern "C" {
     /// value is not a user defined type.
     ///
     /// @see cass_iterator_free()
-    pub fn cass_iterator_fields_from_user_type(
-        value: *const CassValue,
-    ) -> *mut CassIterator;
+    pub fn cass_iterator_fields_from_user_type(value: *const CassValue) -> *mut CassIterator;
 }
 extern "C" {
     /// Creates a new iterator for the specified schema metadata.
@@ -9438,9 +9293,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A row
-    pub fn cass_iterator_get_row(
-        iterator: *const CassIterator,
-    ) -> *const CassRow;
+    pub fn cass_iterator_get_row(iterator: *const CassIterator) -> *const CassRow;
 }
 extern "C" {
     /// Gets the column value at the row iterator's current position.
@@ -9452,9 +9305,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A value
-    pub fn cass_iterator_get_column(
-        iterator: *const CassIterator,
-    ) -> *const CassValue;
+    pub fn cass_iterator_get_column(iterator: *const CassIterator) -> *const CassValue;
 }
 extern "C" {
     /// Gets the value at a collection or tuple iterator's current position.
@@ -9466,9 +9317,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A value
-    pub fn cass_iterator_get_value(
-        iterator: *const CassIterator,
-    ) -> *const CassValue;
+    pub fn cass_iterator_get_value(iterator: *const CassIterator) -> *const CassValue;
 }
 extern "C" {
     /// Gets the key at the map iterator's current position.
@@ -9480,9 +9329,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A value
-    pub fn cass_iterator_get_map_key(
-        iterator: *const CassIterator,
-    ) -> *const CassValue;
+    pub fn cass_iterator_get_map_key(iterator: *const CassIterator) -> *const CassValue;
 }
 extern "C" {
     /// Gets the value at the map iterator's current position.
@@ -9494,9 +9341,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A value
-    pub fn cass_iterator_get_map_value(
-        iterator: *const CassIterator,
-    ) -> *const CassValue;
+    pub fn cass_iterator_get_map_value(iterator: *const CassIterator) -> *const CassValue;
 }
 extern "C" {
     /// Gets the field name at the user type defined iterator's current position.
@@ -9558,9 +9403,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A table metadata entry
-    pub fn cass_iterator_get_table_meta(
-        iterator: *const CassIterator,
-    ) -> *const CassTableMeta;
+    pub fn cass_iterator_get_table_meta(iterator: *const CassIterator) -> *const CassTableMeta;
 }
 extern "C" {
     /// Gets the materialized view metadata entry at the iterator's current position.
@@ -9590,9 +9433,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A type metadata entry
-    pub fn cass_iterator_get_user_type(
-        iterator: *const CassIterator,
-    ) -> *const CassDataType;
+    pub fn cass_iterator_get_user_type(iterator: *const CassIterator) -> *const CassDataType;
 }
 extern "C" {
     /// Gets the function metadata entry at the iterator's current position.
@@ -9636,9 +9477,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A column metadata entry
-    pub fn cass_iterator_get_column_meta(
-        iterator: *const CassIterator,
-    ) -> *const CassColumnMeta;
+    pub fn cass_iterator_get_column_meta(iterator: *const CassIterator) -> *const CassColumnMeta;
 }
 extern "C" {
     /// Gets the index metadata entry at the iterator's current position.
@@ -9650,9 +9489,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A index metadata entry
-    pub fn cass_iterator_get_index_meta(
-        iterator: *const CassIterator,
-    ) -> *const CassIndexMeta;
+    pub fn cass_iterator_get_index_meta(iterator: *const CassIterator) -> *const CassIndexMeta;
 }
 extern "C" {
     /// Gets the metadata field name at the iterator's current position.
@@ -9682,9 +9519,7 @@ extern "C" {
     ///
     /// @param[in] iterator
     /// @return A metadata field value
-    pub fn cass_iterator_get_meta_field_value(
-        iterator: *const CassIterator,
-    ) -> *const CassValue;
+    pub fn cass_iterator_get_meta_field_value(iterator: *const CassIterator) -> *const CassValue;
 }
 extern "C" {
     /// Get the column value at index for the specified row.
@@ -9695,10 +9530,7 @@ extern "C" {
     /// @param[in] index
     /// @return The column value at the specified index. NULL is
     /// returned if the index is out of bounds.
-    pub fn cass_row_get_column(
-        row: *const CassRow,
-        index: usize,
-    ) -> *const CassValue;
+    pub fn cass_row_get_column(row: *const CassRow, index: usize) -> *const CassValue;
 }
 extern "C" {
     /// Get the column value by name for the specified row.
@@ -9740,8 +9572,7 @@ extern "C" {
     /// @param[in] value
     /// @return Returns a reference to the data type of the value.
     /// Do not free this reference as it is bound to the lifetime of the value.
-    pub fn cass_value_data_type(value: *const CassValue)
-        -> *const CassDataType;
+    pub fn cass_value_data_type(value: *const CassValue) -> *const CassDataType;
 }
 extern "C" {
     /// Gets an int8 for the specified value.
@@ -9753,10 +9584,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_int8(
-        value: *const CassValue,
-        output: *mut cass_int8_t,
-    ) -> CassError;
+    pub fn cass_value_get_int8(value: *const CassValue, output: *mut cass_int8_t) -> CassError;
 }
 extern "C" {
     /// Gets an int16 for the specified value.
@@ -9768,10 +9596,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_int16(
-        value: *const CassValue,
-        output: *mut cass_int16_t,
-    ) -> CassError;
+    pub fn cass_value_get_int16(value: *const CassValue, output: *mut cass_int16_t) -> CassError;
 }
 extern "C" {
     /// Gets an int32 for the specified value.
@@ -9781,10 +9606,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_int32(
-        value: *const CassValue,
-        output: *mut cass_int32_t,
-    ) -> CassError;
+    pub fn cass_value_get_int32(value: *const CassValue, output: *mut cass_int32_t) -> CassError;
 }
 extern "C" {
     /// Gets an uint32 for the specified value.
@@ -9796,10 +9618,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_uint32(
-        value: *const CassValue,
-        output: *mut cass_uint32_t,
-    ) -> CassError;
+    pub fn cass_value_get_uint32(value: *const CassValue, output: *mut cass_uint32_t) -> CassError;
 }
 extern "C" {
     /// Gets an int64 for the specified value.
@@ -9809,10 +9628,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_int64(
-        value: *const CassValue,
-        output: *mut cass_int64_t,
-    ) -> CassError;
+    pub fn cass_value_get_int64(value: *const CassValue, output: *mut cass_int64_t) -> CassError;
 }
 extern "C" {
     /// Gets a float for the specified value.
@@ -9822,10 +9638,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_float(
-        value: *const CassValue,
-        output: *mut cass_float_t,
-    ) -> CassError;
+    pub fn cass_value_get_float(value: *const CassValue, output: *mut cass_float_t) -> CassError;
 }
 extern "C" {
     /// Gets a double for the specified value.
@@ -9835,10 +9648,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_double(
-        value: *const CassValue,
-        output: *mut cass_double_t,
-    ) -> CassError;
+    pub fn cass_value_get_double(value: *const CassValue, output: *mut cass_double_t) -> CassError;
 }
 extern "C" {
     /// Gets a bool for the specified value.
@@ -9848,10 +9658,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_bool(
-        value: *const CassValue,
-        output: *mut cass_bool_t,
-    ) -> CassError;
+    pub fn cass_value_get_bool(value: *const CassValue, output: *mut cass_bool_t) -> CassError;
 }
 extern "C" {
     /// Gets a UUID for the specified value.
@@ -9861,10 +9668,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_uuid(
-        value: *const CassValue,
-        output: *mut CassUuid,
-    ) -> CassError;
+    pub fn cass_value_get_uuid(value: *const CassValue, output: *mut CassUuid) -> CassError;
 }
 extern "C" {
     /// Gets an INET for the specified value.
@@ -9874,10 +9678,7 @@ extern "C" {
     /// @param[in] value
     /// @param[out] output
     /// @return CASS_OK if successful, otherwise error occurred
-    pub fn cass_value_get_inet(
-        value: *const CassValue,
-        output: *mut CassInet,
-    ) -> CassError;
+    pub fn cass_value_get_inet(value: *const CassValue, output: *mut CassInet) -> CassError;
 }
 extern "C" {
     /// Gets a string for the specified value.
@@ -9999,9 +9800,7 @@ extern "C" {
     /// @param[in] collection
     /// @return The type of the primary sub-type. CASS_VALUE_TYPE_UNKNOWN
     /// returned if not a collection.
-    pub fn cass_value_primary_sub_type(
-        collection: *const CassValue,
-    ) -> CassValueType;
+    pub fn cass_value_primary_sub_type(collection: *const CassValue) -> CassValueType;
 }
 extern "C" {
     /// Get the secondary sub-type for a collection. This returns the value type for a
@@ -10012,9 +9811,7 @@ extern "C" {
     /// @param[in] collection
     /// @return The type of the primary sub-type. CASS_VALUE_TYPE_UNKNOWN
     /// returned if not a collection or not a map.
-    pub fn cass_value_secondary_sub_type(
-        collection: *const CassValue,
-    ) -> CassValueType;
+    pub fn cass_value_secondary_sub_type(collection: *const CassValue) -> CassValueType;
 }
 extern "C" {
     /// Creates a new UUID generator.
@@ -10044,8 +9841,7 @@ extern "C" {
     /// @return Returns a UUID generator that must be freed.
     ///
     /// @see cass_uuid_gen_free()
-    pub fn cass_uuid_gen_new_with_node(node: cass_uint64_t)
-        -> *mut CassUuidGen;
+    pub fn cass_uuid_gen_new_with_node(node: cass_uint64_t) -> *mut CassUuidGen;
 }
 extern "C" {
     /// Frees a UUID generator instance.
@@ -10064,10 +9860,7 @@ extern "C" {
     ///
     /// @param[in] uuid_gen
     /// @param[out] output A V1 UUID for the current time.
-    pub fn cass_uuid_gen_time(
-        uuid_gen: *mut CassUuidGen,
-        output: *mut CassUuid,
-    );
+    pub fn cass_uuid_gen_time(uuid_gen: *mut CassUuidGen, output: *mut CassUuid);
 }
 extern "C" {
     /// Generates a new V4 (random) UUID
@@ -10078,10 +9871,7 @@ extern "C" {
     ///
     /// @param[in] uuid_gen
     /// @param output A randomly generated V4 UUID.
-    pub fn cass_uuid_gen_random(
-        uuid_gen: *mut CassUuidGen,
-        output: *mut CassUuid,
-    );
+    pub fn cass_uuid_gen_random(uuid_gen: *mut CassUuidGen, output: *mut CassUuid);
 }
 extern "C" {
     /// Generates a V1 (time) UUID for the specified time.
@@ -10144,10 +9934,7 @@ extern "C" {
     ///
     /// @param[in] uuid
     /// @param[out] output A null-terminated string of length CASS_UUID_STRING_LENGTH.
-    pub fn cass_uuid_string(
-        uuid: CassUuid,
-        output: *mut ::std::os::raw::c_char,
-    );
+    pub fn cass_uuid_string(uuid: CassUuid, output: *mut ::std::os::raw::c_char);
 }
 extern "C" {
     /// Returns a UUID for the specified string.
@@ -10302,8 +10089,7 @@ extern "C" {
     /// @return Returns a retry policy that must be freed.
     ///
     /// @see cass_retry_policy_free()
-    pub fn cass_retry_policy_downgrading_consistency_new(
-) -> *mut CassRetryPolicy;
+    pub fn cass_retry_policy_downgrading_consistency_new() -> *mut CassRetryPolicy;
 }
 extern "C" {
     /// Creates a new fallthrough retry policy.
@@ -10441,9 +10227,7 @@ extern "C" {
     /// @param[in] consistency
     /// @return A null-terminated string for the consistency.
     /// Example: "ALL", "ONE", "QUORUM", etc.
-    pub fn cass_consistency_string(
-        consistency: CassConsistency,
-    ) -> *const ::std::os::raw::c_char;
+    pub fn cass_consistency_string(consistency: CassConsistency) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     /// Write type
@@ -10455,9 +10239,7 @@ extern "C" {
     /// @param[in] write_type
     /// @return A null-terminated string for the write type.
     /// Example: "BATCH", "SIMPLE", "COUNTER", etc.
-    pub fn cass_write_type_string(
-        write_type: CassWriteType,
-    ) -> *const ::std::os::raw::c_char;
+    pub fn cass_write_type_string(write_type: CassWriteType) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     /// Gets a description for an error code.
@@ -10491,10 +10273,7 @@ extern "C" {
     /// @param[in] data An opaque data object passed to the callback.
     /// @param[in] callback A callback that handles logging events. This is
     /// called in a separate thread so access to shared data must be synchronized.
-    pub fn cass_log_set_callback(
-        callback: CassLogCallback,
-        data: *mut ::std::os::raw::c_void,
-    );
+    pub fn cass_log_set_callback(callback: CassLogCallback, data: *mut ::std::os::raw::c_void);
 }
 extern "C" {
     pub fn cass_log_set_queue_size(queue_size: usize);
@@ -10505,9 +10284,7 @@ extern "C" {
     /// @param[in] log_level
     /// @return A null-terminated string for the log level.
     /// Example: "ERROR", "WARN", "INFO", etc.
-    pub fn cass_log_level_string(
-        log_level: CassLogLevel,
-    ) -> *const ::std::os::raw::c_char;
+    pub fn cass_log_level_string(log_level: CassLogLevel) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     /// Constructs an inet v4 object.
@@ -10534,10 +10311,7 @@ extern "C" {
     ///
     /// @param[in] inet
     /// @param[out] output A null-terminated string of length CASS_INET_STRING_LENGTH.
-    pub fn cass_inet_string(
-        inet: CassInet,
-        output: *mut ::std::os::raw::c_char,
-    );
+    pub fn cass_inet_string(inet: CassInet, output: *mut ::std::os::raw::c_char);
 }
 extern "C" {
     /// Returns an inet for the specified string.
@@ -10601,10 +10375,7 @@ extern "C" {
     /// @param[in] time
     /// @return Epoch time in seconds. Negative times are possible if the date
     /// occurs before the Epoch (1970-1-1).
-    pub fn cass_date_time_to_epoch(
-        date: cass_uint32_t,
-        time: cass_int64_t,
-    ) -> cass_int64_t;
+    pub fn cass_date_time_to_epoch(date: cass_uint32_t, time: cass_int64_t) -> cass_int64_t;
 }
 extern "C" {
     /// Set custom allocation functions.

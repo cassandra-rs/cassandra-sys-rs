@@ -8,9 +8,9 @@ mod examples_util;
 use examples_util::*;
 use std::os::raw;
 
-use std::ptr;
 use std::env;
 use std::ffi::CStr;
+use std::ptr;
 
 use cassandra_cpp_sys::*;
 
@@ -18,14 +18,14 @@ unsafe extern "C" fn on_log(message: *const CassLogMessage, data: *mut raw::c_vo
     let _ = data;
     let message = &*message;
     info!(target: "cass_log", "{:?}.{:?} [{:?}] ({:?}:{:?}:{:?}) {:?}",
-            message.time_ms / 1000,
-            message.time_ms % 1000,
-            message.severity,
-            message.file,
-            message.line,
-            message.function,
-            CStr::from_ptr(message.message[..].as_ptr())
-        );
+        message.time_ms / 1000,
+        message.time_ms % 1000,
+        message.severity,
+        message.file,
+        message.line,
+        message.function,
+        CStr::from_ptr(message.message[..].as_ptr())
+    );
 }
 
 fn main() {
@@ -47,6 +47,5 @@ fn main() {
 
         cass_cluster_free(cluster);
         cass_session_free(session);
-
     }
 }

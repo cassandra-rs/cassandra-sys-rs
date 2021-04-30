@@ -5,8 +5,8 @@ extern crate cassandra_cpp_sys;
 
 mod examples_util;
 use examples_util::*;
-use std::mem;
 use std::ffi::CString;
+use std::mem;
 
 use cassandra_cpp_sys::*;
 
@@ -15,7 +15,11 @@ struct Pair {
     value: i32,
 }
 
-fn insert_into_maps(session: &mut CassSession, key: &str, items: Vec<Pair>) -> Result<(), CassError> {
+fn insert_into_maps(
+    session: &mut CassSession,
+    key: &str,
+    items: Vec<Pair>,
+) -> Result<(), CassError> {
     unsafe {
         let query = "INSERT INTO examples.maps (key, items) VALUES (?, ?);";
         let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
@@ -71,14 +75,18 @@ fn select_from_maps(session: &mut CassSession, key: &str) -> Result<(), CassErro
                         let mut item_key = mem::zeroed();
                         let mut item_key_length = mem::zeroed();
                         let mut value = mem::zeroed();
-                        cass_value_get_string(cass_iterator_get_map_key(iterator),
-                                              &mut item_key,
-                                              &mut item_key_length);
+                        cass_value_get_string(
+                            cass_iterator_get_map_key(iterator),
+                            &mut item_key,
+                            &mut item_key_length,
+                        );
                         cass_value_get_int32(cass_iterator_get_map_value(iterator), &mut value);
 
-                        println!("item: '{:?}' : {:?}",
-                                 raw2utf8(item_key, item_key_length),
-                                 value);
+                        println!(
+                            "item: '{:?}' : {:?}",
+                            raw2utf8(item_key, item_key_length),
+                            value
+                        );
                     }
                     cass_iterator_free(iterator);
                     cass_result_free(result);
@@ -95,22 +103,24 @@ fn select_from_maps(session: &mut CassSession, key: &str) -> Result<(), CassErro
 
 fn main() {
     unsafe {
-        let items = vec![Pair {
-                             key: "apple".to_owned(),
-                             value: 1,
-                         },
-                         Pair {
-                             key: "orange".to_owned(),
-                             value: 2,
-                         },
-                         Pair {
-                             key: "banana".to_owned(),
-                             value: 3,
-                         },
-                         Pair {
-                             key: "mango".to_owned(),
-                             value: 4,
-                         }];
+        let items = vec![
+            Pair {
+                key: "apple".to_owned(),
+                value: 1,
+            },
+            Pair {
+                key: "orange".to_owned(),
+                value: 2,
+            },
+            Pair {
+                key: "banana".to_owned(),
+                value: 3,
+            },
+            Pair {
+                key: "mango".to_owned(),
+                value: 4,
+            },
+        ];
 
         let cluster = create_cluster();
         let session = &mut *cass_session_new();
@@ -125,7 +135,6 @@ fn main() {
         execute_query(session,
                       "CREATE TABLE IF NOT EXISTS examples.maps (key text, items map<text, int>, PRIMARY KEY (key))")
             .unwrap();
-
 
         insert_into_maps(session, "test", items).unwrap();
         //        select_from_maps(session, "test").unwrap();

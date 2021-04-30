@@ -4,9 +4,9 @@
 extern crate cassandra_cpp_sys;
 
 mod examples_util;
+use cassandra_cpp_sys::*;
 use examples_util::*;
 use std::ffi::CString;
-use cassandra_cpp_sys::*;
 
 struct Pair {
     key: String,
@@ -35,8 +35,11 @@ fn prepare_insert_into_batch<'a>(session: &mut CassSession) -> Result<&'a CassPr
     }
 }
 
-fn insert_into_batch_with_prepared(session: &mut CassSession, prepared: &CassPrepared, pairs: Vec<Pair>)
-                                   -> Result<(), CassError> {
+fn insert_into_batch_with_prepared(
+    session: &mut CassSession,
+    prepared: &CassPrepared,
+    pairs: Vec<Pair>,
+) -> Result<(), CassError> {
     unsafe {
         let batch = cass_batch_new(CASS_BATCH_TYPE_LOGGED);
 
@@ -89,20 +92,21 @@ fn insert_into_batch_with_prepared(session: &mut CassSession, prepared: &CassPre
     }
 }
 
-
 pub fn main() {
     unsafe {
         let cluster = create_cluster();
         let session = &mut *cass_session_new();
 
-        let pairs = vec![Pair {
-                             key: "a".to_owned(),
-                             value: "1".to_owned(),
-                         },
-                         Pair {
-                             key: "b".to_owned(),
-                             value: "2".to_owned(),
-                         }];
+        let pairs = vec![
+            Pair {
+                key: "a".to_owned(),
+                value: "1".to_owned(),
+            },
+            Pair {
+                key: "b".to_owned(),
+                value: "2".to_owned(),
+            },
+        ];
 
         connect_session(session, &cluster).unwrap();
 
@@ -111,10 +115,11 @@ pub fn main() {
                        \'replication_factor\': \'3\' };")
             .unwrap();
 
-
-        execute_query(session,
-                      "CREATE TABLE IF NOT EXISTS examples.pairs (key text, value text, PRIMARY KEY (key));")
-            .unwrap();
+        execute_query(
+            session,
+            "CREATE TABLE IF NOT EXISTS examples.pairs (key text, value text, PRIMARY KEY (key));",
+        )
+        .unwrap();
 
         match prepare_insert_into_batch(session) {
             Ok(prepared) => {
@@ -130,6 +135,5 @@ pub fn main() {
 
         cass_cluster_free(cluster);
         cass_session_free(session);
-
     }
 }

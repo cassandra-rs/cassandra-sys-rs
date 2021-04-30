@@ -18,10 +18,16 @@ struct Basic {
     i64: i64,
 }
 
-fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) -> Result<(), CassError> {
+fn insert_into_basic(
+    session: &mut CassSession,
+    key: &str,
+    basic: &mut Basic,
+) -> Result<(), CassError> {
     unsafe {
-        let query = CString::new("INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, \
-                                  ?);");
+        let query = CString::new(
+            "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, \
+                                  ?);",
+        );
         let statement = cass_statement_new(query.unwrap().as_ptr(), 6);
 
         cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
@@ -48,7 +54,11 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &mut Basic) ->
     }
 }
 
-fn select_from_basic(session: &mut CassSession, key: &str, basic: &mut Basic) -> Result<(), CassError> {
+fn select_from_basic(
+    session: &mut CassSession,
+    key: &str,
+    basic: &mut Basic,
+) -> Result<(), CassError> {
     unsafe {
         let query = "SELECT * FROM examples.basic WHERE key = ?";
         let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
@@ -115,10 +125,12 @@ pub fn main() {
                     i32: 0,
                     i64: 0,
                 };
-                execute_query(session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
-                               'SimpleStrategy', 'replication_factor': '1' };")
-                    .unwrap();
+                execute_query(
+                    session,
+                    "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '1' };",
+                )
+                .unwrap();
                 execute_query(session,
                               "CREATE TABLE IF NOT EXISTS examples.basic (key text, bln boolean, flt float, dbl \
                                double, i32 int, i64 bigint, PRIMARY KEY (key));")
@@ -138,7 +150,7 @@ pub fn main() {
 
                 let close_future = cass_session_close(session);
 
-               cass_future_wait(close_future);
+                cass_future_wait(close_future);
                 cass_future_free(close_future);
             }
             err => println!("Error: {:?}", err),
