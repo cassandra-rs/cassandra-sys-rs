@@ -3,8 +3,8 @@
 
 extern crate cassandra_cpp_sys;
 
-use std::mem;
 use std::ffi::CString;
+use std::mem;
 
 use cassandra_cpp_sys::*;
 
@@ -36,14 +36,22 @@ fn main() {
 
                         while cass_iterator_next(rows) == cass_true {
                             let row = cass_iterator_get_row(rows);
-                            let value = cass_row_get_column_by_name(row,
-                                                                    CString::new("keyspace_name").unwrap().as_ptr());
+                            let value = cass_row_get_column_by_name(
+                                row,
+                                CString::new("keyspace_name").unwrap().as_ptr(),
+                            );
 
                             let mut keyspace_name = mem::zeroed();
                             let mut keyspace_name_length = mem::zeroed();
-                            cass_value_get_string(value, &mut keyspace_name, &mut keyspace_name_length);
-                            println!("keyspace_name: {:?}",
-                                     raw2utf8(keyspace_name, keyspace_name_length).unwrap());
+                            cass_value_get_string(
+                                value,
+                                &mut keyspace_name,
+                                &mut keyspace_name_length,
+                            );
+                            println!(
+                                "keyspace_name: {:?}",
+                                raw2utf8(keyspace_name, keyspace_name_length).unwrap()
+                            );
                         }
 
                         cass_result_free(result);
@@ -54,8 +62,10 @@ fn main() {
                         let mut message = mem::zeroed();
                         let mut message_length = mem::zeroed();
                         cass_future_error_message(result_future, &mut message, &mut message_length);
-                        println!("Unable to run query: {:?}",
-                                 raw2utf8(message, message_length));
+                        println!(
+                            "Unable to run query: {:?}",
+                            raw2utf8(message, message_length)
+                        );
                     }
                 }
 
@@ -75,11 +85,5 @@ fn main() {
                 println!("Unable to connect: {:?}", raw2utf8(message, message_length));
             }
         };
-
-
-
     };
-
-
-
 }

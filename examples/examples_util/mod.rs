@@ -2,8 +2,8 @@
 
 use cassandra_cpp_sys::*;
 
-use std::mem;
 use std::ffi::CString;
+use std::mem;
 
 pub fn print_error(future: &mut CassFuture) {
     unsafe {

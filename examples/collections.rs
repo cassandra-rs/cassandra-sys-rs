@@ -6,12 +6,15 @@ extern crate cassandra_cpp_sys;
 mod examples_util;
 use examples_util::*;
 
-use std::mem;
-use std::ffi::CString;
 use cassandra_cpp_sys::*;
+use std::ffi::CString;
+use std::mem;
 
-
-fn insert_into_collections(session: &mut CassSession, key: &str, items: Vec<&str>) -> Result<(), CassError> {
+fn insert_into_collections(
+    session: &mut CassSession,
+    key: &str,
+    items: Vec<&str>,
+) -> Result<(), CassError> {
     unsafe {
         let query = "INSERT INTO examples.collections (key, items) VALUES (?, ?);";
 
@@ -65,9 +68,11 @@ fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), C
                     while cass_iterator_next(items_iterator) == cass_true {
                         let mut item = mem::zeroed();
                         let mut item_length = mem::zeroed();
-                        cass_value_get_string(cass_iterator_get_value(items_iterator),
-                                              &mut item,
-                                              &mut item_length);
+                        cass_value_get_string(
+                            cass_iterator_get_value(items_iterator),
+                            &mut item,
+                            &mut item_length,
+                        );
                         println!("item: {:?}", raw2utf8(item, item_length));
                     }
                     cass_iterator_free(items_iterator);
@@ -107,7 +112,6 @@ fn main() {
         execute_query(session,
                       "CREATE TABLE IF NOT EXISTS examples.collections (key text, items set<text>, PRIMARY KEY (key))")
             .unwrap();
-
 
         insert_into_collections(session, "test", items).unwrap();
         select_from_collections(session, "test").unwrap();

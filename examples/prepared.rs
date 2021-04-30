@@ -21,7 +21,8 @@ struct Basic {
 
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
-        let query = "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
+        let query =
+            "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
         let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 6);
 
         cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
@@ -70,8 +71,12 @@ fn prepare_select_from_basic(session: &mut CassSession) -> Result<&CassPrepared,
     }
 }
 
-fn select_from_basic(session: &mut CassSession, prepared: &CassPrepared, key: &str, basic: &mut Basic)
-                     -> Result<(), CassError> {
+fn select_from_basic(
+    session: &mut CassSession,
+    prepared: &CassPrepared,
+    key: &str,
+    basic: &mut Basic,
+) -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
         cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());

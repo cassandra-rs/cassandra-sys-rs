@@ -6,9 +6,9 @@ extern crate cassandra_cpp_sys;
 mod examples_util;
 use examples_util::*;
 
-use std::mem;
 use std::ffi::CStr;
 use std::ffi::CString;
+use std::mem;
 
 use std::str;
 
@@ -16,11 +16,17 @@ use cassandra_cpp_sys::*;
 
 const CASS_UUID_STRING_LENGTH: usize = 37;
 
-fn insert_into_log(session: &mut CassSession, key: &str, time: CassUuid, entry: &str) -> Result<(), CassError> {
+fn insert_into_log(
+    session: &mut CassSession,
+    key: &str,
+    time: CassUuid,
+    entry: &str,
+) -> Result<(), CassError> {
     unsafe {
         let query = "INSERT INTO examples.log (key, time, entry) VALUES (?, ?, ?);";
 
-        let statement: *mut CassStatement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 3);
+        let statement: *mut CassStatement =
+            cass_statement_new(CString::new(query).unwrap().as_ptr(), 3);
 
         cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
         cass_statement_bind_uuid(statement, 1, time);
@@ -71,11 +77,17 @@ fn select_from_log(session: &mut CassSession, key: &str) -> Result<(), CassError
                     let mut entry_length = mem::zeroed();
                     let mut time_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
 
-                    cass_value_get_string(cass_row_get_column(row, 0),
-                                          &mut CString::new(key).unwrap().as_ptr(),
-                                          &mut key_length);
+                    cass_value_get_string(
+                        cass_row_get_column(row, 0),
+                        &mut CString::new(key).unwrap().as_ptr(),
+                        &mut key_length,
+                    );
                     cass_value_get_uuid(cass_row_get_column(row, 1), &mut time);
-                    cass_value_get_string(cass_row_get_column(row, 2), &mut entry, &mut entry_length);
+                    cass_value_get_string(
+                        cass_row_get_column(row, 2),
+                        &mut entry,
+                        &mut entry_length,
+                    );
                     let mut output: i8 = mem::zeroed();
                     cass_uuid_string(time, &mut output);
                     let output = CStr::from_ptr(&output);
@@ -108,10 +120,12 @@ pub fn main() {
 
         match connect_session(session, cluster) {
             Ok(()) => {
-                execute_query(&mut *session,
-                              "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
-                               'SimpleStrategy', 'replication_factor': '1' };")
-                    .unwrap();
+                execute_query(
+                    &mut *session,
+                    "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': \
+                               'SimpleStrategy', 'replication_factor': '1' };",
+                )
+                .unwrap();
                 execute_query(&mut *session,
                               "CREATE TABLE IF NOT EXISTS examples.log (key text, time timeuuid, entry text, PRIMARY \
                                KEY (key, time));")

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 ### Changed
 ### Fixed
+* Remove assumption that char is signed. Allows building on M1.
 
 ## [0.12.2] - 2020-09-16
 ### Added
