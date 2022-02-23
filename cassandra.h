@@ -52,7 +52,7 @@
  */
 
 #define CASS_VERSION_MAJOR 2
-#define CASS_VERSION_MINOR 10
+#define CASS_VERSION_MINOR 16
 #define CASS_VERSION_PATCH 0
 #define CASS_VERSION_SUFFIX ""
 
@@ -226,6 +226,14 @@ typedef struct CassResult_ CassResult;
  * @struct CassErrorResult
  */
 typedef struct CassErrorResult_ CassErrorResult;
+
+
+/**
+ * An object that represents a cluster node.
+ *
+ * @struct CassNode
+ */
+typedef struct CassNode_ CassNode;
 
 /**
  * An object used to iterate over a group of rows, columns or collection values.
@@ -423,7 +431,7 @@ typedef struct CassMetrics_ {
 
   struct {
     cass_uint64_t connection_timeouts; /**< Occurrences of a connection timeout */
-    cass_uint64_t pending_request_timeouts; /**< Occurrences of requests that timed out waiting for a connection */
+    cass_uint64_t pending_request_timeouts; /**< Deprecated */
     cass_uint64_t request_timeouts; /**< Occurrences of requests that timed out waiting for a request to finish */
   } errors; /**< Error metrics */
 } CassMetrics;
@@ -626,7 +634,11 @@ typedef enum CassProtocolVersion_ {
   CASS_PROTOCOL_VERSION_V2    = 0x02, /**< Deprecated */
   CASS_PROTOCOL_VERSION_V3    = 0x03,
   CASS_PROTOCOL_VERSION_V4    = 0x04,
-  CASS_PROTOCOL_VERSION_V5    = 0x05
+  CASS_PROTOCOL_VERSION_V5    = 0x05,
+  CASS_PROTOCOL_VERSION_DSEV1 = 0x41, /**< Only supported when using the DSE
+                                           driver with DataStax Enterprise */
+  CASS_PROTOCOL_VERSION_DSEV2 = 0x42  /**< Only supported when using the DSE
+                                           driver with DataStax Enterprise */
 } CassProtocolVersion;
 
 typedef enum  CassErrorSource_ {
@@ -672,6 +684,7 @@ typedef enum  CassErrorSource_ {
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_INVALID_STATE, 32, "Invalid state") \
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_NO_CUSTOM_PAYLOAD, 33, "No custom payload") \
   XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_EXECUTION_PROFILE_INVALID, 34, "Invalid execution profile specified") \
+  XX(CASS_ERROR_SOURCE_LIB, CASS_ERROR_LIB_NO_TRACING_ID, 35, "No tracing ID") \
   XX(CASS_ERROR_SOURCE_SERVER, CASS_ERROR_SERVER_SERVER_ERROR, 0x0000, "Server error") \
   XX(CASS_ERROR_SOURCE_SERVER, CASS_ERROR_SERVER_PROTOCOL_ERROR, 0x000A, "Protocol error") \
   XX(CASS_ERROR_SOURCE_SERVER, CASS_ERROR_SERVER_BAD_CREDENTIALS, 0x0100, "Bad credentials") \
@@ -695,7 +708,8 @@ typedef enum  CassErrorSource_ {
   XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_NO_PEER_CERT, 3, "No peer certificate")  \
   XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_INVALID_PEER_CERT, 4, "Invalid peer certificate") \
   XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_IDENTITY_MISMATCH, 5, "Certificate does not match host or IP address") \
-  XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_PROTOCOL_ERROR, 6, "Protocol error")
+  XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_PROTOCOL_ERROR, 6, "Protocol error") \
+  XX(CASS_ERROR_SOURCE_SSL, CASS_ERROR_SSL_CLOSED, 7, "Connection closed")
 
 /* @cond IGNORE */
 #define CASS_ERROR_MAP CASS_ERROR_MAPPING /* Deprecated */
@@ -804,7 +818,6 @@ typedef void (*CassFreeFunction)(void* ptr);
  */
 typedef struct CassAuthenticator_ CassAuthenticator;
 
-
 /**
  * A callback used to initiate an authentication exchange.
  *
@@ -864,7 +877,6 @@ typedef void (*CassAuthenticatorSuccessCallback)(CassAuthenticator* auth,
 typedef void (*CassAuthenticatorCleanupCallback)(CassAuthenticator* auth,
                                                  void* data);
 
-
 /**
  * A callback used to cleanup resources.
  *
@@ -881,6 +893,25 @@ typedef struct CassAuthenticatorCallbacks_ {
   CassAuthenticatorSuccessCallback success_callback;
   CassAuthenticatorCleanupCallback cleanup_callback;
 } CassAuthenticatorCallbacks;
+
+typedef enum CassHostListenerEvent_ {
+  CASS_HOST_LISTENER_EVENT_UP,
+  CASS_HOST_LISTENER_EVENT_DOWN,
+  CASS_HOST_LISTENER_EVENT_ADD,
+  CASS_HOST_LISTENER_EVENT_REMOVE
+} CassHostListenerEvent;
+
+/**
+ * A callback used to indicate the host state for a node in the cluster.
+ *
+ * @param[in] event
+ * @param[in] address
+ * @param[in] data
+ * @see cass_cluster_set_host_listener_callback()
+ */
+typedef void(*CassHostListenerCallback)(CassHostListenerEvent event,
+                                        const CassInet address,
+                                        void* data);
 
 /***********************************************************************************
  *
@@ -998,15 +1029,20 @@ cass_execution_profile_set_load_balance_round_robin(CassExecProfile* profile);
  * <b>Note:</b> Profile-based load balancing policy is disabled by default;
  * cluster load balancing policy is used when profile does not contain a policy.
  *
+ * @deprecated The remote DC settings for DC-aware are not suitable for most
+ * scenarios that require DC failover. There is also unhandled gap between
+ * replication factor number of nodes failing and the full cluster failing. Only
+ * the remote DC settings are being deprecated.
+ *
  * @public @memberof CassExecProfile
  *
  * @param[in] profile
  * @param[in] local_dc The primary data center to try first
  * @param[in] used_hosts_per_remote_dc The number of hosts used in each remote
- * DC if no hosts are available in the local dc
+ * DC if no hosts are available in the local dc (<b>deprecated</b>)
  * @param[in] allow_remote_dcs_for_local_cl Allows remote hosts to be used if no
  * local dc hosts are available and the consistency level is LOCAL_ONE or
- * LOCAL_QUORUM
+ * LOCAL_QUORUM (<b>deprecated</b>)
  * @return CASS_OK if successful, otherwise an error occurred.
  *
  * @see cass_cluster_set_load_balance_dc_aware()
@@ -1021,13 +1057,18 @@ cass_execution_profile_set_load_balance_dc_aware(CassExecProfile* profile,
  * Same as cass_execution_profile_set_load_balance_dc_aware(), but with lengths
  * for string parameters.
  *
+ * @deprecated The remote DC settings for DC-aware are not suitable for most
+ * scenarios that require DC failover. There is also unhandled gap between
+ * replication factor number of nodes failing and the full cluster failing. Only
+ * the remote DC settings are being deprecated.
+ *
  * @public @memberof CassExecProfile
  *
  * @param[in] profile
  * @param[in] local_dc
  * @param[in] local_dc_length
- * @param[in] used_hosts_per_remote_dc
- * @param[in] allow_remote_dcs_for_local_cl
+ * @param[in] used_hosts_per_remote_dc (<b>deprecated</b>)
+ * @param[in] allow_remote_dcs_for_local_cl (<b>deprecated</b>)
  * @return same as cass_execution_profile_set_load_balance_dc_aware()
  *
  * @see cass_execution_profile_set_load_balance_dc_aware()
@@ -1549,10 +1590,11 @@ cass_cluster_set_authenticator_callbacks(CassCluster* cluster,
                                          void* data);
 
 /**
- * Sets the protocol version. This will automatically downgrade to the lowest
+ * Sets the protocol version. The driver will automatically downgrade to the lowest
  * supported protocol version.
  *
- * <b>Default:</b> CASS_PROTOCOL_VERSION_V4
+ * <b>Default:</b> CASS_PROTOCOL_VERSION_V4 or CASS_PROTOCOL_VERSION_DSEV1 when
+ * using the DSE driver with DataStax Enterprise.
  *
  * @public @memberof CassCluster
  *
@@ -1568,7 +1610,8 @@ cass_cluster_set_protocol_version(CassCluster* cluster,
 
 /**
  * Use the newest beta protocol version. This currently enables the use of
- * protocol version v5 (CASS_PROTOCOL_VERSION_V5).
+ * protocol version v5 (CASS_PROTOCOL_VERSION_V5) or DSEv2 (CASS_PROTOCOL_VERSION_DSEV2)
+ * when using the DSE driver with DataStax Enterprise.
  *
  * <b>Default:</b> cass_false
  *
@@ -1659,9 +1702,9 @@ cass_cluster_set_queue_size_io(CassCluster* cluster,
  * @param[in] queue_size
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_queue_size_event(CassCluster* cluster,
-                                                  unsigned queue_size));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_queue_size_event(CassCluster* cluster,
+                                  unsigned queue_size));
 
 /**
  * Sets the number of connections made to each server in each
@@ -1694,23 +1737,71 @@ cass_cluster_set_core_connections_per_host(CassCluster* cluster,
  * @param[in] num_connections
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_max_connections_per_host(CassCluster* cluster,
-                                                          unsigned num_connections));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_max_connections_per_host(CassCluster* cluster,
+                                          unsigned num_connections));
 
 /**
  * Sets the amount of time to wait before attempting to reconnect.
  *
- * <b>Default:</b> 2000 milliseconds
- *
  * @public @memberof CassCluster
+ *
+ * @deprecated This is being replaced with cass_cluster_set_constant_reconnect().
+ * Expect this to be removed in a future release.
  *
  * @param[in] cluster
  * @param[in] wait_time
  */
-CASS_EXPORT void
+CASS_EXPORT CASS_DEPRECATED(void
 cass_cluster_set_reconnect_wait_time(CassCluster* cluster,
-                                     unsigned wait_time);
+                                     unsigned wait_time));
+
+/**
+ * Configures the cluster to use a reconnection policy that waits a constant
+ * time between each reconnection attempt.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] delay_ms Time in milliseconds to delay attempting a reconnection;
+ * 0 to perform a reconnection immediately.
+ */
+CASS_EXPORT void
+cass_cluster_set_constant_reconnect(CassCluster* cluster,
+                                    cass_uint64_t delay_ms);
+
+/**
+ * Configures the cluster to use a reconnection policy that waits exponentially
+ * longer between each reconnection attempt; however will maintain a constant
+ * delay once the maximum delay is reached.
+ *
+ * <b>Default:</b>
+ * <ul>
+ *   <li>2000 milliseconds base delay</li>
+ *   <li>60000 milliseconds max delay</li>
+ * </ul>
+ *
+ * <p>
+ *   <b>Note:</b> A random amount of jitter (+/- 15%) will be added to the pure
+ *   exponential delay value. This helps to prevent situations where multiple
+ *   connections are in the reconnection process at exactly the same time. The
+ *   jitter will never cause the delay to be less than the base delay, or more
+ *   than the max delay.
+ * </p>
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] base_delay_ms The base delay (in milliseconds) to use for
+ * scheduling reconnection attempts.
+ * @param[in] max_delay_ms The maximum delay to wait between two reconnection
+ * attempts.
+ * @return CASS_OK if successful, otherwise error occurred.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_exponential_reconnect(CassCluster* cluster,
+                                       cass_uint64_t base_delay_ms,
+                                       cass_uint64_t max_delay_ms);
 
 /**
  * Sets the amount of time, in microseconds, to wait for new requests to
@@ -1766,9 +1857,9 @@ cass_cluster_set_new_request_ratio(CassCluster* cluster,
  * @param[in] num_connections
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_max_concurrent_creation(CassCluster* cluster,
-                                                         unsigned num_connections));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_max_concurrent_creation(CassCluster* cluster,
+                                         unsigned num_connections));
 
 /**
  * Sets the threshold for the maximum number of concurrent requests in-flight
@@ -1786,9 +1877,9 @@ CASS_DEPRECATED(cass_cluster_set_max_concurrent_creation(CassCluster* cluster,
  * @param[in] num_requests
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_max_concurrent_requests_threshold(CassCluster* cluster,
-                                                                   unsigned num_requests));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_max_concurrent_requests_threshold(CassCluster* cluster,
+                                                   unsigned num_requests));
 
 /**
  * Sets the maximum number of requests processed by an IO worker
@@ -1805,9 +1896,9 @@ CASS_DEPRECATED(cass_cluster_set_max_concurrent_requests_threshold(CassCluster* 
  * @param[in] num_requests
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_max_requests_per_flush(CassCluster* cluster,
-                                                        unsigned num_requests));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_max_requests_per_flush(CassCluster* cluster,
+                                        unsigned num_requests));
 
 /**
  * Sets the high water mark for the number of bytes outstanding
@@ -1825,9 +1916,9 @@ CASS_DEPRECATED(cass_cluster_set_max_requests_per_flush(CassCluster* cluster,
  * @param[in] num_bytes
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_write_bytes_high_water_mark(CassCluster* cluster,
-                                                             unsigned num_bytes));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_write_bytes_high_water_mark(CassCluster* cluster,
+                                             unsigned num_bytes));
 
 /**
  * Sets the low water mark for number of bytes outstanding on a
@@ -1845,9 +1936,9 @@ CASS_DEPRECATED(cass_cluster_set_write_bytes_high_water_mark(CassCluster* cluste
  * @param[in] num_bytes
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_write_bytes_low_water_mark(CassCluster* cluster,
-                                                            unsigned num_bytes));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_write_bytes_low_water_mark(CassCluster* cluster,
+                                            unsigned num_bytes));
 
 /**
  * Sets the high water mark for the number of requests queued waiting
@@ -1866,9 +1957,9 @@ CASS_DEPRECATED(cass_cluster_set_write_bytes_low_water_mark(CassCluster* cluster
  * @param[in] num_requests
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_pending_requests_high_water_mark(CassCluster* cluster,
-                                                                  unsigned num_requests));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_pending_requests_high_water_mark(CassCluster* cluster,
+                                                  unsigned num_requests));
 
 /**
  * Sets the low water mark for the number of requests queued waiting
@@ -1887,9 +1978,9 @@ CASS_DEPRECATED(cass_cluster_set_pending_requests_high_water_mark(CassCluster* c
  * @param[in] num_requests
  * @return CASS_OK if successful, otherwise an error occurred.
  */
-CASS_EXPORT CassError
-CASS_DEPRECATED(cass_cluster_set_pending_requests_low_water_mark(CassCluster* cluster,
-                                                                 unsigned num_requests));
+CASS_EXPORT CASS_DEPRECATED(CassError
+cass_cluster_set_pending_requests_low_water_mark(CassCluster* cluster,
+                                                 unsigned num_requests));
 
 /**
  * Sets the timeout for connecting to a node.
@@ -1947,6 +2038,46 @@ cass_cluster_set_resolve_timeout(CassCluster* cluster,
 CASS_EXPORT void
 cass_cluster_set_max_schema_wait_time(CassCluster* cluster,
                                       unsigned wait_time_ms);
+
+
+/**
+ * Sets the maximum time to wait for tracing data to become available.
+ *
+ * <b>Default:</b> 15 milliseconds
+ *
+ * @param[in] cluster
+ * @param[in] max_wait_time_ms
+ */
+CASS_EXPORT void
+cass_cluster_set_tracing_max_wait_time(CassCluster* cluster,
+                                       unsigned max_wait_time_ms);
+
+/**
+ * Sets the amount of time to wait between attempts to check to see if tracing is
+ * available.
+ *
+ * <b>Default:</b> 3 milliseconds
+ *
+ * @param[in] cluster
+ * @param[in] retry_wait_time_ms
+ */
+CASS_EXPORT void
+cass_cluster_set_tracing_retry_wait_time(CassCluster* cluster,
+                                         unsigned retry_wait_time_ms);
+
+/**
+ * Sets the consistency level to use for checking to see if tracing data is
+ * available.
+ *
+ * <b>Default:</b> CASS_CONSISTENCY_ONE
+ *
+ * @param[in] cluster
+ * @param[in] consistency
+ */
+CASS_EXPORT void
+cass_cluster_set_tracing_consistency(CassCluster* cluster,
+                                     CassConsistency consistency);
+
 
 /**
  * Sets credentials for plain text authentication.
@@ -2009,14 +2140,20 @@ cass_cluster_set_load_balance_round_robin(CassCluster* cluster);
  * query plans. If relying on this mechanism, be sure to use only contact
  * points from the local DC.
  *
+ * @deprecated The remote DC settings for DC-aware are not suitable for most
+ * scenarios that require DC failover. There is also unhandled gap between
+ * replication factor number of nodes failing and the full cluster failing. Only
+ * the remote DC settings are being deprecated.
+ *
  * @public @memberof CassCluster
  *
  * @param[in] cluster
  * @param[in] local_dc The primary data center to try first
- * @param[in] used_hosts_per_remote_dc The number of hosts used in each remote DC if no hosts
- * are available in the local dc
- * @param[in] allow_remote_dcs_for_local_cl Allows remote hosts to be used if no local dc hosts
- * are available and the consistency level is LOCAL_ONE or LOCAL_QUORUM
+ * @param[in] used_hosts_per_remote_dc The number of hosts used in each remote
+ * DC if no hosts are available in the local dc (<b>deprecated</b>)
+ * @param[in] allow_remote_dcs_for_local_cl Allows remote hosts to be used if no
+ * local dc hosts are available and the consistency level is LOCAL_ONE or
+ * LOCAL_QUORUM (<b>deprecated</b>)
  * @return CASS_OK if successful, otherwise an error occurred
  */
 CASS_EXPORT CassError
@@ -2030,13 +2167,18 @@ cass_cluster_set_load_balance_dc_aware(CassCluster* cluster,
  * Same as cass_cluster_set_load_balance_dc_aware(), but with lengths for string
  * parameters.
  *
+ * @deprecated The remote DC settings for DC-aware are not suitable for most
+ * scenarios that require DC failover. There is also unhandled gap between
+ * replication factor number of nodes failing and the full cluster failing. Only
+ * the remote DC settings are being deprecated.
+ *
  * @public @memberof CassCluster
  *
  * @param[in] cluster
  * @param[in] local_dc
  * @param[in] local_dc_length
- * @param[in] used_hosts_per_remote_dc
- * @param[in] allow_remote_dcs_for_local_cl
+ * @param[in] used_hosts_per_remote_dc (<b>deprecated</b>)
+ * @param[in] allow_remote_dcs_for_local_cl (<b>deprecated</b>)
  * @return same as cass_cluster_set_load_balance_dc_aware()
  *
  * @see cass_cluster_set_load_balance_dc_aware()
@@ -2329,7 +2471,7 @@ cass_cluster_set_tcp_keepalive(CassCluster* cluster,
  * Sets the timestamp generator used to assign timestamps to all requests
  * unless overridden by setting the timestamp on a statement or a batch.
  *
- * <b>Default:</b> server-side timestamp generator.
+ * <b>Default:</b> Monotonically increasing, client-side timestamp generator.
  *
  * @cassandra{2.1+}
  *
@@ -2608,6 +2750,184 @@ CASS_EXPORT CassError
 cass_cluster_set_no_compact(CassCluster* cluster,
                             cass_bool_t enabled);
 
+/**
+ * Sets a callback for handling host state changes in the cluster.
+ *
+ * <b>Note:</b> The callback is invoked only when state changes in the cluster
+ * are applicable to the configured load balancing policy(s).
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] callback
+ * @param[in] data
+ * @return CASS_OK if successful, otherwise and error occurred
+ */
+CASS_EXPORT CassError
+cass_cluster_set_host_listener_callback(CassCluster* cluster,
+                                        CassHostListenerCallback callback,
+                                        void* data);
+
+/**
+ * Sets the secure connection bundle path for processing DBaaS credentials.
+ *
+ * This will pre-configure a cluster using the credentials format provided by
+ * the DBaaS cloud provider.
+ *
+ * @param[in] cluster
+ * @param[in] path Absolute path to DBaaS credentials file.
+ * @return CASS_OK if successful, otherwise error occured.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_cloud_secure_connection_bundle(CassCluster* cluster,
+                                                const char* path);
+
+/**
+ * Same as cass_cluster_set_cloud_secure_connection_bundle(), but with lengths
+ * for string parameters.
+ *
+ * @see cass_cluster_set_cloud_secure_connection_bundle()
+ *
+ * @param[in] cluster
+ * @param[in] path Absolute path to DBaaS credentials file.
+ * @param[in] path_length Length of path variable.
+ * @return CASS_OK if successful, otherwise error occured.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_cloud_secure_connection_bundle_n(CassCluster* cluster,
+                                                  const char* path,
+                                                  size_t path_length);
+
+/**
+ * Same as cass_cluster_set_cloud_secure_connection_bundle(), but it does not
+ * initialize the underlying SSL library implementation. The SSL library still
+ * needs to be initialized, but it's up to the client application to handle
+ * initialization. This is similar to the function cass_ssl_new_no_lib_init(),
+ * and its documentation should be used as a reference to properly initialize
+ * the underlying SSL library.
+ *
+ * @see cass_ssl_new_no_lib_init()
+ * @see cass_cluster_set_cloud_secure_connection_bundle()
+ *
+ * @param[in] cluster
+ * @param[in] path Absolute path to DBaaS credentials file.
+ * @return CASS_OK if successful, otherwise error occured.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_cloud_secure_connection_bundle_no_ssl_lib_init(CassCluster* cluster,
+                                                                const char* path);
+
+/**
+ * Same as cass_cluster_set_cloud_secure_connection_bundle_no_ssl_lib_init(),
+ * but with lengths for string parameters.
+ *
+ * @see cass_cluster_set_cloud_secure_connection_bundle_no_ssl_lib_init()
+ *
+ * @param[in] cluster
+ * @param[in] path Absolute path to DBaaS credentials file.
+ * @param[in] path_length Length of path variable.
+ * @return CASS_OK if successful, otherwise error occured.
+ */
+CASS_EXPORT CassError
+cass_cluster_set_cloud_secure_connection_bundle_no_ssl_lib_init_n(CassCluster* cluster,
+                                                                  const char* path,
+                                                                  size_t path_length);
+
+/**
+ * Set the application name.
+ *
+ * This is optional; however it provides the server with the application name
+ * that can aid in debugging issues with larger clusters where there are a lot
+ * of client (or application) connections.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] application_name
+ */
+CASS_EXPORT void
+cass_cluster_set_application_name(CassCluster* cluster,
+                                  const char* application_name);
+
+/**
+ * Same as cass_cluster_set_application_name(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] application_name
+ * @param[in] application_name_length
+ */
+CASS_EXPORT void
+cass_cluster_set_application_name_n(CassCluster* cluster,
+                                    const char* application_name,
+                                    size_t application_name_length);
+
+/**
+ * Set the application version.
+ *
+ * This is optional; however it provides the server with the application
+ * version that can aid in debugging issues with large clusters where there are
+ * a lot of client (or application) connections that may have different
+ * versions in use.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] application_version
+ */
+
+CASS_EXPORT void
+cass_cluster_set_application_version(CassCluster* cluster,
+                                     const char* application_version);
+
+/**
+ * Same as cass_cluster_set_application_version(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] application_version
+ * @param[in] application_version_length
+ */
+CASS_EXPORT void
+cass_cluster_set_application_version_n(CassCluster* cluster,
+                                       const char* application_version,
+                                       size_t application_version_length);
+
+/**
+ * Set the client id.
+ *
+ * This is optional; however it provides the server with the client ID that can
+ * aid in debugging issues with large clusters where there are a lot of client
+ * connections.
+ *
+ * Default: UUID v4 generated (@see cass_session_get_client_id())
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] client_id
+ */
+CASS_EXPORT void
+cass_cluster_set_client_id(CassCluster* cluster, CassUuid client_id);
+
+/**
+ * Sets the amount of time between monitor reporting event messages.
+ *
+ * <b>Default:</b> 300 seconds.
+ *
+ * @public @memberof CassCluster
+ *
+ * @param[in] cluster
+ * @param[in] interval_secs Use 0 to disable monitor reporting event messages.
+ */
+CASS_EXPORT void
+cass_cluster_set_monitor_reporting_interval(CassCluster* cluster,
+                                            unsigned interval_secs);
+
 /***********************************************************************************
  *
  * Session
@@ -2831,6 +3151,17 @@ cass_session_get_metrics(const CassSession* session,
 CASS_EXPORT void
 cass_session_get_speculative_execution_metrics(const CassSession* session,
                                                CassSpeculativeExecutionMetrics* output);
+
+/**
+ * Get the client id.
+ *
+ * @public @memberof CassSession
+ *
+ * @param[in] session
+ * @return Client id.
+ */
+CASS_EXPORT CassUuid
+cass_session_get_client_id(CassSession* session);
 
 /***********************************************************************************
  *
@@ -4629,6 +4960,19 @@ cass_future_error_message(CassFuture* future,
                           size_t* message_length);
 
 /**
+ * Gets the tracing ID associated with the request.
+ *
+ * @public @memberof CassFuture
+ *
+ * @param[in] future
+ * @param[out] tracing_id
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_future_tracing_id(CassFuture* future,
+                       CassUuid* tracing_id);
+
+/**
  * Gets a the number of custom payload items from a response future. If the future is not
  * ready this method will wait for the future to be set.
  *
@@ -4665,6 +5009,23 @@ cass_future_custom_payload_item(CassFuture* future,
                                 size_t* name_length,
                                 const cass_byte_t** value,
                                 size_t* value_size);
+
+/**
+ * Gets the node that acted as coordinator for this query. If the future is not
+ * ready this method will wait for the future to be set.
+ *
+ * @public @memberof CassFuture
+ *
+ * @param future
+ * @return The coordinator node that handled the query. The lifetime of this
+ * object is the same as the result object it came from. NULL can be returned
+ * if the future is not a response future or if an error occurs before a
+ * coordinator responds.
+ *
+ * @see cass_statement_set_node()
+ */
+CASS_EXPORT const CassNode*
+cass_future_coordinator(CassFuture* future);
 
 /***********************************************************************************
  *
@@ -4953,6 +5314,128 @@ cass_statement_set_retry_policy(CassStatement* statement,
 CASS_EXPORT CassError
 cass_statement_set_custom_payload(CassStatement* statement,
                                   const CassCustomPayload* payload);
+
+/**
+ * Sets the execution profile to execute the statement with.
+ *
+ * <b>Note:</b> NULL or empty string will clear execution profile from statement
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] name
+ * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_cluster_set_execution_profile()
+ */
+CASS_EXPORT CassError
+cass_statement_set_execution_profile(CassStatement* statement,
+                                     const char* name);
+
+/**
+ * Same as cass_statement_set_execution_profile(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] name
+ * @param[in] name_length
+ * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_statement_set_execution_profile()
+ */
+CASS_EXPORT CassError
+cass_statement_set_execution_profile_n(CassStatement* statement,
+                                       const char* name,
+                                       size_t name_length);
+
+/**
+ * Sets whether the statement should use tracing.
+ *
+ * @cassandra{2.2+}
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] enabled
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_set_tracing(CassStatement* statement,
+                           cass_bool_t enabled);
+
+/**
+ * Sets a specific host that should run the query.
+ *
+ * In general, this should not be used, but it can be useful in the following
+ * situations:
+ * * To query node-local tables such as system and virtual tables.
+ * * To apply a sequence of schema changes where it makes sense for all the
+ *   changes to be applied on a single node.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] host
+ * @param[in] port
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_set_host(CassStatement* statement,
+                        const char* host,
+                        int port);
+
+/**
+ * Same as cass_statement_set_host(), but with lengths for string
+ * parameters.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] host
+ * @param[in] host_length
+ * @param[in] port
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_set_host_n(CassStatement* statement,
+                          const char* host,
+                          size_t host_length,
+                          int port);
+
+/**
+ * Same as cass_statement_set_host(), but with the `CassInet` type
+ * for the host instead of a string.
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] statement
+ * @param[in] host
+ * @param[in] port
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_statement_set_host_inet(CassStatement* statement,
+                             const CassInet* host,
+                             int port);
+
+/**
+ * Same as cass_statement_set_host(), but using the `CassNode` type. This can
+ * be used to re-query the same coordinator when used with the result of
+ * `cass_future_coordinator()`
+ *
+ * @public @memberof CassStatement
+ *
+ * @param statement
+ * @param address
+ * @return CASS_OK if successful, otherwise an error occurred.
+ *
+ * @see cass_future_coordinator()
+ */
+CASS_EXPORT CassError
+cass_statement_set_node(CassStatement* statement,
+                        const CassNode* node);
 
 /**
  * Binds null to a query or bound statement at the specified index.
@@ -6078,41 +6561,6 @@ cass_statement_bind_user_type_by_name_n(CassStatement* statement,
                                         size_t name_length,
                                         const CassUserType* user_type);
 
-/**
- * Sets the execution profile to execute the statement with.
- *
- * <b>Note:</b> NULL or empty string will clear execution profile from statement
- *
- * @public @memberof CassStatement
- *
- * @param[in] statement
- * @param[in] name
- * @return CASS_OK if successful, otherwise an error occurred.
- *
- * @see cass_cluster_set_execution_profile()
- */
-CASS_EXPORT CassError
-cass_statement_set_execution_profile(CassStatement* statement,
-                                     const char* name);
-
-/**
- * Same as cass_statement_set_execution_profile(), but with lengths for string
- * parameters.
- *
- * @public @memberof CassStatement
- *
- * @param[in] statement
- * @param[in] name
- * @param[in] name_length
- * @return CASS_OK if successful, otherwise an error occurred.
- *
- * @see cass_statement_set_execution_profile()
- */
-CASS_EXPORT CassError
-cass_statement_set_execution_profile_n(CassStatement* statement,
-                                       const char* name,
-                                       size_t name_length);
-
 /***********************************************************************************
  *
  * Prepared
@@ -6387,6 +6835,21 @@ cass_batch_set_retry_policy(CassBatch* batch,
 CASS_EXPORT CassError
 cass_batch_set_custom_payload(CassBatch* batch,
                               const CassCustomPayload* payload);
+
+/**
+ * Sets whether the batch should use tracing.
+ *
+ * @cassandra{2.2+}
+ *
+ * @public @memberof CassStatement
+ *
+ * @param[in] batch
+ * @param[in] enabled
+ * @return CASS_OK if successful, otherwise an error occurred.
+ */
+CASS_EXPORT CassError
+cass_batch_set_tracing(CassBatch* batch,
+                       cass_bool_t enabled);
 
 /**
  * Adds a statement to a batch.
@@ -6683,8 +7146,8 @@ cass_data_type_sub_type_count(const CassDataType* data_type);
 /**
  * @deprecated Use cass_data_type_sub_type_count()
  */
-CASS_EXPORT size_t
-CASS_DEPRECATED(cass_data_sub_type_count(const CassDataType* data_type));
+CASS_EXPORT CASS_DEPRECATED(size_t
+cass_data_sub_type_count(const CassDataType* data_type));
 
 /**
  * Gets the sub-data type count of a UDT (user defined type), tuple
@@ -10527,7 +10990,7 @@ cass_timestamp_gen_monotonic_new();
  * @param warning_threshold_us The amount of clock skew, in microseconds, that
  * must be detected before a warning is triggered. A threshold less than 0 can
  * be used to disable warnings.
- * @param warning_interval_ms The amount of time, in milliseonds, to wait before
+ * @param warning_interval_ms The amount of time, in milliseconds, to wait before
  * warning again about clock skew. An interval value less than or equal to 0 allows
  * the warning to be triggered every millisecond.
  * @return Returns a timestamp generator that must be freed.
@@ -10603,14 +11066,19 @@ cass_retry_policy_default_new();
  * persisted and a read will succeed if there's some data available even
  * if it increases the risk of reading stale data.
  *
+ * @deprecated This still works, but should not be used in new applications. It
+ * can lead to unexpected behavior when the cluster is in a degraded state.
+ * Instead, applications should prefer using the lowest consistency level on
+ * statements that can be tolerated by a specific use case.
+ *
  * @public @memberof CassRetryPolicy
  *
  * @return Returns a retry policy that must be freed.
  *
  * @see cass_retry_policy_free()
  */
-CASS_EXPORT CassRetryPolicy*
-cass_retry_policy_downgrading_consistency_new();
+CASS_EXPORT CASS_DEPRECATED(CassRetryPolicy*
+cass_retry_policy_downgrading_consistency_new());
 
 /**
  * Creates a new fallthrough retry policy.
@@ -10817,8 +11285,8 @@ cass_error_desc(CassError error);
  * @deprecated This is no longer useful and does nothing. Expect this to be
  * removed in a future release.
  */
-CASS_EXPORT void
-CASS_DEPRECATED(cass_log_cleanup());
+CASS_EXPORT CASS_DEPRECATED(void
+cass_log_cleanup());
 
 /**
  * Sets the log level.
@@ -10862,8 +11330,8 @@ cass_log_set_callback(CassLogCallback callback,
  *
  * @param[in] queue_size
  */
-CASS_EXPORT void
-CASS_DEPRECATED(cass_log_set_queue_size(size_t queue_size));
+CASS_EXPORT CASS_DEPRECATED(void
+cass_log_set_queue_size(size_t queue_size));
 
 /**
  * Gets the string for a log level.
