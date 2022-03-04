@@ -9,6 +9,32 @@ If you wish to contribute code to this project, you are welcome to do so
 using a github pull request, however you will need to sign each commit,
 see details below.
 
+A few important notes:
+
+* Please use `cargo fmt` to format the code. If it's not already properly
+  formatted, please put the reformatting into a separate commit so it is
+  easier to review; don't combine it with actual changes.
+* There are no tests in this repo, but there are examples which at least
+  use most features. If it makes sense, when you're adding a feature please
+  add to the examples.
+* Please do ensure you carry your changes through to https://github.com/Metaswitch/cassandra-rs
+  and add tests there (if that makes sense).
+* In general: I know this code isn't as nice as it could be, but please ensure
+  new code does things better, and if you have an opportunity to clean up old
+  code then please do so.
+
+If updating the Cassandra driver version, there are examples at #18 and #39. The steps are:
+  * Update `cassandra.h` from the latest driver.
+  * Regenerate the binding code with [bindgen](https://rust-lang.github.io/rust-bindgen/),
+    using `--size_t-is-usize` for compatibility.
+  * Update or add examples - we should ideally have code that uses each new binding.
+  * Update the changelog.
+  * Update the CI files to download the correct driver library.
+
+(We try not to update the driver version too often, since this forces clients
+to update their driver too. You should only do this if you need to use a
+newly-added binding.)
+
 ### Sign your work
 
 The sign-off is a simple line at the end of the explanation for the patch. Your
@@ -73,6 +99,6 @@ base.
 **Please make sure you change the base to this repository's master branch
 before submitting the pull request.**
 
-If you make a mistake, unfortunately it is not possible to delete an 
-erroneous pull request from GitHub. However you can change the name 
+If you make a mistake, unfortunately it is not possible to delete an
+erroneous pull request from GitHub. However you can change the name
 of the pull request to something like "(please ignore)" and close it.
