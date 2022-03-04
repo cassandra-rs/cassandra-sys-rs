@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Metaswitch/cassandra-sys-rs.svg?branch=master)](https://travis-ci.org/Metaswitch/cassandra-sys-rs)
+[![Build Status](https://github.com/Metaswitch/cassandra-sys-rs/actions/workflows/build.yml/badge.svg)](https://github.com/Metaswitch/cassandra-sys-rs/actions)
 [![Current Version](http://img.shields.io/crates/v/cassandra-cpp-sys.svg)](https://crates.io/crates/cassandra-cpp-sys)
 [![License](https://img.shields.io/github/license/Metaswitch/cassandra-sys-rs.svg)](#license)
 

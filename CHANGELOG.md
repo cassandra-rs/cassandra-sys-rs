@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 ### Changed
+* Move GitHub build to GitHub Actions (was previously Travis).
 ### Fixed
 
 ## [0.12.3] - 2021-04-30
