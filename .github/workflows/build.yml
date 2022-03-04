@@ -1,0 +1,52 @@
+name: Build
+
+on: [push,pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-18.04
+    services:
+      cassandra:
+        image: cassandra:3.11.12
+        ports:
+          - 9042:9042
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Need all history so we can validate the commits.
+          fetch-depth: 0
+
+      # Enforce that all new commits are signed off according to the DCO,
+      # per CONTRIBUTING.md. Prior commits are either pre-fork, are signed off,
+      # or were made by Keith Wansbrough, who hereby certifies the DCO with regard
+      # to each such commit.
+      - run: |
+          DCO_SIGNING_BASE_COMMIT=f43fa8aeac397cfbd4a470f506581948e807013c
+          git log ${DCO_SIGNING_BASE_COMMIT}.. --grep "^signed-off-by: .\+@.\+" --regexp-ignore-case --invert-grep --no-merges --pretty=oneline > tmp-unsigned-dco
+          if [ -s tmp-unsigned-dco ] ; then
+            echo '**One or more commits are not signed off! Unsigned commits:'
+            cat tmp-unsigned-dco
+            echo '**Please sign these commits and amend your PR.'
+            /bin/false
+          fi
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - run: sudo apt install libcurl4-openssl-dev libelf-dev libdw-dev
+      - run: wget http://downloads.datastax.com/cpp-driver/ubuntu/18.04/cassandra/v2.16.0/cassandra-cpp-driver-dbg_2.16.0-1_amd64.deb
+      - run: wget http://downloads.datastax.com/cpp-driver/ubuntu/18.04/cassandra/v2.16.0/cassandra-cpp-driver-dev_2.16.0-1_amd64.deb
+      - run: wget http://downloads.datastax.com/cpp-driver/ubuntu/18.04/cassandra/v2.16.0/cassandra-cpp-driver_2.16.0-1_amd64.deb
+      - run: wget http://downloads.datastax.com/cpp-driver/ubuntu/18.04/dependencies/libuv/v1.35.0/libuv1-dbg_1.35.0-1_amd64.deb
+      - run: wget http://downloads.datastax.com/cpp-driver/ubuntu/18.04/dependencies/libuv/v1.35.0/libuv1-dev_1.35.0-1_amd64.deb
+      - run: wget http://downloads.datastax.com/cpp-driver/ubuntu/18.04/dependencies/libuv/v1.35.0/libuv1_1.35.0-1_amd64.deb
+      - run: sudo dpkg -i libuv1-dbg_1.35.0-1_amd64.deb libuv1-dev_1.35.0-1_amd64.deb libuv1_1.35.0-1_amd64.deb cassandra-cpp-driver_2.16.0-1_amd64.deb cassandra-cpp-driver-dbg_2.16.0-1_amd64.deb cassandra-cpp-driver-dev_2.16.0-1_amd64.deb
+
+      # We now build all the code, then test it.
+      #
+      # Tests must be run on a single thread since they share keyspaces and tables.
+      - run: |
+          cargo build --all
+      - run: |
+          cargo test -- --test-threads 1
