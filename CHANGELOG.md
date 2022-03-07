@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 ### Changed
+* Upgraded to version 2.16.0 of the C++ driver (was previously 2.10.0) to provide
+API for using secure connection bundles. See that project's 
+[CHANGELOG](https://github.com/datastax/cpp-driver/blob/master/CHANGELOG.md) for more details.
+
 * Move GitHub build to GitHub Actions (was previously Travis).
 ### Fixed
 
