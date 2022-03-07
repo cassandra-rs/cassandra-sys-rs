@@ -13,28 +13,22 @@ use std::mem;
 use cassandra_cpp_sys::*;
 
 const NUM_CONCURRENT_REQUESTS: usize = 1000;
-#[derive(Clone)]
-struct Basic {
-    bln: u32,
-    flt: f32,
-    dbl: f64,
-    i32: i32,
-    i64: i64,
-}
 
 fn insert_into_paging(session: &mut CassSession, uuid_gen: &mut CassUuidGen) {
     unsafe {
-        let query = "INSERT INTO paging (key, value) VALUES (?, ?);";
+        let query = CString::new("INSERT INTO paging (key, value) VALUES (?, ?);").unwrap();
         let mut futures = Vec::with_capacity(NUM_CONCURRENT_REQUESTS);
 
         for i in 0..NUM_CONCURRENT_REQUESTS {
-            let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
-            let mut key = mem::zeroed();
+            let statement = cass_statement_new(query.as_ptr(), 2);
 
+            let mut key = mem::zeroed();
             cass_uuid_gen_time(uuid_gen, &mut key);
 
+            let i = CString::new(i.to_string()).unwrap();
+
             cass_statement_bind_uuid(statement, 0, key);
-            cass_statement_bind_string(statement, 1, CString::new(i.to_string()).unwrap().as_ptr());
+            cass_statement_bind_string(statement, 1, i.as_ptr());
 
             futures.push(&mut *cass_session_execute(session, statement));
 
@@ -55,8 +49,8 @@ fn insert_into_paging(session: &mut CassSession, uuid_gen: &mut CassUuidGen) {
 fn select_from_paging(session: &mut CassSession) {
     unsafe {
         let mut has_more_pages = true;
-        let query = "SELECT * FROM paging";
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
+        let query = CString::new("SELECT * FROM paging").unwrap();
+        let statement = cass_statement_new(query.as_ptr(), 0);
 
         cass_statement_set_paging_size(statement, 100);
 

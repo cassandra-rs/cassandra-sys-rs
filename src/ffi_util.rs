@@ -12,9 +12,9 @@ pub unsafe fn raw2utf8(
     Ok(str::from_utf8(slice)?.to_owned())
 }
 
-impl Into<bool> for cass_bool_t {
-    fn into(self) -> bool {
-        match self {
+impl From<cass_bool_t> for bool {
+    fn from(b: cass_bool_t) -> Self {
+        match b {
             cass_bool_t::cass_true => true,
             cass_bool_t::cass_false => false,
         }

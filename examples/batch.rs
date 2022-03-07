@@ -15,9 +15,9 @@ struct Pair {
 
 fn prepare_insert_into_batch<'a>(session: &mut CassSession) -> Result<&'a CassPrepared, CassError> {
     unsafe {
-        let query = "INSERT INTO examples.pairs (key, value) VALUES (?, ?)";
+        let query = CString::new("INSERT INTO examples.pairs (key, value) VALUES (?, ?)").unwrap();
 
-        let future = &mut *cass_session_prepare(session, CString::new(query).unwrap().as_ptr());
+        let future = &mut *cass_session_prepare(session, query.as_ptr());
         cass_future_wait(future);
         let rc = cass_future_error_code(future);
         let result = match rc {
@@ -45,27 +45,32 @@ fn insert_into_batch_with_prepared(
 
         for pair in pairs {
             let statement = cass_prepared_bind(prepared);
-            cass_statement_bind_string(statement, 0, CString::new(pair.key).unwrap().as_ptr());
-            cass_statement_bind_string(statement, 1, CString::new(pair.value).unwrap().as_ptr());
+            let key = CString::new(pair.key).unwrap();
+            let value = CString::new(pair.value).unwrap();
+
+            cass_statement_bind_string(statement, 0, key.as_ptr());
+            cass_statement_bind_string(statement, 1, value.as_ptr());
             cass_batch_add_statement(batch, statement);
             cass_statement_free(statement);
         }
 
-        let statement1 = "INSERT INTO examples.pairs (key, value) VALUES ('c', '3')";
-        let statement1 = cass_statement_new(CString::new(statement1).unwrap().as_ptr(), 0);
+        let statement1 =
+            CString::new("INSERT INTO examples.pairs (key, value) VALUES ('c', '3')").unwrap();
+        let statement1 = cass_statement_new(statement1.as_ptr(), 0);
 
         cass_batch_add_statement(batch, statement1);
         cass_statement_free(statement1);
 
-        let statement2 = "INSERT INTO examples.pairs (key, value) VALUES (?, ?)";
+        let statement2 =
+            CString::new("INSERT INTO examples.pairs (key, value) VALUES (?, ?)").unwrap();
 
-        let statement2 = cass_statement_new(CString::new(statement2).unwrap().as_ptr(), 2);
+        let statement2 = cass_statement_new(statement2.as_ptr(), 2);
 
-        let key = "d";
-        let value = "4";
+        let key = CString::new("d").unwrap();
+        let value = CString::new("4").unwrap();
 
-        cass_statement_bind_string(statement2, 0, CString::new(key).unwrap().as_ptr());
-        cass_statement_bind_string(statement2, 1, CString::new(value).unwrap().as_ptr());
+        cass_statement_bind_string(statement2, 0, key.as_ptr());
+        cass_statement_bind_string(statement2, 1, value.as_ptr());
 
         cass_batch_add_statement(batch, statement2);
         cass_statement_free(statement2);
@@ -108,7 +113,7 @@ pub fn main() {
             },
         ];
 
-        connect_session(session, &cluster).unwrap();
+        connect_session(session, cluster).unwrap();
 
         execute_query(session,
                       "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { \'class\': \'SimpleStrategy\', \

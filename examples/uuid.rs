@@ -23,14 +23,16 @@ fn insert_into_log(
     entry: &str,
 ) -> Result<(), CassError> {
     unsafe {
-        let query = "INSERT INTO examples.log (key, time, entry) VALUES (?, ?, ?);";
+        let query =
+            CString::new("INSERT INTO examples.log (key, time, entry) VALUES (?, ?, ?);").unwrap();
 
-        let statement: *mut CassStatement =
-            cass_statement_new(CString::new(query).unwrap().as_ptr(), 3);
+        let statement: *mut CassStatement = cass_statement_new(query.as_ptr(), 3);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let key = CString::new(key).unwrap();
+        let entry = CString::new(entry).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
         cass_statement_bind_uuid(statement, 1, time);
-        cass_statement_bind_string(statement, 2, CString::new(entry).unwrap().as_ptr());
+        cass_statement_bind_string(statement, 2, entry.as_ptr());
 
         let future = cass_session_execute(session, statement);
 
@@ -55,11 +57,12 @@ fn insert_into_log(
 
 fn select_from_log(session: &mut CassSession, key: &str) -> Result<(), CassError> {
     unsafe {
-        let query = "SELECT * FROM examples.log WHERE key = ?";
+        let query = CString::new("SELECT * FROM examples.log WHERE key = ?").unwrap();
 
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
+        let statement = cass_statement_new(query.as_ptr(), 1);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -71,17 +74,14 @@ fn select_from_log(session: &mut CassSession, key: &str) -> Result<(), CassError
 
                 while cass_iterator_next(iterator) == cass_true {
                     let row = cass_iterator_get_row(iterator);
+                    let mut key = mem::zeroed();
                     let mut key_length = mem::zeroed();
                     let mut time: CassUuid = mem::zeroed();
                     let mut entry = mem::zeroed();
                     let mut entry_length = mem::zeroed();
                     let mut time_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
 
-                    cass_value_get_string(
-                        cass_row_get_column(row, 0),
-                        &mut CString::new(key).unwrap().as_ptr(),
-                        &mut key_length,
-                    );
+                    cass_value_get_string(cass_row_get_column(row, 0), &mut key, &mut key_length);
                     cass_value_get_uuid(cass_row_get_column(row, 1), &mut time);
                     cass_value_get_string(
                         cass_row_get_column(row, 2),

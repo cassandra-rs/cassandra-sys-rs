@@ -12,10 +12,10 @@ use std::mem;
 
 fn load_trusted_cert_file(file: &str, ssl: &mut CassSsl) -> IoResult<()> {
     unsafe {
-        let mut file = try!(File::open(file));
-        let cert_size = try!(file.metadata()).len() as usize;
+        let mut file = File::open(file)?;
+        let cert_size = file.metadata()?.len() as usize;
         let mut cert: Vec<u8> = Vec::with_capacity(cert_size);
-        let byte_len = try!(file.read_to_end(&mut cert));
+        let byte_len = file.read_to_end(&mut cert)?;
         match byte_len == cert_size {
             true => {
                 let rc = cass_ssl_add_trusted_cert_n(ssl, cert.as_ptr() as *const i8, cert_size);
@@ -41,7 +41,8 @@ fn main() {
         let session = cass_session_new();
         let ssl = cass_ssl_new();
 
-        cass_cluster_set_contact_points(cluster, CString::new("127.0.0.1").unwrap().as_ptr());
+        let contact_point = CString::new("127.0.0.1").unwrap();
+        cass_cluster_set_contact_points(cluster, contact_point.as_ptr());
 
         // Only verify the certification and not the identity
         cass_ssl_set_verify_flags(ssl, CASS_SSL_VERIFY_PEER_CERT as i32);
@@ -64,8 +65,9 @@ fn main() {
         match cass_future_error_code(connect_future) {
             CASS_OK => {
                 // Build statement and execute query
-                let query = "SELECT keyspace_name FROM system.schema_keyspaces;";
-                let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
+                let query =
+                    CString::new("SELECT keyspace_name FROM system.schema_keyspaces;").unwrap();
+                let statement = cass_statement_new(query.as_ptr(), 0);
 
                 let result_future = cass_session_execute(session, statement);
 
@@ -75,12 +77,11 @@ fn main() {
                         let result = cass_future_get_result(result_future);
                         let rows = cass_iterator_from_result(result);
 
+                        let keyspace_name_cstring = CString::new("keyspace_name").unwrap();
                         while cass_iterator_next(rows) == cass_true {
                             let row = cass_iterator_get_row(rows);
-                            let value = cass_row_get_column_by_name(
-                                row,
-                                CString::new("keyspace_name").unwrap().as_ptr(),
-                            );
+                            let value =
+                                cass_row_get_column_by_name(row, keyspace_name_cstring.as_ptr());
 
                             let mut keyspace_name = mem::zeroed();
                             let mut keyspace_name_length = mem::zeroed();
@@ -98,7 +99,7 @@ fn main() {
                         cass_result_free(result);
                         cass_iterator_free(rows);
                     }
-                    rc => {
+                    _rc => {
                         // Handle error
                         let mut message = mem::zeroed();
                         let mut message_length = mem::zeroed();

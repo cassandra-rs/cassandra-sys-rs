@@ -73,24 +73,23 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Res
         .unwrap();
         let key = CString::new(key).unwrap();
         let statement = &mut *cass_statement_new(query.as_ptr(), 6);
-        let k = CString::new("k").unwrap().as_ptr();
-        let b = CString::new("b").unwrap().as_ptr();
-        let f = CString::new("f").unwrap().as_ptr();
-        let d = CString::new("d").unwrap().as_ptr();
-        let i32 = CString::new("i32").unwrap().as_ptr();
-        let i64 = CString::new("i64").unwrap().as_ptr();
-        cass_statement_bind_string_by_name(statement, k, key.as_ptr());
-        cass_statement_bind_bool_by_name(statement, b, basic.bln);
-        cass_statement_bind_float_by_name(statement, f, basic.flt);
-        cass_statement_bind_double_by_name(statement, d, basic.dbl);
-        cass_statement_bind_int32_by_name(statement, i32, basic.i32);
-        cass_statement_bind_int64_by_name(statement, i64, basic.i64);
+        let k = CString::new("k").unwrap();
+        let b = CString::new("b").unwrap();
+        let f = CString::new("f").unwrap();
+        let d = CString::new("d").unwrap();
+        let i32 = CString::new("i32").unwrap();
+        let i64 = CString::new("i64").unwrap();
+        cass_statement_bind_string_by_name(statement, k.as_ptr(), key.as_ptr());
+        cass_statement_bind_bool_by_name(statement, b.as_ptr(), basic.bln);
+        cass_statement_bind_float_by_name(statement, f.as_ptr(), basic.flt);
+        cass_statement_bind_double_by_name(statement, d.as_ptr(), basic.dbl);
+        cass_statement_bind_int32_by_name(statement, i32.as_ptr(), basic.i32);
+        cass_statement_bind_int64_by_name(statement, i64.as_ptr(), basic.i64);
 
         let future = &mut *cass_session_execute(session, statement);
 
         cass_future_wait(future);
 
-        let rc = cass_future_error_code(future);
         let result = match cass_future_error_code(future) {
             CASS_OK => Ok(()),
             rc => {
@@ -102,7 +101,7 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Res
         cass_future_free(future);
         cass_statement_free(statement);
 
-        Ok(())
+        result
     }
 }
 
@@ -114,11 +113,8 @@ fn select_from_basic(session: &mut CassSession, key: &str) -> Result<Basic, Cass
 
         let statement = &mut *cass_statement_new(query.as_ptr(), 1);
 
-        cass_statement_bind_string_by_name(
-            statement,
-            CString::new("key").unwrap().as_ptr(),
-            key.as_ptr(),
-        );
+        let key_name = CString::new("key").unwrap();
+        cass_statement_bind_string_by_name(statement, key_name.as_ptr(), key.as_ptr());
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -133,26 +129,36 @@ fn select_from_basic(session: &mut CassSession, key: &str) -> Result<Basic, Cass
                 if cass_iterator_next(iterator) == cass_true {
                     let row = &*cass_iterator_get_row(iterator);
 
+                    let bool_name = CString::new("BLN").unwrap();
                     cass_value_get_bool(
-                        cass_row_get_column_by_name(row, CString::new("BLN").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, bool_name.as_ptr()),
                         &mut output.bln,
                     );
+
+                    let double_name = CString::new("dbl").unwrap();
                     cass_value_get_double(
-                        cass_row_get_column_by_name(row, CString::new("dbl").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, double_name.as_ptr()),
                         &mut output.dbl,
                     );
+
+                    let float_name = CString::new("flt").unwrap();
                     cass_value_get_float(
-                        cass_row_get_column_by_name(row, CString::new("flt").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, float_name.as_ptr()),
                         &mut output.flt,
                     );
+
+                    let i32_name = CString::new("\"i32\"").unwrap();
                     cass_value_get_int32(
-                        cass_row_get_column_by_name(row, CString::new("\"i32\"").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, i32_name.as_ptr()),
                         &mut output.i32,
                     );
+
+                    let i64_name = CString::new("i64").unwrap();
                     cass_value_get_int64(
-                        cass_row_get_column_by_name(row, CString::new("i64").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, i64_name.as_ptr()),
                         &mut output.i64,
                     );
+
                     cass_result_free(result);
                     cass_iterator_free(iterator);
                 }
@@ -179,9 +185,10 @@ fn main() {
             i64: 2,
         };
 
-        let result = match connect_session(session, cluster) {
+        match connect_session(session, cluster) {
             CASS_OK => {}
             rc => {
+                println!("Could not connect session: {:?}", rc);
                 cass_cluster_free(cluster);
                 cass_session_free(session);
             }
