@@ -16,14 +16,17 @@ fn insert_into_collections(
     items: Vec<&str>,
 ) -> Result<(), CassError> {
     unsafe {
-        let query = "INSERT INTO examples.collections (key, items) VALUES (?, ?);";
+        let query =
+            CString::new("INSERT INTO examples.collections (key, items) VALUES (?, ?);").unwrap();
 
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let statement = cass_statement_new(query.as_ptr(), 2);
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
 
         let collection = cass_collection_new(CASS_COLLECTION_TYPE_SET, 2);
         for item in items {
-            cass_collection_append_string(collection, CString::new(item).unwrap().as_ptr());
+            let item = CString::new(item).unwrap();
+            cass_collection_append_string(collection, item.as_ptr());
         }
         cass_statement_bind_collection(statement, 1, collection);
         cass_collection_free(collection);
@@ -47,10 +50,11 @@ fn insert_into_collections(
 
 fn select_from_collections(session: &mut CassSession, key: &str) -> Result<(), CassError> {
     unsafe {
-        let query = "SELECT items FROM examples.collections WHERE key = ?";
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
+        let query = CString::new("SELECT items FROM examples.collections WHERE key = ?").unwrap();
+        let statement = cass_statement_new(query.as_ptr(), 1);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);

@@ -59,7 +59,7 @@ unsafe fn print_schema_value(value: &CassValue) {
         CASS_VALUE_TYPE_UUID => {
             cass_value_get_uuid(value, &mut u);
             cass_uuid_string(u, &mut *us.as_mut_ptr());
-            println!("{}", "us - FIXME" /* us */);
+            println!("<us - FIXME>");
         }
 
         CASS_VALUE_TYPE_LIST => {
@@ -111,8 +111,9 @@ unsafe fn print_schema_map(value: &CassValue) {
 
 unsafe fn print_keyspace(session: &mut CassSession, keyspace: &str) {
     let schema_meta = cass_session_get_schema_meta(session);
-    let keyspace_meta =
-        cass_schema_meta_keyspace_by_name(schema_meta, CString::new(keyspace).unwrap().as_ptr());
+
+    let keyspace_cstring = CString::new(keyspace).unwrap();
+    let keyspace_meta = cass_schema_meta_keyspace_by_name(schema_meta, keyspace_cstring.as_ptr());
 
     if !keyspace_meta.is_null() {
         print_keyspace_meta(&*keyspace_meta, 0);
@@ -141,7 +142,7 @@ unsafe fn print_meta_field(iterator: *const CassIterator, indent: u32) {
     print_indent(indent);
     println!("{}: ", raw2utf8(name, name_length).unwrap());
     print_schema_value(&*value);
-    println!("");
+    println!();
 }
 
 unsafe fn print_keyspace_meta(meta: *const CassKeyspaceMeta, indent: u32) {
@@ -157,13 +158,13 @@ unsafe fn print_keyspace_meta(meta: *const CassKeyspaceMeta, indent: u32) {
     println!("Keyspace \"{}\":\n", raw2utf8(name, name_length).unwrap());
 
     print_meta_fields(cass_iterator_fields_from_keyspace_meta(meta), indent + 1);
-    println!("");
+    println!();
 
     let iterator = cass_iterator_tables_from_keyspace_meta(meta);
     while cass_iterator_next(iterator) == cass_true {
         print_table_meta(cass_iterator_get_table_meta(iterator), indent + 1);
     }
-    println!("");
+    println!();
 
     cass_iterator_free(iterator);
 }
@@ -177,13 +178,13 @@ unsafe fn print_table_meta(meta: *const CassTableMeta, indent: u32) {
     println!("Table \"{}\":", raw2utf8(name, name_length).unwrap());
 
     print_meta_fields(cass_iterator_fields_from_table_meta(meta), indent + 1);
-    println!("");
+    println!();
 
     let iterator = cass_iterator_columns_from_table_meta(meta);
     while cass_iterator_next(iterator) == cass_true {
         print_column_meta(cass_iterator_get_column_meta(iterator), indent + 1);
     }
-    println!("");
+    println!();
 
     cass_iterator_free(iterator);
 }
@@ -196,17 +197,18 @@ unsafe fn print_column_meta(meta: *const CassColumnMeta, indent: u32) {
     cass_column_meta_name(meta, &mut name, &mut name_length);
     println!("Column \"{}\":", raw2utf8(name, name_length).unwrap());
     print_meta_fields(cass_iterator_fields_from_column_meta(meta), indent + 1);
-    println!("");
+    println!();
 }
 
 unsafe fn print_table(session: &mut CassSession, keyspace: &str, table: &str) {
     let schema_meta = cass_session_get_schema_meta(session);
-    let keyspace_meta =
-        cass_schema_meta_keyspace_by_name(schema_meta, CString::new(keyspace).unwrap().as_ptr());
+
+    let keyspace_cstring = CString::new(keyspace).unwrap();
+    let keyspace_meta = cass_schema_meta_keyspace_by_name(schema_meta, keyspace_cstring.as_ptr());
 
     if !keyspace_meta.is_null() {
-        let table_meta =
-            cass_keyspace_meta_table_by_name(keyspace_meta, CString::new(table).unwrap().as_ptr());
+        let table_cstring = CString::new(table).unwrap();
+        let table_meta = cass_keyspace_meta_table_by_name(keyspace_meta, table_cstring.as_ptr());
         if !table_meta.is_null() {
             print_table_meta(&*table_meta, 0);
         } else {
@@ -225,7 +227,9 @@ pub fn main() {
     unsafe {
         let cluster = cass_cluster_new();
         let session = cass_session_new();
-        cass_cluster_set_contact_points(cluster, CString::new("127.0.0.1").unwrap().as_ptr());
+
+        let contact_point = CString::new("127.0.0.1").unwrap();
+        cass_cluster_set_contact_points(cluster, contact_point.as_ptr());
 
         let connect_future = cass_session_connect(session, cluster);
 

@@ -21,7 +21,8 @@ fn prepare_query<'a>(
     query: &str,
 ) -> Result<&'a CassPrepared, CassError> {
     unsafe {
-        let future = &mut *cass_session_prepare(session, CString::new(query).unwrap().as_ptr());
+        let query = CString::new(query).unwrap();
+        let future = &mut *cass_session_prepare(session, query.as_ptr());
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -47,36 +48,25 @@ fn insert_into_basic(
 ) -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
-        cass_statement_bind_string_by_name(
-            statement,
-            CString::new("key").unwrap().as_ptr(),
-            CString::new(key).unwrap().as_ptr(),
-        );
-        cass_statement_bind_bool_by_name(
-            statement,
-            CString::new("bln").unwrap().as_ptr(),
-            basic.bln,
-        );
-        cass_statement_bind_float_by_name(
-            statement,
-            CString::new("flt").unwrap().as_ptr(),
-            basic.flt,
-        );
-        cass_statement_bind_double_by_name(
-            statement,
-            CString::new("dbl").unwrap().as_ptr(),
-            basic.dbl,
-        );
-        cass_statement_bind_int32_by_name(
-            statement,
-            CString::new("i32").unwrap().as_ptr(),
-            basic.i32,
-        );
-        cass_statement_bind_int64_by_name(
-            statement,
-            CString::new("i64").unwrap().as_ptr(),
-            basic.i64,
-        );
+
+        let string_name = CString::new("key").unwrap();
+        let string_value = CString::new(key).unwrap();
+        cass_statement_bind_string_by_name(statement, string_name.as_ptr(), string_value.as_ptr());
+
+        let bool_name = CString::new("bln").unwrap();
+        cass_statement_bind_bool_by_name(statement, bool_name.as_ptr(), basic.bln);
+
+        let float_name = CString::new("flt").unwrap();
+        cass_statement_bind_float_by_name(statement, float_name.as_ptr(), basic.flt);
+
+        let double_name = CString::new("double").unwrap();
+        cass_statement_bind_double_by_name(statement, double_name.as_ptr(), basic.dbl);
+
+        let i32_name = CString::new("i32").unwrap();
+        cass_statement_bind_int32_by_name(statement, i32_name.as_ptr(), basic.i32);
+
+        let i64_name = CString::new("i64").unwrap();
+        cass_statement_bind_int64_by_name(statement, i64_name.as_ptr(), basic.i64);
 
         let future = &mut *cass_session_execute(session, statement);
 
@@ -100,7 +90,7 @@ fn insert_into_basic(
     }
 }
 
-fn select_from_basic<'a>(
+fn select_from_basic(
     session: &mut CassSession,
     prepared: &CassPrepared,
     key: &str,
@@ -109,11 +99,10 @@ fn select_from_basic<'a>(
     unsafe {
         let statement = cass_prepared_bind(prepared);
         cass_prepared_free(prepared);
-        cass_statement_bind_string_by_name(
-            statement,
-            CString::new("key").unwrap().as_ptr(),
-            CString::new(key).unwrap().as_ptr(),
-        );
+
+        let key_name = CString::new("key").unwrap();
+        let key_value = CString::new(key).unwrap();
+        cass_statement_bind_string_by_name(statement, key_name.as_ptr(), key_value.as_ptr());
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -129,24 +118,33 @@ fn select_from_basic<'a>(
                 if cass_iterator_next(iterator) == cass_true {
                     let row = cass_iterator_get_row(iterator);
 
+                    let bool_name = CString::new("bln").unwrap();
                     cass_value_get_bool(
-                        cass_row_get_column_by_name(row, CString::new("bln").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, bool_name.as_ptr()),
                         &mut output.bln,
                     );
+
+                    let double_name = CString::new("dbl").unwrap();
                     cass_value_get_double(
-                        cass_row_get_column_by_name(row, CString::new("dbl").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, double_name.as_ptr()),
                         &mut output.dbl,
                     );
+
+                    let float_name = CString::new("flt").unwrap();
                     cass_value_get_float(
-                        cass_row_get_column_by_name(row, CString::new("flt").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, float_name.as_ptr()),
                         &mut output.flt,
                     );
+
+                    let i32_name = CString::new("i32").unwrap();
                     cass_value_get_int32(
-                        cass_row_get_column_by_name(row, CString::new("i32").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, i32_name.as_ptr()),
                         &mut output.i32,
                     );
+
+                    let i64_name = CString::new("i64").unwrap();
                     cass_value_get_int64(
-                        cass_row_get_column_by_name(row, CString::new("i64").unwrap().as_ptr()),
+                        cass_row_get_column_by_name(row, i64_name.as_ptr()),
                         &mut output.i64,
                     );
                 }
@@ -198,12 +196,12 @@ fn main() {
                                double,i32 int, i64 bigint, PRIMARY KEY (key));")
                     .unwrap();
 
-                match prepare_query(session, &insert_query) {
+                match prepare_query(session, insert_query) {
                     Ok(insert_prepared) => {
                         insert_into_basic(session, insert_prepared, "prepared_test", &input)
                             .unwrap();
                         cass_prepared_free(insert_prepared);
-                        match prepare_query(session, &select_query) {
+                        match prepare_query(session, select_query) {
                             Ok(select_prepared) => {
                                 let output = select_from_basic(
                                     session,
@@ -213,7 +211,7 @@ fn main() {
                                 )
                                 .unwrap();
 
-                                assert!(input.bln.clone() == output.bln);
+                                assert!(input.bln == output.bln);
                                 assert!(input.flt == output.flt);
                                 assert!(input.dbl == output.dbl);
                                 assert!(input.i32 == output.i32);

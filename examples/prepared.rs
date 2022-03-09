@@ -21,11 +21,14 @@ struct Basic {
 
 fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Result<(), CassError> {
     unsafe {
-        let query =
-            "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);";
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 6);
+        let query = CString::new(
+            "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, ?);",
+        )
+        .unwrap();
+        let statement = cass_statement_new(query.as_ptr(), 6);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
         cass_statement_bind_bool(statement, 1, basic.bln);
         cass_statement_bind_float(statement, 2, basic.flt);
         cass_statement_bind_double(statement, 3, basic.dbl);
@@ -51,9 +54,9 @@ fn insert_into_basic(session: &mut CassSession, key: &str, basic: &Basic) -> Res
 
 fn prepare_select_from_basic(session: &mut CassSession) -> Result<&CassPrepared, CassError> {
     unsafe {
-        let query = "SELECT * FROM examples.basic WHERE key = ?";
+        let query = CString::new("SELECT * FROM examples.basic WHERE key = ?").unwrap();
 
-        let future = &mut *cass_session_prepare(session, CString::new(query).unwrap().as_ptr());
+        let future = &mut *cass_session_prepare(session, query.as_ptr());
         cass_future_wait(future);
 
         let result = match cass_future_error_code(future) {
@@ -79,7 +82,9 @@ fn select_from_basic(
 ) -> Result<(), CassError> {
     unsafe {
         let statement = cass_prepared_bind(prepared);
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -144,7 +149,7 @@ fn main() {
         insert_into_basic(&mut *session, "prepared_test", &input).unwrap();
 
         let prepared = prepare_select_from_basic(&mut *session).unwrap();
-        select_from_basic(&mut *session, &prepared, "prepared_test", &mut output).unwrap();
+        select_from_basic(&mut *session, prepared, "prepared_test", &mut output).unwrap();
 
         assert!(input.bln == output.bln);
         assert!(input.flt == output.flt);

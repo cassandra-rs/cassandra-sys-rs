@@ -25,13 +25,15 @@ fn insert_into_basic(
 ) -> Result<(), CassError> {
     unsafe {
         let query = CString::new(
-            "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) VALUES (?, ?, ?, ?, ?, \
-                                  ?);",
-        );
-        let statement = cass_statement_new(query.unwrap().as_ptr(), 6);
+            "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) \
+                                 VALUES (?, ?, ?, ?, ?, ?);",
+        )
+        .unwrap();
+        let statement = cass_statement_new(query.as_ptr(), 6);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
-        cass_statement_bind_bool(statement, 1, basic.bln.into());
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
+        cass_statement_bind_bool(statement, 1, basic.bln);
         cass_statement_bind_float(statement, 2, basic.flt);
         cass_statement_bind_double(statement, 3, basic.dbl);
         cass_statement_bind_int32(statement, 4, basic.i32);
@@ -60,10 +62,11 @@ fn select_from_basic(
     basic: &mut Basic,
 ) -> Result<(), CassError> {
     unsafe {
-        let query = "SELECT * FROM examples.basic WHERE key = ?";
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
+        let query = CString::new("SELECT * FROM examples.basic WHERE key = ?").unwrap();
+        let statement = cass_statement_new(query.as_ptr(), 1);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
 
         let future = cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -76,11 +79,11 @@ fn select_from_basic(
                     cass_true => {
                         let row = cass_iterator_get_row(iterator);
 
-                        let ref mut b_bln = basic.bln;
-                        let ref mut b_dbl = basic.dbl;
-                        let ref mut b_flt = basic.flt;
-                        let ref mut b_i32 = basic.i32;
-                        let ref mut b_i64 = basic.i64;
+                        let b_bln = &mut basic.bln;
+                        let b_dbl = &mut basic.dbl;
+                        let b_flt = &mut basic.flt;
+                        let b_i32 = &mut basic.i32;
+                        let b_i64 = &mut basic.i64;
 
                         cass_value_get_bool(cass_row_get_column(row, 1), b_bln);
                         cass_value_get_double(cass_row_get_column(row, 2), b_dbl);

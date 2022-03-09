@@ -21,14 +21,16 @@ fn insert_into_maps(
     items: Vec<Pair>,
 ) -> Result<(), CassError> {
     unsafe {
-        let query = "INSERT INTO examples.maps (key, items) VALUES (?, ?);";
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
+        let query = CString::new("INSERT INTO examples.maps (key, items) VALUES (?, ?);").unwrap();
+        let statement = cass_statement_new(query.as_ptr(), 2);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
 
         let collection = cass_collection_new(CASS_COLLECTION_TYPE_MAP, 5);
         for item in items {
-            cass_collection_append_string(collection, CString::new(item.key).unwrap().as_ptr());
+            let item_key = CString::new(item.key).unwrap();
+            cass_collection_append_string(collection, item_key.as_ptr());
             cass_collection_append_int32(collection, item.value);
         }
         cass_statement_bind_collection(statement, 1, collection);
@@ -45,19 +47,19 @@ fn insert_into_maps(
             }
         };
 
-        //        cass_future_free(future);
-        //        cass_statement_free(statement);
-
-        Ok(())
+        cass_future_free(future);
+        cass_statement_free(statement);
+        result
     }
 }
 
 fn select_from_maps(session: &mut CassSession, key: &str) -> Result<(), CassError> {
     unsafe {
-        let query = "SELECT items FROM examples.maps WHERE key = ?";
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 1);
+        let query = CString::new("SELECT items FROM examples.maps WHERE key = ?").unwrap();
+        let statement = cass_statement_new(query.as_ptr(), 1);
 
-        cass_statement_bind_string(statement, 0, CString::new(key).unwrap().as_ptr());
+        let key = CString::new(key).unwrap();
+        cass_statement_bind_string(statement, 0, key.as_ptr());
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -125,7 +127,7 @@ fn main() {
         let cluster = create_cluster();
         let session = &mut *cass_session_new();
 
-        connect_session(session, &cluster).unwrap();
+        connect_session(session, cluster).unwrap();
 
         execute_query(session,
                       "CREATE KEYSPACE IF NOT EXISTS examples WITH replication = { 'class': 'SimpleStrategy', \
@@ -137,7 +139,7 @@ fn main() {
             .unwrap();
 
         insert_into_maps(session, "test", items).unwrap();
-        //        select_from_maps(session, "test").unwrap();
+        select_from_maps(session, "test").unwrap();
 
         let close_future = cass_session_close(session);
         cass_future_wait(close_future);

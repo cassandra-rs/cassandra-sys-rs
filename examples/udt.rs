@@ -19,27 +19,22 @@ fn insert_into_udt(
     unsafe {
         let mut id_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
 
-        let query = "INSERT INTO examples.udt (id, address) VALUES (?, ?)";
+        let query = CString::new("INSERT INTO examples.udt (id, address) VALUES (?, ?)").unwrap();
 
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 2);
+        let statement = cass_statement_new(query.as_ptr(), 2);
         let mut id = mem::zeroed();
         cass_uuid_gen_time(uuid_gen, &mut id);
         cass_uuid_string(id, id_str[..].as_mut_ptr());
 
-        let keyspace_meta = cass_schema_meta_keyspace_by_name(
-            schema_meta,
-            CString::new("examples").unwrap().as_ptr(),
-        );
+        let keyspace = CString::new("examples").unwrap();
+        let keyspace_meta = cass_schema_meta_keyspace_by_name(schema_meta, keyspace.as_ptr());
 
-        let udt_address = cass_keyspace_meta_user_type_by_name(
-            keyspace_meta,
-            CString::new("address").unwrap().as_ptr(),
-        );
+        let address_name = CString::new("address").unwrap();
+        let udt_address =
+            cass_keyspace_meta_user_type_by_name(keyspace_meta, address_name.as_ptr());
 
-        let udt_phone = cass_keyspace_meta_user_type_by_name(
-            keyspace_meta,
-            CString::new("phone_numbers").unwrap().as_ptr(),
-        );
+        let phone_name = CString::new("phone_numbers").unwrap();
+        let udt_phone = cass_keyspace_meta_user_type_by_name(keyspace_meta, phone_name.as_ptr());
 
         match (udt_address.is_null(), udt_phone.is_null()) {
             (_, true) => panic!("phone is null"),
@@ -50,40 +45,40 @@ fn insert_into_udt(
 
                 for i in 0..2 {
                     let phone_numbers = cass_user_type_new_from_data_type(udt_phone);
-                    cass_user_type_set_int32_by_name(
-                        phone_numbers,
-                        CString::new("phone1").unwrap().as_ptr(),
-                        i + 1,
-                    );
-                    cass_user_type_set_int32_by_name(
-                        phone_numbers,
-                        CString::new("phone2").unwrap().as_ptr(),
-                        i + 2,
-                    );
+
+                    let phone1 = CString::new("phone1").unwrap();
+                    cass_user_type_set_int32_by_name(phone_numbers, phone1.as_ptr(), i + 1);
+
+                    let phone2 = CString::new("phone2").unwrap();
+                    cass_user_type_set_int32_by_name(phone_numbers, phone2.as_ptr(), i + 2);
+
                     cass_collection_append_user_type(phone, phone_numbers);
                     cass_user_type_free(phone_numbers);
                 }
 
+                let street_name = CString::new("street").unwrap();
                 cass_user_type_set_string_by_name(
                     address,
-                    CString::new("street").unwrap().as_ptr(),
+                    street_name.as_ptr(),
                     id_str[..].as_mut_ptr(),
                 );
+
+                let city_name = CString::new("city").unwrap();
                 cass_user_type_set_string_by_name(
                     address,
-                    CString::new("city").unwrap().as_ptr(),
+                    city_name.as_ptr(),
                     id_str[..].as_mut_ptr(),
                 );
+
+                let zip_name = CString::new("zip").unwrap();
                 cass_user_type_set_int32_by_name(
                     address,
-                    CString::new("zip").unwrap().as_ptr(),
+                    zip_name.as_ptr(),
                     id.time_and_version as i32,
                 );
-                cass_user_type_set_collection_by_name(
-                    address,
-                    CString::new("phone").unwrap().as_ptr(),
-                    phone,
-                );
+
+                let phone_name = CString::new("phone").unwrap();
+                cass_user_type_set_collection_by_name(address, phone_name.as_ptr(), phone);
 
                 cass_statement_bind_uuid(statement, 0, id);
                 cass_statement_bind_user_type(statement, 1, address);
@@ -110,9 +105,9 @@ fn insert_into_udt(
 
 fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
     unsafe {
-        let query = "SELECT * FROM examples.udt";
+        let query = CString::new("SELECT * FROM examples.udt").unwrap();
 
-        let statement = cass_statement_new(CString::new(query).unwrap().as_ptr(), 0);
+        let statement = cass_statement_new(query.as_ptr(), 0);
 
         let future = &mut *cass_session_execute(session, statement);
         cass_future_wait(future);
@@ -125,10 +120,12 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                 while cass_iterator_next(rows) == cass_true {
                     let mut id_str: [i8; CASS_UUID_STRING_LENGTH] = [0; CASS_UUID_STRING_LENGTH];
                     let row = cass_iterator_get_row(rows);
-                    let id_value =
-                        cass_row_get_column_by_name(row, CString::new("id").unwrap().as_ptr());
-                    let address_value =
-                        cass_row_get_column_by_name(row, CString::new("address").unwrap().as_ptr());
+
+                    let id_name = CString::new("id").unwrap();
+                    let id_value = cass_row_get_column_by_name(row, id_name.as_ptr());
+
+                    let address_name = CString::new("address").unwrap();
+                    let address_value = cass_row_get_column_by_name(row, address_name.as_ptr());
                     let fields = cass_iterator_fields_from_user_type(address_value);
                     let mut id = mem::zeroed();
                     cass_value_get_uuid(id_value, &mut id);
@@ -185,7 +182,7 @@ fn select_from_udt(session: &mut CassSession) -> Result<(), CassError> {
                             cass_true => print!("<null> "),
                         }
 
-                        println!("");
+                        println!();
                     }
 
                     cass_result_free(result);
