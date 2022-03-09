@@ -4,6 +4,12 @@ use std::str;
 
 use std::str::Utf8Error;
 
+/// Convert C pointer-and-length to Rust `String`. Fail if it is not valid UTF-8.
+///
+/// # Safety
+///
+/// Safety concerns are identical to [`std::slice::from_raw_parts`];
+/// please see those docs for details.
 pub unsafe fn raw2utf8(
     data: *const ::std::os::raw::c_char,
     length: usize,

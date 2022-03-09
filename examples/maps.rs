@@ -47,9 +47,8 @@ fn insert_into_maps(
             }
         };
 
-        //        cass_future_free(future);
-        //        cass_statement_free(statement);
-
+        cass_future_free(future);
+        cass_statement_free(statement);
         result
     }
 }

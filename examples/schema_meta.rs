@@ -59,7 +59,7 @@ unsafe fn print_schema_value(value: &CassValue) {
         CASS_VALUE_TYPE_UUID => {
             cass_value_get_uuid(value, &mut u);
             cass_uuid_string(u, &mut *us.as_mut_ptr());
-            println!("{}", "us - FIXME" /* us */);
+            println!("<us - FIXME>");
         }
 
         CASS_VALUE_TYPE_LIST => {
