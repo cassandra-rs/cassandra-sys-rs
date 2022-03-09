@@ -43,10 +43,11 @@ jobs:
       - run: wget http://downloads.datastax.com/cpp-driver/ubuntu/18.04/dependencies/libuv/v1.35.0/libuv1_1.35.0-1_amd64.deb
       - run: sudo dpkg -i libuv1-dbg_1.35.0-1_amd64.deb libuv1-dev_1.35.0-1_amd64.deb libuv1_1.35.0-1_amd64.deb cassandra-cpp-driver_2.16.0-1_amd64.deb cassandra-cpp-driver-dbg_2.16.0-1_amd64.deb cassandra-cpp-driver-dev_2.16.0-1_amd64.deb
 
+      # Check we're clean and tidy. Allow floating-point comparisons because
+      # we're testing round-tripping of values, which is safe.
+      - run: cargo clippy --all-targets -- -A clippy::float_cmp
+      - run: cargo fmt --all --check
       # We now build all the code, then test it.
-      #
+      - run: cargo build --all
       # Tests must be run on a single thread since they share keyspaces and tables.
-      - run: |
-          cargo build --all
-      - run: |
-          cargo test -- --test-threads 1
+      - run: cargo test -- --test-threads 1
