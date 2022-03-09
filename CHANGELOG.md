@@ -8,13 +8,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 ### Changed
-* Upgraded to version 2.16.0 of the C++ driver (was previously 2.10.0) to provide
-API for using secure connection bundles. See that project's 
-[CHANGELOG](https://github.com/datastax/cpp-driver/blob/master/CHANGELOG.md) for more details.
-
-* Move GitHub build to GitHub Actions (was previously Travis).
 ### Fixed
 
+## [1.0.0] - 2022-03-09
+### Changed
+* Bump version to 1.0 (belatedly!) to reflect the fact that this has been supported and stable since 2017.
+
+* Upgraded to version 2.16.0 of the C++ driver (was previously 2.10.0) to provide
+API for using secure connection bundles. See that project's
+[CHANGELOG](https://github.com/datastax/cpp-driver/blob/master/CHANGELOG.md) for more details.
+This is the minimum supported version of the C++ driver.
+
+* Move GitHub build to GitHub Actions (was previously Travis).
 ## [0.12.3] - 2021-04-30
 ### Fixed
 * Remove assumption that char is signed. Allows building on M1.
