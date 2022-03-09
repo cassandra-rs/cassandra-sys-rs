@@ -26,7 +26,7 @@ fn insert_into_basic(
     unsafe {
         let query = CString::new(
             "INSERT INTO examples.basic (key, bln, flt, dbl, i32, i64) \
-                                 VALUES (?, ?, ?, ?, ?, ?);"
+                                 VALUES (?, ?, ?, ?, ?, ?);",
         )
         .unwrap();
         let statement = cass_statement_new(query.as_ptr(), 6);
