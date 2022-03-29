@@ -6,9 +6,10 @@ This file's format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [1.1.0]
 ### Added
-### Changed
-### Fixed
+* Added feature flag `early_access_min_tls_version`, allowing use of the `cass_ssl_set_min_protocol_version` method yet to be released in the driver.
 
 ## [1.0.0] - 2022-03-09
 ### Changed
@@ -75,7 +76,9 @@ released versions.
 ### Changed
 - (Pre-fork version.)
 
-[Unreleased]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.3...HEAD
+[Unreleased]: https://github.com/Metaswitch/cassandra-sys-rs/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.3...1.0.0
 [0.12.3]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.2...0.12.3
 [0.12.2]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.1...0.12.2
 [0.12.1]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.0...0.12.1

@@ -20,3 +20,8 @@ pub use cassandra::*;
 
 mod cassandra;
 pub mod ffi_util;
+
+#[cfg(feature = "early_access_min_tls_version")]
+pub mod min_tls_version;
+#[cfg(feature = "early_access_min_tls_version")]
+pub use min_tls_version::{CassSslTlsVersion::*, *};
