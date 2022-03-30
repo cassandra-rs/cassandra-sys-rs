@@ -26,12 +26,7 @@ to do so. Pre-built packages are available for most platforms.
 
 Make sure that the driver (specifically `libcassandra_static.a` and `libcassandra.so`) are in your `/usr/local/lib64/` directory.
 
-You can use this crate from cargo with
-
-```toml
-    [dependencies]
-    cassandra-cpp-sys = "1.0"
-```
+You can use this crate from cargo as `cassandra-cpp-sys`.
 
 ## License
 
