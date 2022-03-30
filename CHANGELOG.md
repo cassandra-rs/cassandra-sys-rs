@@ -6,8 +6,13 @@ This file's format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
 
-## [1.1.0]
+### Changed
+
+### Fixed
+
+## [1.1.0] - 2022-03-30
 ### Added
 * Added feature flag `early_access_min_tls_version`, allowing use of the `cass_ssl_set_min_protocol_version` method yet to be released in the driver.
 
