@@ -13,9 +13,6 @@ authors = ["Tupshin Harper <tupshin@tupshin.com>", "Keith Wansbrough <Keith.Wans
 links = "cassandra"
 build = "build.rs"
 
-[badges]
-travis-ci = { repository = "Metaswitch/cassandra-sys-rs" }
-
 [lib]
 name = "cassandra_cpp_sys"
 
