@@ -9,7 +9,8 @@ sudo apt-get update
 # Install dependencies of the cpp-driver even if they are already on CI so that we can run this locally
 sudo apt-get install -y libuv1 libuv1-dev cmake g++ libssl-dev zlib1g-dev
 
-# set VERSION to one of the tags here: https://github.com/datastax/cpp-driver/tags
+# Set VERSION to one of the tags here: https://github.com/datastax/cpp-driver/tags
+# This is the version of the cpp driver that will be installed and therefore tested against
 VERSION=2.16.2
 
 PACKAGE_NAME="cassandra-cpp-driver_${VERSION}-1_amd64"

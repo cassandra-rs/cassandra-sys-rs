@@ -3,5 +3,5 @@ Version: VERSION
 Section: base
 Priority: optional
 Architecture: amd64
-Maintainer: Shotover team
-Description: cassandra cpp-driver installed by shotover
+Maintainer: cassandra-rs team
+Description: cassandra cpp-driver installed by cassandra-rs driver test script
