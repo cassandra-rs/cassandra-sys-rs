@@ -1,6 +1,6 @@
-[![Build Status](https://github.com/Metaswitch/cassandra-sys-rs/actions/workflows/build.yml/badge.svg)](https://github.com/Metaswitch/cassandra-sys-rs/actions)
+[![Build Status](https://github.com/cassandra-rs/cassandra-sys-rs/actions/workflows/build.yml/badge.svg)](https://github.com/cassandra-rs/cassandra-sys-rs/actions)
 [![Current Version](http://img.shields.io/crates/v/cassandra-cpp-sys.svg)](https://crates.io/crates/cassandra-cpp-sys)
-[![License](https://img.shields.io/github/license/Metaswitch/cassandra-sys-rs.svg)](#license)
+[![License](https://img.shields.io/github/license/cassandra-rs/cassandra-sys-rs.svg)](#license)
 
 # cassandra-cpp-sys
 
@@ -12,7 +12,7 @@ It was originally a fork of https://github.com/tupshin/cassandra-sys-rs/ but tha
 This project also includes a fairly complete set of examples equivalent to the ones in the C++ repository.
 
 It is quite possible to use this crate directly from your Rust code, but it will mean littering unsafe all over the place.
-Instead it is recommended that you use the safe wrapper of this interface: [cassandra-cpp](https://github.com/Metaswitch/cassandra-rs).
+Instead it is recommended that you use the safe wrapper of this interface: [cassandra-cpp](https://github.com/cassandra-rs/cassandra-rs).
 
 [Documentation (crates.io)](https://docs.rs/cassandra-cpp-sys).
 

@@ -17,7 +17,7 @@ A few important notes:
 * There are no tests in this repo, but there are examples which at least
   use most features. If it makes sense, when you're adding a feature please
   add to the examples.
-* Please do ensure you carry your changes through to https://github.com/Metaswitch/cassandra-rs
+* Please do ensure you carry your changes through to https://github.com/cassandra-rs/cassandra-rs
   and add tests there (if that makes sense).
 * In general: I know this code isn't as nice as it could be, but please ensure
   new code does things better, and if you have an opportunity to clean up old

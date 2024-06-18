@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [1.1.1] - 2024-06-18
+
+### Changed
+- Update repo location from
+  [Metaswitch/cassandra-sys-rs](https://github.com/Metaswitch/cassandra-sys-rs) to
+  [cassandra-rs/cassandra-sys-rs](https://github.com/cassandra-rs/cassandra-sys-rs),
+  and update maintainer's affiliation.
+
 ## [1.1.0] - 2022-03-30
 ### Added
 * Added feature flag `early_access_min_tls_version`, allowing use of the `cass_ssl_set_min_protocol_version` method yet to be released in the driver.
@@ -68,7 +76,7 @@ This is the minimum supported version of the C++ driver.
 
 At one point some development was done on preparing a version 0.9.0
 using a newer version of bindgen, but the work was not completed or released. See the
-[version-0.9](https://github.com/Metaswitch/cassandra-sys-rs/tree/version-0.9) branch
+[version-0.9](https://github.com/cassandra-rs/cassandra-sys-rs/tree/version-0.9) branch
 to follow that development. In due course this may be merged to master, but for the moment we recommend you use the
 released versions.
 
@@ -81,14 +89,15 @@ released versions.
 ### Changed
 - (Pre-fork version.)
 
-[Unreleased]: https://github.com/Metaswitch/cassandra-sys-rs/compare/1.1.0...HEAD
-[1.1.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/1.0.0...1.1.0
-[1.0.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.3...1.0.0
-[0.12.3]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.2...0.12.3
-[0.12.2]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.1...0.12.2
-[0.12.1]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.12.0...0.12.1
-[0.12.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.11.0...0.12.0
-[0.11.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.10.0...0.11.0
-[0.10.0]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.8.8...0.10.0
-[0.8.8]: https://github.com/Metaswitch/cassandra-sys-rs/compare/0.8.7...0.8.8
-[0.8.7]: https://github.com/Metaswitch/cassandra-sys-rs/tree/0.8.7
+[Unreleased]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/1.1.1...HEAD
+[1.1.1]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/1.1.0...1.1.1
+[1.1.0]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.12.3...1.0.0
+[0.12.3]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.12.2...0.12.3
+[0.12.2]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.12.1...0.12.2
+[0.12.1]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.12.0...0.12.1
+[0.12.0]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.11.0...0.12.0
+[0.11.0]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.10.0...0.11.0
+[0.10.0]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.8.8...0.10.0
+[0.8.8]: https://github.com/cassandra-rs/cassandra-sys-rs/compare/0.8.7...0.8.8
+[0.8.7]: https://github.com/cassandra-rs/cassandra-sys-rs/tree/0.8.7
