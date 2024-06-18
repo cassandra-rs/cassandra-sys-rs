@@ -2,14 +2,14 @@
 description = "A bindgen-generated Rust wrapper around the DataStax Cassandra C++ driver plus working examples. You probably want to use the \"cassandra-cpp\" crate which provides a safe wrapper."
 documentation = "https://docs.rs/cassandra-sys-rs"
 # no homepage yet
-repository = "https://github.com/Metaswitch/cassandra-sys-rs"
+repository = "https://github.com/cassandra-rs/cassandra-sys-rs"
 readme = "README.md"
 keywords = ["Cassandra", "binding", "CQL", "client", "database" ]
 categories = [ "api-bindings", "database", "external-ffi-bindings" ]
 license = "Apache-2.0"
 name = "cassandra-cpp-sys"
-version = "1.1.1-pre"
-authors = ["Tupshin Harper <tupshin@tupshin.com>", "Keith Wansbrough <Keith.Wansbrough@metaswitch.com>"]
+version = "1.1.1"
+authors = ["Keith Wansbrough <keithw@lochan.org>"]
 links = "cassandra"
 build = "build.rs"
 
